@@ -55,8 +55,33 @@ export default function Root({ children }: PropsWithChildren) {
 const estilos = `
   html, body, #root { background-color: #131313; }
   body { overscroll-behavior-y: none; }
-  @supports (padding: env(safe-area-inset-top)) {
-    body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+
+  /* Nada de padding de safe-area aqui.
+     O app já reserva o espaço do notch e da barra de gestos por conta
+     própria (useSafeAreaInsets no cabeçalho e na barra de abas), e o
+     react-native-safe-area-context lê os mesmos env() no navegador. Somar
+     de novo no body aplicava tudo duas vezes: sobrava um vão no topo e uma
+     faixa preta embaixo da barra de navegação. */
+
+  /* No computador o app não estica.
+     Sem isto o layout de celular ocupa 1900px de largura e a linha de texto
+     fica impossível de ler. Limitar a um formato de telefone é o que os
+     apps que rodam nos dois lugares fazem — e mantém o mesmo layout que foi
+     desenhado, em vez de inventar um segundo. */
+  @media (min-width: 860px) {
+    html, body { background-color: #0A0A0A; }
+    #root {
+      max-width: 460px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background-color: #131313;
+      border-left: 1px solid #242424;
+      border-right: 1px solid #242424;
+      /* O conteúdo interno é posicionado em relação a este bloco, então a
+         barra de abas acompanha a largura em vez de grudar na janela. */
+      position: relative;
+      overflow: hidden;
+    }
   }
 `;
 
