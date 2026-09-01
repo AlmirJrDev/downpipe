@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { ArrowLeft, Camera, Send } from "lucide-react-native";
+import { ArrowLeft, Camera, Eye, Send } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ImageCropper } from "@/components/ImageCropper";
 import { CarTagSheet } from "@/components/CarTagSheet";
@@ -116,6 +116,16 @@ export default function AddPostScreen() {
             </>
           )}
         </Pressable>
+
+        {photoUri && (
+          <View className="flex-row items-start gap-2 mb-5 -mt-2">
+            <Eye size={13} color={colors.muted} style={{ marginTop: 2 }} />
+            <Text className="text-muted flex-1" style={{ fontSize: 11.5, lineHeight: 16 }}>
+              Dá uma olhada se aparece placa, endereço ou documento na foto. Depois
+              de publicada, ela fica visível pra qualquer pessoa.
+            </Text>
+          </View>
+        )}
 
         <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
           CARRO NA FOTO
