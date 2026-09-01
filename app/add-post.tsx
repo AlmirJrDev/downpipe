@@ -47,15 +47,24 @@ export default function AddPostScreen() {
   const carId = selectedCarId ?? cars[0]?.id;
 
   /**
-   * Rolês que dá pra marcar: só aqueles em que a pessoa confirmou presença.
-   * Os que já rolaram vêm primeiro — a foto quase sempre é do encontro
-   * passado, não do que ainda vai acontecer.
+   * Rolês que dá pra marcar: aqueles em que a pessoa confirmou presença e
+   * que já começaram. Os que já rolaram vêm primeiro — a foto quase sempre
+   * é do encontro passado.
+   *
+   * Rolê futuro fica de fora: não existe foto de um encontro que ainda não
+   * aconteceu, e oferecer isso foi o que encheu de foto a página de eventos
+   * que ainda iam rolar. A tolerância de duas horas é pra quem chega antes
+   * do horário marcado, e repete a mesma janela que o backend aplica em
+   * posts.service.ts — o servidor é quem de fato recusa.
    */
   const { data: proximos } = useEvents({});
   const { data: passados } = useEvents({ past: true });
   const taggableEvents = useMemo(() => {
+    const limite = Date.now() + 2 * 60 * 60 * 1000;
     const confirmados = (lista?: { pages: { data: CarEvent[] }[] }) =>
-      (lista?.pages.flatMap((p) => p.data) ?? []).filter((e) => e.attendingByMe);
+      (lista?.pages.flatMap((p) => p.data) ?? []).filter(
+        (e) => e.attendingByMe && new Date(e.startsAt).getTime() <= limite
+      );
     return [...confirmados(passados), ...confirmados(proximos)].slice(0, 12);
   }, [proximos, passados]);
 
