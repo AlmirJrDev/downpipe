@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Downpipe",
+    "slug": "downpipe",
+    "scheme": "downpipe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "backgroundColor": "#131313",
+    "splash": {
+      "image": "./assets/splash-1284.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#131313"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image-picker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Downpipe usa sua localizacao para marcar o ponto exato do encontro no mapa."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.downpipe.app",
+      "icon": "./assets/icon-1024.png"
+    },
+    "android": {
+      "package": "com.downpipe.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-maskable-1024.png",
+        "backgroundColor": "#131313"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "icon": "./assets/icon-1024.png",
+    "experiments": {
+      "baseUrl": "/app"
+    }
+  }
+}

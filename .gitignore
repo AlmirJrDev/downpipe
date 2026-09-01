@@ -1,0 +1,39 @@
+# Dependências
+node_modules/
+
+# Segredos e configuração de máquina. O .env deste projeto guarda o
+# STATUS_SECRET e o caminho local do repositório do backend — nada disso
+# pode ir pro GitHub.
+.env
+.env.local
+.env.*.local
+
+# Build do PWA. É gerado pelo "npm run build:web" e publicado dentro do
+# repositório do backend, que é quem vai pro Render. Versionar aqui seria
+# guardar o mesmo bundle de 5 MB em dois lugares.
+dist/
+web-build/
+
+# Expo
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Nativo (gerado pelo prebuild)
+/ios
+/android
+
+# Sistema e editor
+.DS_Store
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.idea/
+.vscode/*
+!.vscode/extensions.json
