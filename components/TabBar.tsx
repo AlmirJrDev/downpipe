@@ -24,6 +24,22 @@ const INDICATOR_WIDTH = 24;
 // linha de base e o indicador encostar na borda superior sem sair do pai.
 const SLOT_PADDING_TOP = 10;
 
+/**
+ * Espaço reservado embaixo da barra.
+ *
+ * O maior indicador de gestos que existe é o do iPhone, com 34pt — então
+ * nenhum aparelho precisa de mais que isso. No PWA o insets.bottom voltava
+ * bem acima disso e a barra ganhava uns 90px de vazio preto embaixo dos
+ * ícones, com cara de layout quebrado.
+ *
+ * O teto de 34 não muda nada no app nativo (lá o valor nunca passa disso) e
+ * corta só o exagero do navegador. O piso de 8 evita os ícones encostando na
+ * borda em aparelho sem indicador nenhum.
+ */
+function espacoDeBaixo(inset: number): number {
+  return Math.min(Math.max(inset, spacing.sm), 34);
+}
+
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
@@ -72,7 +88,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         borderTopColor: colors.border,
         // Sem paddingTop: cada slot traz o seu, para o indicador poder
         // encostar na borda de cima.
-        paddingBottom: Math.max(insets.bottom, spacing.md),
+        paddingBottom: espacoDeBaixo(insets.bottom),
       }}
     >
       {LEFT_ROUTES.map(renderTab)}
