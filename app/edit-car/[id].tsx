@@ -153,7 +153,7 @@ export default function EditCarScreen() {
               className="text-on-surface-variant mb-1"
               style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.2 }}
             >
-              CATÁLOGO FIPE
+              CATÁLOGO
             </Text>
             <Text className="text-on-surface" style={{ fontSize: 13 }}>
               {catalogName}

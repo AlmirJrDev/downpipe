@@ -325,7 +325,7 @@ export default function AddCarScreen() {
         >
           {skippedCatalog ? (
             <Text className="text-on-surface-variant mb-6" style={typography.bodyMd}>
-              Descreva seu veículo — ele não está linkado ao catálogo FIPE.
+              Descreva seu veículo — ele não está no catálogo.
             </Text>
           ) : (
             <View className="border border-border bg-card px-4 py-3 mb-6">

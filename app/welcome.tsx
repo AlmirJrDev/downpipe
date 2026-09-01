@@ -13,7 +13,7 @@ const SLIDES = [
   {
     icon: Car,
     title: "Monte sua garagem",
-    description: "Cadastre seus carros com marca, modelo e versão direto do catálogo FIPE.",
+    description: "Cadastre seus carros com marca, modelo e versão direto do catálogo.",
   },
   {
     icon: Wrench,
