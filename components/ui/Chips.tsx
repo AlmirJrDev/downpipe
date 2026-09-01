@@ -19,8 +19,17 @@ export function StatCard({
         {value}
       </Text>
       <Text
+        numberOfLines={1}
         className="text-on-surface-variant mt-1"
-        style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase" }}
+        style={{
+          // 9.5 sem espaçamento entre letras: são cinco números lado a lado,
+          // e "SEGUIDORES" a 11px com letterSpacing encostava em "SEGUINDO"
+          // num celular estreito — as duas palavras viravam uma só.
+          fontSize: 9.5,
+          letterSpacing: 0.2,
+          textTransform: "uppercase",
+          textAlign: "center",
+        }}
       >
         {label}
       </Text>

@@ -10,7 +10,7 @@ import {
 import { Alert } from "@/utils/alert";
 import { Share } from "@/utils/share";
 import { Image } from "expo-image";
-import { Bookmark, LogOut, Share2 } from "lucide-react-native";
+import { LogOut, MoreVertical, Share2 } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -36,6 +36,24 @@ export default function ProfileScreen() {
   const { data: myCars } = useMyGarage();
   const logout = useAuthStore((s) => s.logout);
   const [followSheet, setFollowSheet] = useState<FollowTab | null>(null);
+
+  /**
+    * Tudo que é da conta num lugar só.
+    *
+    * Antes eram três coisas soltas: o ícone de sair no cabeçalho, o marcador
+    * dos salvos, e uma seção "Conta" no meio da página. Coisa de
+    * configuração não disputa espaço com a garagem e as publicações.
+    */
+  const abrirMenu = () => {
+    Alert.alert("Conta", undefined, [
+      { text: "Publicações salvas", onPress: () => router.push("/saved") },
+      { text: "Pessoas bloqueadas", onPress: () => router.push("/bloqueados") },
+      { text: "Política de privacidade", onPress: () => abrirLegal("privacidade") },
+      { text: "Termos de uso", onPress: () => abrirLegal("termos") },
+      { text: "Sair da conta", style: "destructive", onPress: confirmLogout },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  };
 
   const confirmLogout = () => {
     Alert.alert("Sair da conta", "Você precisará entrar novamente para acessar o app.", [
@@ -103,16 +121,9 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 bg-surface">
       <AppHeader
-        left={
-          // Era um ícone de menu sem onPress — não abria nada. Virou a
-          // entrada dos salvos, que precisava de um lugar pra morar.
-          <Pressable hitSlop={8} onPress={() => router.push("/saved")}>
-            <Bookmark size={20} color={colors.onSurfaceVariant} />
-          </Pressable>
-        }
         right={
-          <Pressable hitSlop={8} onPress={confirmLogout}>
-            <LogOut size={20} color={colors.onSurfaceVariant} />
+          <Pressable hitSlop={8} onPress={abrirMenu}>
+            <MoreVertical size={20} color={colors.onSurfaceVariant} />
           </Pressable>
         }
       />
@@ -245,39 +256,6 @@ export default function ProfileScreen() {
         </View>
 
         <ProfileEvents username={me.username} isOrganizer={!!me.isOrganizer} isMe />
-
-        <View className="mt-8 px-4">
-          <Text className="text-on-surface mb-3" style={typography.labelCaps}>
-            Conta
-          </Text>
-          <Pressable
-            onPress={() => router.push("/bloqueados")}
-            className="flex-row items-center justify-between border-t border-border py-3.5"
-          >
-            <Text className="text-on-surface" style={{ fontSize: 14 }}>
-              Pessoas bloqueadas
-            </Text>
-            <Text className="text-muted" style={{ fontSize: 18 }}>›</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => abrirLegal("privacidade")}
-            className="flex-row items-center justify-between border-t border-border py-3.5"
-          >
-            <Text className="text-on-surface" style={{ fontSize: 14 }}>
-              Política de privacidade
-            </Text>
-            <Text className="text-muted" style={{ fontSize: 18 }}>›</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => abrirLegal("termos")}
-            className="flex-row items-center justify-between border-t border-b border-border py-3.5"
-          >
-            <Text className="text-on-surface" style={{ fontSize: 14 }}>
-              Termos de uso
-            </Text>
-            <Text className="text-muted" style={{ fontSize: 18 }}>›</Text>
-          </Pressable>
-        </View>
 
         <View className="mt-8 px-4">
           <Text className="text-on-surface mb-3" style={typography.labelCaps}>
