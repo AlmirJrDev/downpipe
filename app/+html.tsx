@@ -42,6 +42,7 @@ export default function Root({ children }: PropsWithChildren) {
 
         <style dangerouslySetInnerHTML={{ __html: estilos }} />
 
+        <script dangerouslySetInnerHTML={{ __html: diagnostico }} />
         <script dangerouslySetInnerHTML={{ __html: capturarInstalacao }} />
         <script dangerouslySetInnerHTML={{ __html: registrarServiceWorker }} />
       </head>
@@ -111,6 +112,74 @@ const capturarInstalacao = `
     window.__promptInstalar = null;
     window.dispatchEvent(new Event('downpipe:instalado'));
   });
+`;
+
+/**
+ * Painel de medidas, ligado só com ?diag=1 no endereço.
+ *
+ * Existe porque a faixa embaixo da barra de navegação só aparece em um
+ * aparelho, e depois de dois consertos errados a única saída honesta é ler
+ * os números de dentro dele em vez de continuar supondo.
+ *
+ * Some sozinho pra quem não pedir. Remover quando a causa estiver achada.
+ */
+const diagnostico = `
+if (location.search.indexOf('diag=1') !== -1) {
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      var sonda = document.createElement('div');
+      sonda.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom);width:1px;';
+      document.body.appendChild(sonda);
+      var insetBaixo = sonda.getBoundingClientRect().height;
+      var insetCima = 0;
+      var s2 = document.createElement('div');
+      s2.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);width:1px;';
+      document.body.appendChild(s2);
+      insetCima = s2.getBoundingClientRect().height;
+
+      var raiz = document.getElementById('root');
+      var vv = window.visualViewport;
+
+      // Acha a barra de abas: o container mais baixo com vários botões.
+      var barra = null, maiorTopo = -1;
+      var candidatos = document.querySelectorAll('div');
+      for (var i = 0; i < candidatos.length; i++) {
+        var e = candidatos[i];
+        var r = e.getBoundingClientRect();
+        if (r.height > 40 && r.height < 140 && r.width > window.innerWidth * 0.9 && r.top > maiorTopo) {
+          maiorTopo = r.top; barra = e;
+        }
+      }
+      var rb = barra ? barra.getBoundingClientRect() : null;
+
+      var linhas = [
+        ['innerHeight', window.innerHeight],
+        ['clientHeight', document.documentElement.clientHeight],
+        ['visualViewport', vv ? Math.round(vv.height) : 'n/d'],
+        ['screen.height', window.screen.height],
+        ['scrollHeight', document.documentElement.scrollHeight],
+        ['#root altura', raiz ? Math.round(raiz.getBoundingClientRect().height) : 'n/d'],
+        ['#root css', raiz ? getComputedStyle(raiz).height : 'n/d'],
+        ['inset topo', insetCima],
+        ['inset baixo', insetBaixo],
+        ['standalone', (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? 'sim' : 'nao'],
+        ['barra topo', rb ? Math.round(rb.top) : 'n/d'],
+        ['barra fim', rb ? Math.round(rb.bottom) : 'n/d'],
+        ['barra padBot', barra ? getComputedStyle(barra).paddingBottom : 'n/d'],
+        ['sobra abaixo', rb ? Math.round(window.innerHeight - rb.bottom) : 'n/d']
+      ];
+
+      var p = document.createElement('div');
+      p.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;' +
+        'font:11px ui-monospace,Menlo,monospace;padding:10px 12px;line-height:1.5;border-bottom:2px solid #0f0;';
+      var html = '<b style="color:#fff">MEDIDAS — mande print desta caixa</b><br>';
+      for (var j = 0; j < linhas.length; j++) html += linhas[j][0] + ': ' + linhas[j][1] + '<br>';
+      p.innerHTML = html;
+      document.body.appendChild(p);
+      sonda.remove(); s2.remove();
+    }, 1200);
+  });
+}
 `;
 
 const registrarServiceWorker = `
