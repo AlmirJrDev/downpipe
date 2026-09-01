@@ -1,0 +1,81 @@
+# CD do front.
+#
+# O backend serve o PWA a partir da pasta web/ do repositório dele, que é o
+# que o Render publica. Sem este workflow, mexer no app exige dois commits
+# em dois repositórios — e esquecer o segundo significa código novo no
+# GitHub e site velho no ar, sem nenhum erro que avise.
+#
+# Aqui o push no app basta: exporta, copia pro outro repositório e commita.
+# O Render enxerga o commit e redeploya sozinho.
+#
+# PRECISA de um secret chamado BACKEND_TOKEN — um Personal Access Token seu
+# com permissão de escrita no repositório downpipe-bk. Sem ele o workflow
+# falha no clone, de propósito: melhor falhar visível do que publicar pela
+# metade.
+name: Publica o PWA no backend
+
+on:
+  push:
+    branches: [master]
+  # Permite disparar à mão pela aba Actions, sem precisar de um commit.
+  workflow_dispatch:
+
+# Se dois pushes chegarem juntos, o segundo espera: dois jobs commitando no
+# mesmo repositório ao mesmo tempo se atropelam no push.
+concurrency:
+  group: publica-pwa
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Exporta e publica
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixa o app
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci --legacy-peer-deps
+
+      # Barra o deploy se os tipos não fecharem: publicar um build quebrado
+      # é pior do que não publicar.
+      - name: Checa os tipos
+        run: npx tsc --noEmit
+
+      # Sem variável de API: na web o app fala com a própria origem, porque
+      # é o mesmo servidor que entrega a página e a API.
+      - name: Exporta o PWA
+        run: npx expo export --platform web --clear
+
+      - name: Baixa o repositório do backend
+        run: |
+          git clone --depth 1 \
+            "https://x-access-token:${{ secrets.BACKEND_TOKEN }}@github.com/AlmirJrDev/downpipe-bk.git" \
+            backend
+
+      - name: Substitui a pasta web
+        run: |
+          # Apaga antes de copiar: os bundles têm hash no nome, e sem limpar
+          # o repositório acumularia um arquivo de 4 MB por deploy.
+          rm -rf backend/web
+          cp -r dist backend/web
+          echo "arquivos publicados: $(find backend/web -type f | wc -l)"
+
+      - name: Commita e envia
+        working-directory: backend
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web
+          # --staged --quiet sai com 0 quando não há diferença: sem isto o
+          # workflow falharia em todo push que não mexeu no front.
+          if git diff --staged --quiet; then
+            echo "PWA sem mudanças — nada a publicar."
+          else
+            git commit -m "Atualiza o PWA (automático, de ${GITHUB_SHA::7})"
+            git push
+          fi

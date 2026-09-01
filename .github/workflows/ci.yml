@@ -1,0 +1,29 @@
+# Checagem de tipos a cada push.
+#
+# Existe porque o deploy é automático: sem isto, um erro de tipo sai da sua
+# máquina e só aparece quando o build quebra no Render — que foi exatamente
+# o que aconteceu no primeiro deploy.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  tipos:
+    name: Checagem de tipos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      # --legacy-peer-deps: o lucide-react-native declara peer React 16–18 e
+      # o projeto usa React 19. É a mesma flag usada na instalação local.
+      - run: npm ci --legacy-peer-deps
+
+      - run: npx tsc --noEmit
