@@ -37,3 +37,6 @@ yarn-error.*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Saída de scripts/build-landing.mjs (gerada pelo workflow do Pages).
+landing-dist/

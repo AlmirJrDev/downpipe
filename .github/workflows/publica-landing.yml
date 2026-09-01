@@ -1,0 +1,72 @@
+# Publica a landing estática no GitHub Pages.
+#
+# POR QUE: o Render grátis hiberna depois de ~15 min sem visita e leva perto
+# de um minuto pra acordar. Landing e API saem do mesmo serviço, então um
+# link de divulgação cai nessa espera — a pessoa clica, vê a tela de "waking
+# up" da Render e fecha.
+#
+# O Pages é estático e não hiberna. A landing abre na hora e dispara um ping
+# que acorda o backend enquanto a pessoa lê, pra que o app já esteja de pé
+# quando ela clicar em "abrir".
+#
+# Isto NÃO tira nada do Render: ele continua servindo a landing, as páginas
+# legais e o app como antes. Se o Pages sumir, nada quebra.
+#
+# Diferente do publica-pwa.yml, este não precisa de token nenhum: o Pages é
+# do mesmo repositório, e o GITHUB_TOKEN da própria execução basta.
+name: Publica a landing no Pages
+
+on:
+  push:
+    branches: [master]
+    # Só quando a landing (ou o que a gera) muda. Sem isto, cada commit de
+    # código do app republicaria uma página idêntica.
+    paths:
+      - 'public/**'
+      - 'scripts/build-landing.mjs'
+      - '.github/workflows/publica-landing.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Duas publicações ao mesmo tempo se atropelam. Não cancela a que está no
+# meio: publicar pela metade é pior do que publicar duas vezes.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # enablement: true liga o Pages na primeira execução, pra isto não
+      # depender de alguém lembrar de mexer em Settings.
+      - id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # O endereço do site só é conhecido aqui, e o og:image precisa dele:
+      # scraper de rede social não resolve caminho relativo.
+      - name: Gera a landing
+        run: node scripts/build-landing.mjs
+        env:
+          PAGES_URL: ${{ steps.pages.outputs.base_url }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: landing-dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Onde ficou
+        run: echo "Landing no ar em ${{ steps.deploy.outputs.page_url }}"
