@@ -47,12 +47,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # enablement: true liga o Pages na primeira execução, pra isto não
-      # depender de alguém lembrar de mexer em Settings.
+      # PRECISA de um passo manual, uma única vez, antes da primeira
+      # execução funcionar:
+      #
+      #   Settings > Pages > Build and deployment > Source: GitHub Actions
+      #
+      # Tentei fazer isso pelo próprio workflow (enablement: true) e não
+      # funciona: o GITHUB_TOKEN da execução não tem permissão pra criar o
+      # site do Pages, só pra publicar num que já existe. Depois de ligado,
+      # nunca mais precisa mexer.
       - id: pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       # O endereço do site só é conhecido aqui, e o og:image precisa dele:
       # scraper de rede social não resolve caminho relativo.
