@@ -146,6 +146,36 @@ export const api = {
     (await send(path, { method: "PATCH", body: jsonBody(body) })).data as T,
 
   delete: async <T>(path: string): Promise<T> => (await send(path, { method: "DELETE" })).data as T,
+
+  /**
+   * PATCH autenticado por um token que não é o da sessão.
+   *
+   * Existe para a recuperação de senha: o token vem do link do e-mail, e
+   * quem está trocando a senha justamente não tem sessão. Passa por fetch
+   * direto, sem o send(), porque o send injeta o token guardado e tentaria
+   * renovar a sessão num 401 — os dois errados aqui.
+   */
+  patchWithToken: async <T>(path: string, body: unknown, token: string): Promise<T> => {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}${path}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      throw new ApiError("NETWORK_ERROR", "Não foi possível conectar ao servidor.", 0);
+    }
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json || json.error) {
+      throw new ApiError(
+        json?.error?.code ?? "UNKNOWN_ERROR",
+        json?.error?.message ?? "Erro inesperado do servidor.",
+        res.status
+      );
+    }
+    return json.data as T;
+  },
 };
 
 /** Monta um FormData com um arquivo de imagem local (URI do expo-image-picker). */

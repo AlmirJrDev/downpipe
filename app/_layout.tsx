@@ -49,7 +49,14 @@ function AuthRedirect() {
 
   useEffect(() => {
     if (status === "hydrating") return;
-    const inAuthScreen = segments[0] === "login" || segments[0] === "register";
+    // Recuperação de senha entra aqui: quem chega nessas telas está
+    // deslogado por definição, e sem esta exceção o redirect as expulsaria
+    // pro login no mesmo instante em que abrissem.
+    const inAuthScreen =
+      segments[0] === "login" ||
+      segments[0] === "register" ||
+      segments[0] === "forgot-password" ||
+      segments[0] === "nova-senha";
 
     if (status === "signedOut") {
       if (!inAuthScreen) router.replace("/login");
@@ -126,10 +133,16 @@ export default function RootLayout() {
                   <Stack.Screen name="(tabs)" />
                   <Stack.Screen name="login" options={{ animation: "fade" }} />
                   <Stack.Screen name="register" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen
+                    name="forgot-password"
+                    options={{ animation: "slide_from_right" }}
+                  />
+                  <Stack.Screen name="nova-senha" options={{ animation: "fade" }} />
                   <Stack.Screen name="welcome" options={{ animation: "fade" }} />
                   <Stack.Screen name="edit-profile" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="saved" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="bloqueados" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen
                     name="add-event"

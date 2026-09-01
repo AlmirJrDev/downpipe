@@ -26,6 +26,10 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiService } from "@/services/apiService";
+import { ApiError } from "@/services/api";
+import { ReportSheet } from "@/components/ReportSheet";
 import { colors } from "@/constants/theme";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -64,15 +68,40 @@ function carLabel(car: Post["car"]): string | null {
 }
 
 /**
- * Editar/excluir a própria publicação. Author só traz username (não id), e
- * username é único — é por ele que dá pra saber se o post é meu.
- * Renderiza null pra qualquer outra pessoa: o backend recusa com 403.
+ * Menu da publicação.
+ *
+ * Pro dono, editar e excluir. Pra qualquer outra pessoa, denunciar e
+ * bloquear — antes o menu simplesmente não existia pra ela, e quem visse
+ * algo errado não tinha nenhuma saída dentro do app.
+ *
+ * Author só traz username (não id), e username é único: é por ele que dá
+ * pra saber se o post é meu.
  */
 function OwnerMenu({ post }: { post: Post }) {
   const { data: me } = useCurrentUser();
   const deletePost = useDeletePost();
+  const queryClient = useQueryClient();
+  const [denunciando, setDenunciando] = useState(false);
 
-  if (!me || post.author?.username !== me.username) return null;
+  const bloquear = useMutation({
+    mutationFn: (userId: string) => apiService.bloquear(userId),
+    onSuccess: () => {
+      // O feed inteiro muda: as publicações da pessoa somem de todas as
+      // listas de uma vez.
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      queryClient.invalidateQueries({ queryKey: ["posts-by-username"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Não deu para bloquear.";
+      Alert.alert("Não foi possível bloquear", msg);
+    },
+  });
+
+  if (!me || !post.author) return null;
+
+  const souDono = post.author.username === me.username;
+  const autor = post.author;
 
   const confirmDelete = () =>
     Alert.alert("Excluir publicação", "Essa ação não pode ser desfeita.", [
@@ -80,23 +109,60 @@ function OwnerMenu({ post }: { post: Post }) {
       { text: "Excluir", style: "destructive", onPress: () => deletePost.mutate(post.id) },
     ]);
 
+  const confirmarBloqueio = () =>
+    Alert.alert(
+      `Bloquear @${autor.username}?`,
+      "Vocês param de ver as publicações um do outro, e quem seguia deixa de seguir.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Bloquear",
+          style: "destructive",
+          onPress: () => {
+            // O id do autor não vem no post; o perfil resolve pelo @.
+            apiService
+              .getUserByUsername(autor.username)
+              .then((u) => u && bloquear.mutate(u.id))
+              .catch(() => Alert.alert("Não foi possível bloquear", "Tente de novo."));
+          },
+        },
+      ]
+    );
+
   const openMenu = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (souDono) {
+      Alert.alert("Publicação", undefined, [
+        { text: "Editar", onPress: () => router.push(`/edit-post/${post.id}`) },
+        { text: "Excluir", style: "destructive", onPress: confirmDelete },
+        { text: "Cancelar", style: "cancel" },
+      ]);
+      return;
+    }
+
     Alert.alert("Publicação", undefined, [
-      { text: "Editar", onPress: () => router.push(`/edit-post/${post.id}`) },
-      { text: "Excluir", style: "destructive", onPress: confirmDelete },
+      { text: "Denunciar", onPress: () => setDenunciando(true) },
+      { text: `Bloquear @${autor.username}`, style: "destructive", onPress: confirmarBloqueio },
       { text: "Cancelar", style: "cancel" },
     ]);
   };
 
-  if (deletePost.isPending) {
+  if (deletePost.isPending || bloquear.isPending) {
     return <ActivityIndicator size="small" color={colors.onSurfaceVariant} />;
   }
 
   return (
-    <Pressable onPress={openMenu} hitSlop={10}>
-      <MoreHorizontal size={20} color={colors.onSurfaceVariant} />
-    </Pressable>
+    <>
+      <Pressable onPress={openMenu} hitSlop={10}>
+        <MoreHorizontal size={20} color={colors.onSurfaceVariant} />
+      </Pressable>
+      <ReportSheet
+        alvo={{ postId: post.id }}
+        visible={denunciando}
+        onClose={() => setDenunciando(false)}
+      />
+    </>
   );
 }
 

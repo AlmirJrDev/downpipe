@@ -24,6 +24,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { FollowListSheet, type FollowTab } from "@/components/FollowListSheet";
 import { ProfileEvents } from "@/components/ProfileEvents";
 import { carTitle } from "@/utils/car";
+import { abrirLegal } from "@/utils/legal";
 import { colors, spacing, typography } from "@/constants/theme";
 import { router } from "expo-router";
 
@@ -244,6 +245,39 @@ export default function ProfileScreen() {
         </View>
 
         <ProfileEvents username={me.username} isOrganizer={!!me.isOrganizer} isMe />
+
+        <View className="mt-8 px-4">
+          <Text className="text-on-surface mb-3" style={typography.labelCaps}>
+            Conta
+          </Text>
+          <Pressable
+            onPress={() => router.push("/bloqueados")}
+            className="flex-row items-center justify-between border-t border-border py-3.5"
+          >
+            <Text className="text-on-surface" style={{ fontSize: 14 }}>
+              Pessoas bloqueadas
+            </Text>
+            <Text className="text-muted" style={{ fontSize: 18 }}>›</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => abrirLegal("privacidade")}
+            className="flex-row items-center justify-between border-t border-border py-3.5"
+          >
+            <Text className="text-on-surface" style={{ fontSize: 14 }}>
+              Política de privacidade
+            </Text>
+            <Text className="text-muted" style={{ fontSize: 18 }}>›</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => abrirLegal("termos")}
+            className="flex-row items-center justify-between border-t border-b border-border py-3.5"
+          >
+            <Text className="text-on-surface" style={{ fontSize: 14 }}>
+              Termos de uso
+            </Text>
+            <Text className="text-muted" style={{ fontSize: 18 }}>›</Text>
+          </Pressable>
+        </View>
 
         <View className="mt-8 px-4">
           <Text className="text-on-surface mb-3" style={typography.labelCaps}>

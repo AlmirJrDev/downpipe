@@ -149,7 +149,17 @@ export default function LoginScreen() {
           <PrimaryButton label="Entrar" onPress={submit} loading={loading} disabled={!isValid} />
         </View>
 
-        <Pressable className="mt-6" onPress={() => router.push("/register")} hitSlop={8}>
+        <Pressable
+          className="mt-5"
+          onPress={() => router.push("/forgot-password")}
+          hitSlop={8}
+        >
+          <Text className="text-on-surface-variant text-center" style={{ fontSize: 13 }}>
+            Esqueci minha senha
+          </Text>
+        </Pressable>
+
+        <Pressable className="mt-5" onPress={() => router.push("/register")} hitSlop={8}>
           <Text className="text-on-surface-variant text-center" style={{ fontSize: 14 }}>
             Não tem conta?{" "}
             <Text className="text-primary" style={{ fontWeight: "600" }}>

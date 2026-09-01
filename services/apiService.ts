@@ -691,6 +691,47 @@ async function unattendEvent(id: string): Promise<{ attendingByMe: boolean; atte
   return api.delete(`/events/${id}/attend`);
 }
 
+// ---------------------------------------------------------------- Moderação
+
+/** Motivos fechados: o backend valida contra a mesma lista. */
+export type MotivoDenuncia =
+  | "spam"
+  | "conteudo_improprio"
+  | "assedio"
+  | "carro_nao_e_meu"
+  | "informacao_falsa"
+  | "outro";
+
+export interface UsuarioBloqueado {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  blockedAt: string;
+}
+
+async function denunciar(alvo: {
+  postId?: string;
+  commentId?: string;
+  profileId?: string;
+  reason: MotivoDenuncia;
+  details?: string;
+}): Promise<{ message: string }> {
+  return api.post("/reports", alvo);
+}
+
+async function bloquear(userId: string): Promise<{ blocked: boolean }> {
+  return api.post(`/profiles/${userId}/block`);
+}
+
+async function desbloquear(userId: string): Promise<{ blocked: boolean }> {
+  return api.delete(`/profiles/${userId}/block`);
+}
+
+async function getBloqueados(): Promise<UsuarioBloqueado[]> {
+  return api.get("/profile/blocks");
+}
+
 /** Dono do carro aceita ou recusa a marcação numa foto de outra pessoa. */
 async function respondCarTag(postId: string, accept: boolean): Promise<Post> {
   const raw = await api.patch<RawPost>(`/posts/${postId}/car-tag`, { accept });
@@ -825,5 +866,9 @@ export const apiService = {
   getEventAttendees,
   getPostsByEvent,
   respondCarTag,
+  denunciar,
+  bloquear,
+  desbloquear,
+  getBloqueados,
   searchAddresses,
 };

@@ -1,4 +1,9 @@
 import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MoreHorizontal } from "lucide-react-native";
+import { Alert } from "@/utils/alert";
+import { ReportSheet } from "@/components/ReportSheet";
+import { ApiError } from "@/services/api";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -19,7 +24,7 @@ import { colors, spacing, typography } from "@/constants/theme";
 
 const SCREEN_PAD = spacing.marginMobile;
 
-function BackHeader({ title }: { title: string }) {
+function BackHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
     <AppHeader
       title={title}
@@ -28,6 +33,7 @@ function BackHeader({ title }: { title: string }) {
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }
+      right={right}
     />
   );
 }
@@ -54,6 +60,24 @@ export default function UserProfileScreen() {
   });
   const toggleFollow = useToggleFollow(username);
   const [followSheet, setFollowSheet] = useState<FollowTab | null>(null);
+  const [denunciando, setDenunciando] = useState(false);
+  const queryClient = useQueryClient();
+
+  const bloquear = useMutation({
+    mutationFn: (userId: string) => apiService.bloquear(userId),
+    onSuccess: () => {
+      // Sai do perfil de quem foi bloqueado: ficar olhando a página de
+      // alguém que você acabou de bloquear não faz sentido nenhum.
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      queryClient.invalidateQueries({ queryKey: ["user", username] });
+      router.back();
+    },
+    onError: (err) =>
+      Alert.alert(
+        "Não foi possível bloquear",
+        err instanceof ApiError ? err.message : "Tente de novo."
+      ),
+  });
 
   const userCars = carsPage?.data ?? [];
   const userPosts = postsPage?.data ?? [];
@@ -87,7 +111,41 @@ export default function UserProfileScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <BackHeader title={`@${user.username}`} />
+      <BackHeader
+        title={`@${user.username}`}
+        right={
+          isMe ? undefined : (
+            <Pressable
+              hitSlop={8}
+              onPress={() =>
+                Alert.alert(`@${user.username}`, undefined, [
+                  { text: "Denunciar perfil", onPress: () => setDenunciando(true) },
+                  {
+                    text: "Bloquear",
+                    style: "destructive",
+                    onPress: () =>
+                      Alert.alert(
+                        `Bloquear @${user.username}?`,
+                        "Vocês param de ver as publicações um do outro, e quem seguia deixa de seguir.",
+                        [
+                          { text: "Cancelar", style: "cancel" },
+                          {
+                            text: "Bloquear",
+                            style: "destructive",
+                            onPress: () => bloquear.mutate(user.id),
+                          },
+                        ]
+                      ),
+                  },
+                  { text: "Cancelar", style: "cancel" },
+                ])
+              }
+            >
+              <MoreHorizontal size={20} color={colors.onSurfaceVariant} />
+            </Pressable>
+          )
+        }
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -205,6 +263,12 @@ export default function UserProfileScreen() {
           <PostGrid posts={userPosts} width={width} username={user.username} />
         )}
       </ScrollView>
+
+      <ReportSheet
+        alvo={{ profileId: user.id }}
+        visible={denunciando}
+        onClose={() => setDenunciando(false)}
+      />
 
       <FollowListSheet
         userId={user.id}

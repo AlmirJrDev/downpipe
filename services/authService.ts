@@ -33,4 +33,15 @@ export const authService = {
     api.post<LoginResponse>("/auth/login", input),
   refresh: (refreshToken: string) => api.post<LoginResponse>("/auth/refresh", { refreshToken }),
   logout: () => api.post<{ success: boolean }>("/auth/logout"),
+
+  /** Dispara o e-mail com o link de recuperação. */
+  forgotPassword: (email: string) =>
+    api.post<{ message: string }>("/auth/forgot-password", { email }),
+
+  /**
+   * Define a senha nova. O token vem do link do e-mail e vale como
+   * autenticação — por isso vai no header, e não no corpo.
+   */
+  resetPassword: (token: string, password: string) =>
+    api.patchWithToken<{ message: string }>("/auth/password", { password }, token),
 };

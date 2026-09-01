@@ -13,6 +13,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react-native";
 import { colors, typography } from "@/constants/theme";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
+import { abrirLegal } from "@/utils/legal";
 import { useAuthStore } from "@/stores/authStore";
 import { ApiError } from "@/services/api";
 
@@ -172,6 +173,21 @@ export default function RegisterScreen() {
         <View className="mt-2">
           <PrimaryButton label="Criar conta" onPress={submit} loading={loading} disabled={!isValid} />
         </View>
+
+        <Text
+          className="text-muted text-center mt-4"
+          style={{ fontSize: 12, lineHeight: 18 }}
+        >
+          Ao criar a conta você concorda com os{" "}
+          <Text className="text-on-surface-variant" style={{ textDecorationLine: "underline" }} onPress={() => abrirLegal("termos")}>
+            termos de uso
+          </Text>{" "}
+          e a{" "}
+          <Text className="text-on-surface-variant" style={{ textDecorationLine: "underline" }} onPress={() => abrirLegal("privacidade")}>
+            política de privacidade
+          </Text>
+          .
+        </Text>
 
         <Pressable className="mt-6" onPress={() => router.back()} hitSlop={8}>
           <Text className="text-on-surface-variant text-center" style={{ fontSize: 14 }}>
