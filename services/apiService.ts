@@ -4,6 +4,7 @@
 // onde ele obriga a mudar (ex.: createCar não aceita mais brand/model/year
 // livres, só vehicleVersionId + version).
 import { api, ApiError, imageFormData, type PaginatedResult } from "./api";
+import { anexarImagem } from "./anexarImagem";
 import type {
   AppNotification,
   Car,
@@ -110,7 +111,7 @@ async function updateMyProfile(patch: {
 }
 
 async function uploadAvatar(localUri: string): Promise<User> {
-  const raw = await api.postForm<RawProfile>("/profile/me/avatar", imageFormData("file", localUri));
+  const raw = await api.postForm<RawProfile>("/profile/me/avatar", await imageFormData("file", localUri));
   return toUser(raw);
 }
 
@@ -203,7 +204,7 @@ async function deleteCar(id: string): Promise<void> {
 }
 
 async function uploadCarPhoto(carId: string, localUri: string): Promise<Car> {
-  return api.postForm<Car>(`/cars/${carId}/photo`, imageFormData("file", localUri));
+  return api.postForm<Car>(`/cars/${carId}/photo`, await imageFormData("file", localUri));
 }
 
 // ---------------------------------------------------------------------------
@@ -469,11 +470,7 @@ async function createPost(input: CreatePostInput): Promise<Post> {
     if (value !== undefined) form.append(key, value);
   }
   for (const uri of input.localImageUris) {
-    const filename = uri.split("/").pop() ?? "photo.jpg";
-    const ext = filename.split(".").pop()?.toLowerCase();
-    const type = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
-    // @ts-expect-error -- RN FormData aceita {uri, name, type}.
-    form.append("files", { uri, name: filename, type });
+    await anexarImagem(form, "files", uri);
   }
 
   const raw = await api.postForm<RawPost>("/posts", form);
@@ -672,7 +669,7 @@ async function deleteEvent(id: string): Promise<void> {
 }
 
 async function uploadEventPhoto(id: string, localUri: string): Promise<CarEvent> {
-  return api.postForm<CarEvent>(`/events/${id}/photo`, imageFormData("file", localUri));
+  return api.postForm<CarEvent>(`/events/${id}/photo`, await imageFormData("file", localUri));
 }
 
 async function attendEvent(

@@ -16,6 +16,7 @@ import { ArrowLeft, CalendarPlus, Camera, Globe, Link2, MapPin } from "lucide-re
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { ImageCropper } from "@/components/ImageCropper";
+import { DateTimeFields } from "@/components/ui/DateTimeFields";
 import { LocationPicker } from "@/components/LocationPicker";
 import {
   useEventById,
@@ -58,6 +59,9 @@ export default function AddEventScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Guarda o rolê já criado quando só a foto falhou: sem isto, tocar de
+  // novo no botão criaria um segundo rolê igual.
+  const [criadoId, setCriadoId] = useState<string | null>(null);
 
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
@@ -112,8 +116,8 @@ export default function AddEventScreen() {
         { id: eventId, patch: fields },
         {
           onSuccess: async () => {
-            if (localPhoto) await uploadPhoto.mutateAsync({ id: eventId, localUri: localPhoto });
-            router.back();
+            const subiu = await enviarFoto(eventId);
+            if (subiu) router.back();
           },
           onError,
         }
@@ -125,11 +129,35 @@ export default function AddEventScreen() {
       // A foto só pode subir depois: o upload é por id, e o id só existe
       // depois de criar o evento.
       onSuccess: async (created) => {
-        if (localPhoto) await uploadPhoto.mutateAsync({ id: created.id, localUri: localPhoto });
-        router.replace(`/event/${created.id}`);
+        setCriadoId(created.id);
+        const subiu = await enviarFoto(created.id);
+        if (subiu) router.replace(`/event/${created.id}`);
       },
       onError,
     });
+  };
+
+  /**
+   * Sobe a foto e diz se deu certo.
+   *
+   * Sem o try/catch, uma falha aqui estourava dentro do onSuccess: a tela
+   * não navegava e também não mostrava nada, então parecia que o botão
+   * tinha sido ignorado. O rolê em si já está salvo neste ponto — o que
+   * falta é só a foto, e é isso que a mensagem precisa dizer.
+   */
+  const enviarFoto = async (id: string): Promise<boolean> => {
+    if (!localPhoto) return true;
+    try {
+      await uploadPhoto.mutateAsync({ id, localUri: localPhoto });
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? `O rolê foi salvo, mas a foto não subiu: ${err.message}`
+          : "O rolê foi salvo, mas a foto não subiu. Abra o rolê e tente de novo pela edição."
+      );
+      return false;
+    }
   };
 
   const header = (
@@ -207,42 +235,13 @@ export default function AddEventScreen() {
           style={INPUT}
         />
 
-        <View className="flex-row gap-3 mb-1">
-          <View className="flex-1">
-            <Text className="text-on-surface-variant mb-2" style={LABEL}>
-              DATA
-            </Text>
-            <TextInput
-              value={dateInput}
-              onChangeText={setDateInput}
-              placeholder="DD/MM/AAAA"
-              placeholderTextColor={colors.inputPlaceholder}
-              keyboardType="numbers-and-punctuation"
-              style={{
-                ...INPUT,
-                borderWidth: dateInvalid ? 1 : 0,
-                borderColor: colors.error,
-              }}
-            />
-          </View>
-          <View style={{ width: 110 }}>
-            <Text className="text-on-surface-variant mb-2" style={LABEL}>
-              HORA
-            </Text>
-            <TextInput
-              value={timeInput}
-              onChangeText={setTimeInput}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.inputPlaceholder}
-              keyboardType="numbers-and-punctuation"
-              style={{
-                ...INPUT,
-                borderWidth: dateInvalid ? 1 : 0,
-                borderColor: colors.error,
-              }}
-            />
-          </View>
-        </View>
+        <DateTimeFields
+          date={dateInput}
+          time={timeInput}
+          onChangeDate={setDateInput}
+          onChangeTime={setTimeInput}
+          invalid={dateInvalid}
+        />
         <Text className={dateInvalid ? "text-error mb-5" : "text-muted mb-5"} style={{ fontSize: 12 }}>
           {dateInvalid ? "Data ou hora inválida." : "Encontro tem horário — os dois são obrigatórios."}
         </Text>
@@ -347,10 +346,12 @@ export default function AddEventScreen() {
         )}
 
         <PrimaryButton
-          label={isEditing ? "Salvar alterações" : "Criar evento"}
-          onPress={submit}
+          label={
+            criadoId ? "Abrir o rolê" : isEditing ? "Salvar alterações" : "Criar evento"
+          }
+          onPress={criadoId ? () => router.replace(`/event/${criadoId}`) : submit}
           loading={saving}
-          disabled={!isValid}
+          disabled={!criadoId && !isValid}
           icon={<CalendarPlus size={15} color={colors.onPrimaryContainer} />}
         />
       </ScrollView>

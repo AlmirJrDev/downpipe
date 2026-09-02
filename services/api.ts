@@ -3,6 +3,7 @@
 // README do backend — este client desembrulha isso e joga ApiError quando
 // error != null, pra quem chama só lidar com o "caminho feliz" ou um catch.
 import { Platform } from "react-native";
+import { anexarImagem } from "./anexarImagem";
 
 /**
  * Na web o app é servido pelo próprio backend, então a API vive na mesma
@@ -178,16 +179,19 @@ export const api = {
   },
 };
 
-/** Monta um FormData com um arquivo de imagem local (URI do expo-image-picker). */
-export function imageFormData(fieldName: string, localUri: string, extraFields?: Record<string, string>): FormData {
+/**
+ * Monta um FormData com um arquivo de imagem local (URI do expo-image-picker).
+ *
+ * Assíncrona porque no navegador anexar exige ler o blob antes; no celular
+ * não espera nada. Ver services/anexarImagem.ts.
+ */
+export async function imageFormData(
+  fieldName: string,
+  localUri: string,
+  extraFields?: Record<string, string>
+): Promise<FormData> {
   const form = new FormData();
-  const filename = localUri.split("/").pop() ?? `${fieldName}.jpg`;
-  const ext = filename.split(".").pop()?.toLowerCase();
-  const mimeType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
-
-  // @ts-expect-error -- RN's FormData aceita {uri, name, type} nesse formato,
-  // diferente do File/Blob do FormData padrão da web.
-  form.append(fieldName, { uri: localUri, name: filename, type: mimeType });
+  await anexarImagem(form, fieldName, localUri);
 
   if (extraFields) {
     for (const [key, value] of Object.entries(extraFields)) form.append(key, value);
