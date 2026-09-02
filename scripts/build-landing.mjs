@@ -64,11 +64,13 @@ function reescrever(html) {
     // Assets soltos: /logo-lp.png -> logo-lp.png
     .replace(/(href|src)="\/([\w.-]+\.(png|jpg|svg|ico|webp))"/g, '$1="$2"');
 
+  // og:url e og:image já saem absolutos apontando pro Render (é a URL que
+  // vale lá). Nesta cópia eles têm de apontar pra cá, senão o link
+  // compartilhado do Pages leva o robô da rede social pro outro endereço.
   if (BASE) {
-    saida = saida.replace(
-      /content="\/og-banner\.png"/g,
-      `content="${BASE}/og-banner.png"`
-    );
+    saida = saida
+      .replace(/content="https:\/\/downpipe\.onrender\.com\/og-banner\.png"/g, `content="${BASE}/og-banner.png"`)
+      .replace(/content="https:\/\/downpipe\.onrender\.com\/"/g, `content="${BASE}/"`);
   }
 
   // O 404 já nasce noindex; repetir a meta não quebra nada, mas deixa o
