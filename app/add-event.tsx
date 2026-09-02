@@ -151,11 +151,12 @@ export default function AddEventScreen() {
       await uploadPhoto.mutateAsync({ id, localUri: localPhoto });
       return true;
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? `O rolê foi salvo, mas a foto não subiu: ${err.message}`
-          : "O rolê foi salvo, mas a foto não subiu. Abra o rolê e tente de novo pela edição."
-      );
+      // O motivo vai na tela, não só no console. Um erro sem causa vira
+      // "não deu certo" no relato de quem testou, e aí só resta adivinhar
+      // — já custou duas rodadas de conserto às cegas.
+      const motivo =
+        err instanceof ApiError ? err.message : err instanceof Error ? err.message : String(err);
+      setError(`O rolê foi salvo, mas a foto não subiu: ${motivo}`);
       return false;
     }
   };
