@@ -7,6 +7,20 @@ import type { TextStyle } from "react-native";
 // propósito: qualquer tingimento (rosa/marrom) empurra a interface para um
 // look "Material genérico" em vez de oficina. O vermelho só entra em CTA,
 // progresso, status e no wordmark.
+/**
+ * Pilha de fontes do app.
+ *
+ * É exatamente a que o react-native-web aplica em Text e TextInput. Existe
+ * como token porque elementos do DOM escritos à mão (o <input type="date">
+ * da web, por exemplo) não herdam nada do react-native-web e precisam
+ * declarar a mesma pilha, ou saem numa fonte diferente do resto da tela.
+ *
+ * Cuidado com "inherit" nesses elementos: o tailwind.config declara Inter,
+ * que não é carregada em lugar nenhum — herdar dela cai em serifa.
+ */
+export const FONT_STACK =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
 export const colors = {
   // Elevação por camada tonal (o design system não usa sombra difusa):
   // canvas #121212 -> cartão #1a1a1a -> elevado #222222.
@@ -45,10 +59,19 @@ export const colors = {
   error: "#ff6b60",
   errorContainer: "#7f1d1d",
 
-  // Campos de formulário claros sobre fundo escuro.
-  inputSurface: "#ededed",
-  onInputSurface: "#171717",
-  inputPlaceholder: "#6b6b6b",
+  // Campos de formulário.
+  //
+  // Eram claros (#ededed) sobre o fundo escuro — destoavam de tudo, e nem
+  // eram consistentes entre si: o campo multilinha do FormField já usava
+  // fundo escuro enquanto o de uma linha era branco, no mesmo formulário.
+  //
+  // Agora seguem a elevação tonal do próprio design system: o campo é a
+  // camada "elevado" (#222222) sobre a canvas (#121212). Por isso não leva
+  // borda — quem separa é o degrau de tom, que é como o resto do app já
+  // distingue cartão de fundo.
+  inputSurface: "#222222",
+  onInputSurface: "#f0f0f0",
+  inputPlaceholder: "#8a8a8a",
 
   // Sobreposições: legibilidade de texto sobre foto e backdrop de modal.
   overlaySheet: "rgba(10,10,10,0.95)",

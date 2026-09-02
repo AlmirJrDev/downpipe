@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, FONT_STACK } from "@/constants/theme";
 import type { DateTimeFieldsProps } from "./DateTimeFields";
 
 /**
@@ -47,7 +47,10 @@ export function DateTimeFields({
     boxSizing: "border-box",
     border: invalid ? `1px solid ${colors.error}` : "none",
     borderRadius: 0,
-    fontFamily: "inherit",
+    // Não use "inherit" aqui: o que se herda é o Inter declarado no
+    // tailwind.config, que não é carregado — e cai em serifa, destoando de
+    // todos os outros campos da mesma tela.
+    fontFamily: FONT_STACK,
     // O Safari centraliza o texto do campo de data e ainda deixa a altura
     // menor que a dos outros campos. Estes dois alinham com o resto do
     // formulário.
@@ -56,6 +59,10 @@ export function DateTimeFields({
     // Sem isto o iOS pinta o campo de branco e o texto some no tema escuro.
     WebkitAppearance: "none",
     colorScheme: "dark",
+    // Mesmo peso e altura de linha dos TextInput vizinhos, senão o campo de
+    // data parece de outra família mesmo com a fonte certa.
+    fontWeight: 400,
+    lineHeight: "20px",
   };
 
   return (

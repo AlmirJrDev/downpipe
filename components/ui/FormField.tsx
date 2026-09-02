@@ -47,8 +47,11 @@ export function FormField({
         multiline={multiline}
         autoCapitalize={autoCapitalize ?? "sentences"}
         style={{
-          backgroundColor: multiline ? colors.surfaceContainer : colors.inputSurface,
-          color: multiline ? colors.onSurface : colors.onInputSurface,
+          // Um só tom para os dois: antes o multilinha era #1a1a1a e o de
+          // uma linha era claro, então o mesmo formulário tinha dois tipos
+          // de campo com aparências diferentes.
+          backgroundColor: colors.inputSurface,
+          color: colors.onInputSurface,
           paddingHorizontal: 14,
           paddingVertical: multiline ? 12 : 14,
           fontSize: 15,
