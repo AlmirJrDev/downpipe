@@ -633,6 +633,29 @@ async function reverseGeocode(
   );
 }
 
+// ---------------------------------------------------------------------------
+// Push (notificações do PWA)
+// ---------------------------------------------------------------------------
+
+/** Chave pública do servidor — não é segredo, é o que o navegador precisa
+ * pra cifrar a inscrição. null quando o backend não tem par VAPID configurado. */
+async function getVapidPublicKey(): Promise<{ publicKey: string | null }> {
+  return api.get<{ publicKey: string | null }>("/push/vapid-public-key");
+}
+
+/** Manda a inscrição exatamente como PushSubscription.toJSON() devolve —
+ * ver services/webPush.web.ts, que é quem monta isso. */
+async function subscribePush(subscription: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}): Promise<void> {
+  await api.post("/push/subscribe", subscription);
+}
+
+async function unsubscribePush(endpoint: string): Promise<void> {
+  await api.post("/push/unsubscribe", { endpoint });
+}
+
 /** Calendário público: só eventos "public", e por padrão só os que ainda vão
  * acontecer. Evento "link" nunca aparece aqui, por definição. */
 async function getEvents(
@@ -886,4 +909,7 @@ export const apiService = {
   getBloqueados,
   searchAddresses,
   reverseGeocode,
+  getVapidPublicKey,
+  subscribePush,
+  unsubscribePush,
 };

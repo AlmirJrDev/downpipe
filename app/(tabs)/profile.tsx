@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Alert } from "@/utils/alert";
+import type { AlertButton } from "react-native";
 import { Share } from "@/utils/share";
 import { Image } from "expo-image";
 import { LogOut, MoreVertical, Share2 } from "lucide-react-native";
@@ -25,6 +26,7 @@ import { FollowListSheet, type FollowTab } from "@/components/FollowListSheet";
 import { ProfileEvents } from "@/components/ProfileEvents";
 import { carTitle } from "@/utils/car";
 import { abrirLegal } from "@/utils/legal";
+import { statusPush, inscreverPush, desinscreverPush } from "@/services/webPush";
 import { colors, spacing, typography } from "@/constants/theme";
 import { router } from "expo-router";
 
@@ -44,14 +46,79 @@ export default function ProfileScreen() {
     * dos salvos, e uma seção "Conta" no meio da página. Coisa de
     * configuração não disputa espaço com a garagem e as publicações.
     */
-  const abrirMenu = () => {
-    Alert.alert("Conta", undefined, [
+  const abrirMenu = async () => {
+    // Assíncrono só pra saber o rótulo certo do item de notificação antes
+    // de desenhar o menu — statusPush() é local (Service Worker + Push
+    // Manager já registrados), não bate rede, então não há atraso
+    // perceptível pra abrir.
+    const push = await statusPush();
+
+    const itemNotificacoes = (() => {
+      switch (push) {
+        case "nao-suportado":
+          // Sem Web Push (app nativo, ou navegador sem suporte): omite —
+          // um botão que nunca funciona é pior que nenhum botão.
+          return null;
+        case "negado":
+          return {
+            text: "Notificações bloqueadas pelo navegador",
+            onPress: () =>
+              Alert.alert(
+                "Bloqueadas pelo navegador",
+                "Você negou a permissão antes. Pra reativar, vá nas configurações do site pelo próprio navegador — o app não consegue pedir de novo sozinho."
+              ),
+          };
+        case "inscrito":
+          return { text: "Desativar notificações push", onPress: confirmDesativarPush };
+        case "nao-inscrito":
+          return { text: "Ativar notificações push", onPress: ativarPush };
+      }
+    })();
+
+    const opcoes: AlertButton[] = [
       { text: "Publicações salvas", onPress: () => router.push("/saved") },
       { text: "Pessoas bloqueadas", onPress: () => router.push("/bloqueados") },
+      ...(itemNotificacoes ? [itemNotificacoes] : []),
       { text: "Política de privacidade", onPress: () => abrirLegal("privacidade") },
       { text: "Termos de uso", onPress: () => abrirLegal("termos") },
       { text: "Sair da conta", style: "destructive", onPress: confirmLogout },
       { text: "Cancelar", style: "cancel" },
+    ];
+    Alert.alert("Conta", undefined, opcoes);
+  };
+
+  const ativarPush = async () => {
+    try {
+      await inscreverPush();
+      Alert.alert(
+        "Notificações ativadas",
+        "Você vai receber um aviso no aparelho quando alguém interagir com você por aqui."
+      );
+    } catch (err) {
+      Alert.alert(
+        "Não deu pra ativar",
+        err instanceof Error ? err.message : "Tente de novo em alguns instantes."
+      );
+    }
+  };
+
+  const confirmDesativarPush = () => {
+    Alert.alert("Desativar notificações", "Você para de receber avisos neste aparelho.", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Desativar",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await desinscreverPush();
+          } catch (err) {
+            Alert.alert(
+              "Não deu pra desativar",
+              err instanceof Error ? err.message : "Tente de novo em alguns instantes."
+            );
+          }
+        },
+      },
     ]);
   };
 
