@@ -12,7 +12,9 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 
-export type PlatformWebViewRef = { injectJavaScript: (code: string) => void };
+export type PlatformWebViewRef = {
+  chamar: (nome: string, ...args: (number | string | boolean)[]) => void;
+};
 
 interface Props {
   source: { html: string };
@@ -31,8 +33,27 @@ interface Props {
  * então o HTML atravessa sem uma linha de diferença entre as plataformas.
  */
 function comPonte(html: string): string {
+  // Duas metades da ponte:
+  //
+  //  1. de dentro pra fora: window.ReactNativeWebView.postMessage, que é o
+  //     que o HTML dos mapas já chama;
+  //  2. de fora pra dentro: escuta um pedido {__chamar, args} e invoca a
+  //     função global correspondente.
+  //
+  // A segunda existe porque injetar código com eval é bloqueado pela CSP
+  // do app ('unsafe-eval' não está liberado) — e falhava calada. Mandar
+  // nome e argumentos separados dispensa eval.
   const ponte =
-    '<script>window.ReactNativeWebView={postMessage:function(m){parent.postMessage(String(m),"*");}};</script>';
+    '<script>' +
+    'window.ReactNativeWebView={postMessage:function(m){parent.postMessage(String(m),"*");}};' +
+    'window.addEventListener("message",function(e){' +
+    'if(e.source!==parent)return;' +
+    'var m=e.data;' +
+    'if(!m||typeof m!=="object"||typeof m.__chamar!=="string")return;' +
+    'var fn=window[m.__chamar];' +
+    'if(typeof fn==="function")fn.apply(null,m.args||[]);' +
+    '});' +
+    '</script>';
   return html.includes("<head>") ? html.replace("<head>", "<head>" + ponte) : ponte + html;
 }
 
@@ -41,16 +62,13 @@ export const PlatformWebView = forwardRef<PlatformWebViewRef, Props>(
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
     useImperativeHandle(ref, () => ({
-      injectJavaScript: (code: string) => {
-        // srcDoc herda a origem da página, então dá pra falar com o
-        // documento de dentro sem esbarrar em same-origin.
-        try {
-          (iframeRef.current?.contentWindow as unknown as { eval?: (c: string) => void })?.eval?.(
-            code
-          );
-        } catch {
-          // Iframe ainda não montou: a próxima chamada pega.
-        }
+      chamar: (nome, ...args) => {
+        // postMessage em vez de eval: a CSP do app não libera
+        // 'unsafe-eval', e a versão anterior — contentWindow.eval() dentro
+        // de um try/catch mudo — nunca funcionou no PWA. O mapa ficava
+        // parado no ponto inicial, tanto pelo GPS quanto ao escolher um
+        // endereço na busca, sem nada no console.
+        iframeRef.current?.contentWindow?.postMessage({ __chamar: nome, args }, "*");
       },
     }));
 

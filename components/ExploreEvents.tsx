@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Location from "expo-location";
+import { pedirLocalizacao } from "@/utils/localizacao";
 import { CalendarPlus, Crosshair, List, Map as MapIcon } from "lucide-react-native";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { CategoryChip } from "@/components/ui/Chips";
@@ -99,15 +99,15 @@ export function ExploreEvents({
     setGpsError(null);
     setLocating(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
+      const posicao = await pedirLocalizacao();
+      if (posicao === "negada") {
         setGpsError("Permissão negada — sem ela não dá pra filtrar por distância.");
         return;
       }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setCenter({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-    } catch {
-      setGpsError("Não consegui pegar sua localização.");
+      setCenter(posicao);
+    } catch (err) {
+      const motivo = err instanceof Error ? err.message : String(err);
+      setGpsError(`Não consegui pegar sua localização (${motivo}).`);
     } finally {
       setLocating(false);
     }

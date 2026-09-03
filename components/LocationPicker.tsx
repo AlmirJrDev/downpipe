@@ -11,7 +11,7 @@ import {
 import { PlatformWebView, type PlatformWebViewRef } from "@/components/ui/PlatformWebView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
-import * as Location from "expo-location";
+import { pedirLocalizacao, permissaoJaConcedida } from "@/utils/localizacao";
 import { Check, Crosshair, MapPin, Search, X } from "lucide-react-native";
 import { PrimaryButton } from "@/components/ui/Button";
 import { apiService } from "@/services/apiService";
@@ -84,6 +84,11 @@ function buildHtml(latitude: number, longitude: number, accent: string) {
     marker.setLngLat([lng, lat]);
     map.flyTo({ center: [lng, lat], zoom: 16 });
   };
+
+  // Avisa que irPara já existe. Sem isto, um movimento pedido no instante
+  // da abertura (centralizar em quem está usando) se perdia: o app injetava
+  // a chamada antes de a função existir, sem erro nenhum.
+  window.ReactNativeWebView.postMessage(JSON.stringify({ pronto: true }));
 </script>
 </body>
 </html>`;
@@ -112,9 +117,13 @@ export function LocationPicker({
   const [locating, setLocating] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
 
+  // Controle da fila de movimentos do mapa (ver moveMap e onMessage).
+  const mapaPronto = useRef(false);
+  const pendente = useRef<{ latitude: number; longitude: number } | null>(null);
+
   // O HTML é montado uma vez só: recriá-lo a cada mudança de coordenada
   // recarregaria o mapa inteiro e perderia o zoom do usuário. Movimentos
-  // posteriores vão por injectJavaScript.
+  // posteriores vão por chamar('irPara', ...).
   const html = useMemo(
     () => buildHtml(initial?.latitude ?? FALLBACK.latitude, initial?.longitude ?? FALLBACK.longitude, colors.primary),
     [initial?.latitude, initial?.longitude]
@@ -125,6 +134,50 @@ export function LocationPicker({
     return () => clearTimeout(timer);
   }, [query]);
 
+  /**
+   * Abre o mapa em cima de quem está usando, em vez de no centro de São
+   * Paulo — que é o ponto de partida e não tem nada a ver com quem mora em
+   * outra cidade.
+   *
+   * Só acontece quando a permissão JÁ foi concedida antes. Consultar o
+   * estado não abre pedido nenhum, e é isso que mantém a promessa da
+   * política de privacidade: a localização só é pedida quando a pessoa
+   * pede, tocando em "usar minha localização".
+   *
+   * Falhar aqui não é erro — é só não ter onde centralizar, e o mapa fica
+   * no ponto de partida como antes.
+   */
+  useEffect(() => {
+    if (!visible || initial) return;
+    let cancelado = false;
+
+    (async () => {
+      try {
+        if (!(await permissaoJaConcedida()) || cancelado) return;
+
+        const posicao = await pedirLocalizacao();
+        if (cancelado || posicao === "negada") return;
+
+        setCoords(posicao);
+        moveMap(posicao.latitude, posicao.longitude);
+      } catch {
+        // Sem localização: segue no ponto de partida, sem avisar nada.
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [visible, initial]);
+
+  // Cada abertura recomeça: o mapa é remontado e a fila da anterior não vale.
+  useEffect(() => {
+    if (!visible) {
+      mapaPronto.current = false;
+      pendente.current = null;
+    }
+  }, [visible]);
+
   const { data: suggestions = [], isFetching } = useQuery({
     queryKey: ["address-search", debounced],
     queryFn: () => apiService.searchAddresses(debounced),
@@ -132,30 +185,31 @@ export function LocationPicker({
   });
 
   const moveMap = (latitude: number, longitude: number) => {
-    webviewRef.current?.injectJavaScript(`window.irPara(${latitude}, ${longitude}); true;`);
+    if (!mapaPronto.current) {
+      // Guarda pra quando o mapa avisar que montou.
+      pendente.current = { latitude, longitude };
+      return;
+    }
+    webviewRef.current?.chamar("irPara", latitude, longitude);
   };
 
   const useMyLocation = async () => {
     setGpsError(null);
     setLocating(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
+      const posicao = await pedirLocalizacao();
+      if (posicao === "negada") {
         setGpsError("Permissão de localização negada. Você ainda pode tocar no mapa.");
         return;
       }
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-      const next = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      };
-      setCoords(next);
+      setCoords(posicao);
       setChosenLabel(undefined);
-      moveMap(next.latitude, next.longitude);
-    } catch {
-      setGpsError("Não consegui pegar sua localização. Tente tocar no mapa.");
+      moveMap(posicao.latitude, posicao.longitude);
+    } catch (err) {
+      // O motivo real vai junto: "não consegui" sozinho parece falta de
+      // sinal, quando pode ser o navegador não oferecer o recurso.
+      const motivo = err instanceof Error ? err.message : String(err);
+      setGpsError(`Não consegui pegar sua localização (${motivo}). Tente tocar no mapa.`);
     } finally {
       setLocating(false);
     }
@@ -234,6 +288,13 @@ export function LocationPicker({
             onMessage={(event) => {
               try {
                 const next = JSON.parse(event.nativeEvent.data);
+                if (next.pronto) {
+                  mapaPronto.current = true;
+                  const alvo = pendente.current;
+                  pendente.current = null;
+                  if (alvo) moveMap(alvo.latitude, alvo.longitude);
+                  return;
+                }
                 if (typeof next.latitude === "number" && typeof next.longitude === "number") {
                   setCoords(next);
                   // Mover o pino invalida o rótulo da busca: o ponto agora é
