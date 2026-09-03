@@ -616,6 +616,21 @@ async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
   return api.get<AddressSuggestion[]>(`/geocoding/search${qs({ q: query.trim() })}`);
 }
 
+/**
+ * O caminho inverso: o pino cravado no mapa vira endereço e cidade.
+ *
+ * Devolve null quando o ponto cai onde o mapa não sabe nomear — o que é
+ * resposta, não erro: a pessoa preenche na mão.
+ */
+async function reverseGeocode(
+  latitude: number,
+  longitude: number
+): Promise<{ location: string; city: string } | null> {
+  return api.get<{ location: string; city: string } | null>(
+    `/geocoding/reverse${qs({ lat: latitude, lng: longitude })}`
+  );
+}
+
 /** Calendário público: só eventos "public", e por padrão só os que ainda vão
  * acontecer. Evento "link" nunca aparece aqui, por definição. */
 async function getEvents(
@@ -868,4 +883,5 @@ export const apiService = {
   desbloquear,
   getBloqueados,
   searchAddresses,
+  reverseGeocode,
 };

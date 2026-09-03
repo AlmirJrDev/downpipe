@@ -11,7 +11,7 @@ import {
 import { PlatformWebView, type PlatformWebViewRef } from "@/components/ui/PlatformWebView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
-import { pedirLocalizacao, permissaoJaConcedida } from "@/utils/localizacao";
+import { pedirLocalizacao } from "@/utils/localizacao";
 import { Check, Crosshair, MapPin, Search, X } from "lucide-react-native";
 import { PrimaryButton } from "@/components/ui/Button";
 import { apiService } from "@/services/apiService";
@@ -103,17 +103,25 @@ export function LocationPicker({
   visible: boolean;
   initial?: { latitude: number; longitude: number } | null;
   onCancel: () => void;
-  /** `label` vem preenchido só quando o ponto saiu de uma sugestão de endereço. */
-  onDone: (coords: { latitude: number; longitude: number }, label?: string) => void;
+  /**
+   * `endereco` é o que o ponto virou em texto — resolvido a partir do pino,
+   * seja ele posto pelo GPS, pelo toque no mapa ou pela busca. Vem null
+   * quando o ponto cai onde o mapa não sabe nomear.
+   */
+  onDone: (
+    coords: { latitude: number; longitude: number },
+    endereco?: { location: string; city: string } | null
+  ) => void;
 }) {
   const insets = useSafeAreaInsets();
   const webviewRef = useRef<PlatformWebViewRef>(null);
 
   const [coords, setCoords] = useState(initial ?? FALLBACK);
-  const [chosenLabel, setChosenLabel] = useState<string | undefined>();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [endereco, setEndereco] = useState<{ location: string; city: string } | null>(null);
+  const [resolvendo, setResolvendo] = useState(false);
   const [locating, setLocating] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
 
@@ -135,17 +143,15 @@ export function LocationPicker({
   }, [query]);
 
   /**
-   * Abre o mapa em cima de quem está usando, em vez de no centro de São
-   * Paulo — que é o ponto de partida e não tem nada a ver com quem mora em
-   * outra cidade.
+   * Abre o mapa já em cima de quem está usando.
    *
-   * Só acontece quando a permissão JÁ foi concedida antes. Consultar o
-   * estado não abre pedido nenhum, e é isso que mantém a promessa da
-   * política de privacidade: a localização só é pedida quando a pessoa
-   * pede, tocando em "usar minha localização".
+   * O ponto de partida é o centro de São Paulo, que não tem nada a ver com
+   * quem mora em outro lugar — e o pino nasce lá, sugerindo um local errado.
+   * Pedir a localização ao abrir troca isso por "aqui, arraste se precisar".
    *
-   * Falhar aqui não é erro — é só não ter onde centralizar, e o mapa fica
-   * no ponto de partida como antes.
+   * Isso pede a permissão na abertura, e a política de privacidade foi
+   * atualizada junto pra dizer exatamente isso. Recusar não trava nada: o
+   * mapa fica no ponto de partida e dá pra tocar, arrastar ou buscar.
    */
   useEffect(() => {
     if (!visible || initial) return;
@@ -153,8 +159,6 @@ export function LocationPicker({
 
     (async () => {
       try {
-        if (!(await permissaoJaConcedida()) || cancelado) return;
-
         const posicao = await pedirLocalizacao();
         if (cancelado || posicao === "negada") return;
 
@@ -169,6 +173,36 @@ export function LocationPicker({
       cancelado = true;
     };
   }, [visible, initial]);
+
+  /**
+   * O pino vira endereço enquanto a pessoa mexe.
+   *
+   * Com atraso porque cada parada do dedo no mapa geraria uma consulta, e o
+   * Nominatim pede no máximo uma por segundo. Mostrar o resultado embaixo
+   * do mapa também serve de conferência: dá pra ver que o ponto é o certo
+   * antes de confirmar.
+   */
+  useEffect(() => {
+    if (!visible) return;
+    let cancelado = false;
+    setResolvendo(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const achado = await apiService.reverseGeocode(coords.latitude, coords.longitude);
+        if (!cancelado) setEndereco(achado);
+      } catch {
+        if (!cancelado) setEndereco(null);
+      } finally {
+        if (!cancelado) setResolvendo(false);
+      }
+    }, 700);
+
+    return () => {
+      cancelado = true;
+      clearTimeout(timer);
+    };
+  }, [visible, coords.latitude, coords.longitude]);
 
   // Cada abertura recomeça: o mapa é remontado e a fila da anterior não vale.
   useEffect(() => {
@@ -203,7 +237,6 @@ export function LocationPicker({
         return;
       }
       setCoords(posicao);
-      setChosenLabel(undefined);
       moveMap(posicao.latitude, posicao.longitude);
     } catch (err) {
       // O motivo real vai junto: "não consegui" sozinho parece falta de
@@ -261,7 +294,6 @@ export function LocationPicker({
                 <Pressable
                   onPress={() => {
                     setCoords({ latitude: item.latitude, longitude: item.longitude });
-                    setChosenLabel(item.label);
                     moveMap(item.latitude, item.longitude);
                     setShowResults(false);
                   }}
@@ -296,10 +328,10 @@ export function LocationPicker({
                   return;
                 }
                 if (typeof next.latitude === "number" && typeof next.longitude === "number") {
+                  // O endereço é recalculado a partir do novo ponto pelo
+                  // efeito que observa coords — venha ele do toque no mapa,
+                  // do GPS ou da busca.
                   setCoords(next);
-                  // Mover o pino invalida o rótulo da busca: o ponto agora é
-                  // do usuário, não daquele endereço.
-                  setChosenLabel(undefined);
                 }
               } catch {
                 // Mensagem que não é coordenada — ignora.
@@ -309,9 +341,20 @@ export function LocationPicker({
         </View>
 
         <View className="px-4 pb-2 pt-3" style={{ paddingBottom: insets.bottom + 12, gap: 10 }}>
-          <Text className="text-muted text-center" style={{ fontSize: 12 }}>
-            Toque no mapa ou arraste o pino para cravar o ponto.
-          </Text>
+          {/* O endereço do ponto, pra conferir antes de confirmar: um pino
+              certo e um pino 200 m ao lado são iguais no mapa, mas viram
+              endereços diferentes aqui. */}
+          {endereco ? (
+            <Text className="text-on-surface text-center" style={{ fontSize: 13 }}>
+              {[endereco.location, endereco.city].filter(Boolean).join(" — ")}
+            </Text>
+          ) : (
+            <Text className="text-muted text-center" style={{ fontSize: 12 }}>
+              {resolvendo
+                ? "Descobrindo o endereço..."
+                : "Toque no mapa ou arraste o pino para cravar o ponto."}
+            </Text>
+          )}
 
           {gpsError && (
             <Text className="text-error text-center" style={{ fontSize: 12 }}>
@@ -342,7 +385,7 @@ export function LocationPicker({
           <PrimaryButton
             label="Confirmar local"
             icon={<Check size={15} color={colors.onPrimaryContainer} />}
-            onPress={() => onDone(coords, chosenLabel)}
+            onPress={() => onDone(coords, endereco)}
           />
         </View>
       </View>

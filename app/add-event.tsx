@@ -361,13 +361,16 @@ export default function AddEventScreen() {
         visible={pickerOpen}
         initial={coords}
         onCancel={() => setPickerOpen(false)}
-        onDone={(next, label) => {
+        onDone={(next, endereco) => {
           setCoords(next);
-          // Endereço vindo da busca preenche o campo de local se ele ainda
-          // estiver vazio — poupa redigitar o que já foi escolhido.
-          if (label && !location.trim()) {
-            setLocation(label.split(",").slice(0, 2).join(",").trim());
-          }
+          // O ponto no mapa preenche local e cidade — é o mesmo dado, e
+          // digitar de novo o que já foi apontado só cria divergência entre
+          // o texto e o pino.
+          //
+          // Só preenche o que está vazio: sobrescrever o que a pessoa
+          // escreveu seria apagar uma escolha dela.
+          if (endereco?.location && !location.trim()) setLocation(endereco.location);
+          if (endereco?.city && !city.trim()) setCity(endereco.city);
           setPickerOpen(false);
         }}
       />
