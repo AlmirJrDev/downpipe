@@ -13,6 +13,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isPlaceholderUsername } from "@/utils/profile";
 import { AlertHost } from "@/components/ui/AlertHost";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { NotificationPrompt } from "@/components/NotificationPrompt";
 
 // expo-router monta o NavigationContainer com o DefaultTheme, cujo
 // colors.background é rgb(242,242,242) — quase branco. Cada navegador usa esse
@@ -178,6 +179,8 @@ export default function RootLayout() {
                 <AlertHost />
                 {/* Convite pra instalar na tela inicial. Só na web. */}
                 <InstallPrompt />
+                {/* Convite pra ativar push, uma vez, só depois de instalado. */}
+                <NotificationPrompt />
               </>
             )}
           </ThemeProvider>
