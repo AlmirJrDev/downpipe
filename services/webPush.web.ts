@@ -92,3 +92,31 @@ export async function desinscreverPush(): Promise<void> {
   await inscricao.unsubscribe();
   await apiService.unsubscribePush(endpoint);
 }
+
+/**
+ * Badging API — o número no ícone do app. Chamada de dentro da página
+ * (app aberto) sempre que a contagem do sino muda; o caso de app FECHADO
+ * é coberto à parte, pelo service worker (ver public/sw.js), usando a
+ * contagem que o próprio push já traz — sem isso o número só atualizaria
+ * na próxima vez que alguém abrisse o app.
+ *
+ * setAppBadge(0) não é bem definido pela spec (alguns navegadores tratam
+ * como "mostrar um badge com zero", outros como "sem badge") — por isso
+ * zero vira clearAppBadge() explícito.
+ */
+export async function sincronizarBadge(contagem: number): Promise<void> {
+  if (typeof navigator === "undefined" || !("setAppBadge" in navigator)) return;
+
+  try {
+    if (contagem > 0) {
+      await (navigator as Navigator & { setAppBadge: (n: number) => Promise<void> }).setAppBadge(
+        contagem
+      );
+    } else {
+      await (navigator as Navigator & { clearAppBadge: () => Promise<void> }).clearAppBadge();
+    }
+  } catch {
+    // Badging API ainda é instável em alguns navegadores — não é crítico
+    // o bastante pra propagar erro pra quem chamou.
+  }
+}

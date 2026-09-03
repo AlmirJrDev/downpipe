@@ -25,3 +25,8 @@ export async function inscreverPush(): Promise<void> {
 export async function desinscreverPush(): Promise<void> {
   // Nada a desfazer onde nunca houve inscrição.
 }
+
+/** Badging API — mesma história: só existe no navegador. */
+export async function sincronizarBadge(_contagem: number): Promise<void> {
+  // no-op
+}

@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PaginatedResult } from "@/services/api";
 import { apiService } from "@/services/apiService";
 import { useAuthStore } from "@/stores/authStore";
+import { sincronizarBadge } from "@/services/webPush";
 import type { AppNotification } from "@/types";
 
 interface InfiniteNotifications {
@@ -26,13 +28,24 @@ export function useNotifications(unreadOnly: boolean) {
  */
 export function useUnreadCount() {
   const status = useAuthStore((s) => s.status);
-  return useQuery({
+  const query = useQuery({
     queryKey: ["notifications-unread"],
     queryFn: apiService.getUnreadCount,
     enabled: status === "signedIn",
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
+
+  // Mantém o número no ícone do app igual ao do sino, com o app aberto.
+  // O caso de app fechado é o push que resolve sozinho (ver public/sw.js)
+  // — aqui é só o complemento pra quando a pessoa está de fato usando.
+  // Deslogar zera: sem isso o ícone ficaria com um número de uma conta
+  // que não é mais a que está entrando.
+  useEffect(() => {
+    sincronizarBadge(status === "signedIn" ? (query.data ?? 0) : 0);
+  }, [status, query.data]);
+
+  return query;
 }
 
 export function useMarkNotificationRead() {
