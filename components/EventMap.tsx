@@ -72,6 +72,7 @@ export function EventMap({
   precision,
   location,
   city,
+  address,
   height = 170,
 }: {
   latitude: number | null;
@@ -79,6 +80,8 @@ export function EventMap({
   precision: "exact" | "city" | "pinned" | null;
   location: string;
   city: string;
+  /** Rua e número — guia melhor o app de mapa que o nome do lugar sozinho. */
+  address?: string | null;
   height?: number;
 }) {
   // Só "city" é aproximado. "pinned" veio da mão do organizador e "exact"
@@ -109,7 +112,7 @@ export function EventMap({
     openDirections({
       latitude,
       longitude,
-      label: `${location}, ${city}`,
+      label: address ?? `${location}, ${city}`,
       preciso: precision === "pinned" || precision === "exact",
     });
 

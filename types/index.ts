@@ -270,8 +270,16 @@ export interface CarEvent {
   description: string | null;
   /** ISO com hora — encontro tem horário, não só data. */
   startsAt: string;
+  /** Como o pessoal chama o lugar — "Posto Graal", não um endereço. */
   location: string;
   city: string;
+  /**
+   * Rua e número, resolvidos a partir do pino no mapa. Complementar a
+   * `location`, não substituto: o nome é o que as pessoas reconhecem, o
+   * endereço é o que leva até lá. Null quando não há coordenada ou o ponto
+   * caiu onde não havia o que nomear.
+   */
+  address: string | null;
   photoUrl: string | null;
   /** "public" entra no calendário; "link" só é alcançado por quem tem o id. */
   visibility: EventVisibility;

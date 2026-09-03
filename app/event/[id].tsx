@@ -139,6 +139,7 @@ export default function EventDetailsScreen() {
       event.name,
       eventFullDate(event.startsAt),
       `${event.location} · ${event.city}`,
+      event.address,
       event.description,
       `${event.attendeesCount} confirmados no Downpipe`,
     ].filter(Boolean);
@@ -154,7 +155,10 @@ export default function EventDetailsScreen() {
     openDirections({
       latitude: event.latitude,
       longitude: event.longitude,
-      label: `${event.location}, ${event.city}`,
+      // O endereço, quando existe, guia o app de mapa melhor que o nome do
+      // lugar: "Posto Graal" pode ter homônimo em outra cidade, "Avenida
+      // Marginal Tietê, 1000" não.
+      label: event.address ?? `${event.location}, ${event.city}`,
       preciso: event.coordsPrecision === "pinned" || event.coordsPrecision === "exact",
     });
 
@@ -253,10 +257,20 @@ export default function EventDetailsScreen() {
 
             <View className="flex-row items-start gap-2.5">
               <MapPin size={15} color={colors.primary} style={{ marginTop: 2 }} />
-              <Text className="text-on-surface flex-1" style={{ fontSize: 14 }}>
-                {event.location}
-                <Text className="text-muted"> — {event.city}</Text>
-              </Text>
+              <View className="flex-1">
+                <Text className="text-on-surface" style={{ fontSize: 14 }}>
+                  {event.location}
+                  <Text className="text-muted"> — {event.city}</Text>
+                </Text>
+                {/* O nome é o que as pessoas reconhecem ("o Graal"), o
+                    endereço é o que leva até lá — quem não conhece o lugar
+                    precisa das duas linhas, não só de uma. */}
+                {event.address && (
+                  <Text className="text-muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                    {event.address}
+                  </Text>
+                )}
+              </View>
             </View>
 
             <Pressable
@@ -510,6 +524,7 @@ export default function EventDetailsScreen() {
               precision={event.coordsPrecision}
               location={event.location}
               city={event.city}
+              address={event.address}
             />
           </View>
 

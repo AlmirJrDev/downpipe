@@ -596,6 +596,8 @@ export interface CreateEventInput {
   startsAt: string;
   location: string;
   city: string;
+  /** Rua e número resolvidos pelo pino no mapa — ver CarEvent.address. */
+  address?: string | null;
   visibility?: EventVisibility;
   /** Ponto escolhido pelo organizador. Quando vai preenchido, o backend usa
    * ele e nem tenta geocodificar o texto do endereço. */

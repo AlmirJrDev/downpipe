@@ -52,6 +52,9 @@ export default function AddEventScreen() {
   const [timeInput, setTimeInput] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
+  // Rua e número resolvidos pelo pino no mapa — complementar ao nome do
+  // lugar, não substituto. Só existe quando alguém marcou um ponto.
+  const [address, setAddress] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<EventVisibility>("public");
   const [localPhoto, setLocalPhoto] = useState<string | null>(null);
@@ -73,6 +76,7 @@ export default function AddEventScreen() {
     setTimeInput(isoToTimeInput(existing.startsAt));
     setLocation(existing.location);
     setCity(existing.city);
+    setAddress(existing.address);
     setDescription(existing.description ?? "");
     setVisibility(existing.visibility);
     if (existing.latitude != null && existing.longitude != null) {
@@ -104,6 +108,7 @@ export default function AddEventScreen() {
       startsAt: startsAtIso,
       location: location.trim(),
       city: city.trim(),
+      address,
       visibility,
       // Com ponto escolhido, o backend usa ele e nem tenta adivinhar pelo
       // texto; sem ele, cai na geocodificação.
@@ -248,12 +253,12 @@ export default function AddEventScreen() {
         </Text>
 
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
-          LOCAL
+          NOME DO LUGAR
         </Text>
         <TextInput
           value={location}
           onChangeText={setLocation}
-          placeholder="Ex: Posto Graal, Marginal Tietê"
+          placeholder="Ex: Posto Graal"
           placeholderTextColor={colors.inputPlaceholder}
           maxLength={200}
           className="mb-5"
@@ -287,15 +292,21 @@ export default function AddEventScreen() {
             <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
               {coords ? "Ponto marcado" : "Marcar no mapa"}
             </Text>
-            <Text className="text-muted" style={{ fontSize: 12, marginTop: 2 }}>
+            <Text className="text-muted" style={{ fontSize: 12, marginTop: 2 }} numberOfLines={1}>
               {coords
-                ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+                ? address ?? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
                 : "Sem isso, a localização é estimada pelo endereço — e pode sair errada."}
             </Text>
           </View>
           {coords && (
             <Pressable
-              onPress={() => setCoords(null)}
+              onPress={() => {
+                setCoords(null);
+                // O endereço só existe amarrado a uma coordenada — sem
+                // coordenada ele viraria texto órfão, sem ponto no mapa que
+                // ele descreva.
+                setAddress(null);
+              }}
               hitSlop={10}
               className="px-2"
             >
@@ -363,13 +374,12 @@ export default function AddEventScreen() {
         onCancel={() => setPickerOpen(false)}
         onDone={(next, endereco) => {
           setCoords(next);
-          // O ponto no mapa preenche local e cidade — é o mesmo dado, e
-          // digitar de novo o que já foi apontado só cria divergência entre
-          // o texto e o pino.
-          //
-          // Só preenche o que está vazio: sobrescrever o que a pessoa
-          // escreveu seria apagar uma escolha dela.
-          if (endereco?.location && !location.trim()) setLocation(endereco.location);
+          // O endereço só tem uma fonte — o pino — então cada confirmação
+          // substitui o anterior: reabrir o mapa e marcar outro ponto tem
+          // que atualizar pra rua nova, não ficar preso na primeira.
+          setAddress(endereco?.location ?? null);
+          // Cidade só preenche se estiver vazia: é um campo que a pessoa
+          // também pode digitar, e sobrescrever apagaria uma escolha dela.
           if (endereco?.city && !city.trim()) setCity(endereco.city);
           setPickerOpen(false);
         }}
