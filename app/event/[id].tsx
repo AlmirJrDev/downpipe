@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { Share } from "@/utils/share";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -105,7 +106,7 @@ export default function EventDetailsScreen() {
         <AppHeader
           title="Evento"
           left={
-            <Pressable hitSlop={8} onPress={() => router.back()}>
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/explore")}>
               <ArrowLeft size={22} color={colors.onSurface} />
             </Pressable>
           }
@@ -130,7 +131,7 @@ export default function EventDetailsScreen() {
       {
         text: "Cancelar evento",
         style: "destructive",
-        onPress: () => deleteEvent.mutate(event.id, { onSuccess: () => router.back() }),
+        onPress: () => deleteEvent.mutate(event.id, { onSuccess: () => voltarOuIrPara("/(tabs)/explore") }),
       },
     ]);
 
@@ -184,7 +185,7 @@ export default function EventDetailsScreen() {
             style={{ top: insets.top + 8, left: 16, right: 16 }}
           >
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => voltarOuIrPara("/(tabs)/explore")}
               className="w-9 h-9 rounded-full items-center justify-center"
               style={{ backgroundColor: colors.overlayMedium }}
             >

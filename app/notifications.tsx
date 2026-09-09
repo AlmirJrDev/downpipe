@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { router } from "expo-router";
+import { voltarOuIrPara } from "@/utils/navigation";
 import {
   ArrowLeft,
   Bell,
@@ -151,7 +152,7 @@ export default function NotificationsScreen() {
       <AppHeader
         title="Notificações"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)")}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

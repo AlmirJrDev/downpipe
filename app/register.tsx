@@ -8,7 +8,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { router } from "expo-router";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react-native";
 import { colors, typography } from "@/constants/theme";
 import { AppHeader } from "@/components/AppHeader";
@@ -16,6 +15,7 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { abrirLegal } from "@/utils/legal";
 import { useAuthStore } from "@/stores/authStore";
 import { ApiError } from "@/services/api";
+import { voltarOuIrPara } from "@/utils/navigation";
 
 function Field({
   label,
@@ -120,7 +120,7 @@ export default function RegisterScreen() {
       <AppHeader
         title="CADASTRO"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/login")}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }
@@ -189,7 +189,7 @@ export default function RegisterScreen() {
           .
         </Text>
 
-        <Pressable className="mt-6" onPress={() => router.back()} hitSlop={8}>
+        <Pressable className="mt-6" onPress={() => voltarOuIrPara("/login")} hitSlop={8}>
           <Text className="text-on-surface-variant text-center" style={{ fontSize: 14 }}>
             Já tem conta?{" "}
             <Text className="text-primary" style={{ fontWeight: "600" }}>

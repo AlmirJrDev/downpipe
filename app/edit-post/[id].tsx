@@ -19,6 +19,7 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/States";
 import { useUpdatePost } from "@/stores/socialStore";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { apiService } from "@/services/apiService";
 import { ApiError } from "@/services/api";
 import { postThumbnail } from "@/utils/post";
@@ -66,7 +67,14 @@ export default function EditPostScreen() {
     <AppHeader
       title="Editar publicação"
       left={
-        <Pressable hitSlop={8} onPress={() => router.back()}>
+        <Pressable
+          hitSlop={8}
+          onPress={() =>
+            voltarOuIrPara(
+              post?.author ? `/user-posts/${post.author.username}?postId=${post.id}` : "/(tabs)"
+            )
+          }
+        >
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }
@@ -138,7 +146,8 @@ export default function EditPostScreen() {
     updatePost.mutate(
       { id: post.id, patch },
       {
-        onSuccess: () => router.back(),
+        onSuccess: () =>
+          voltarOuIrPara(post.author ? `/user-posts/${post.author.username}?postId=${post.id}` : "/(tabs)"),
         onError: (err) =>
           setError(
             err instanceof ApiError ? err.message : "Não foi possível salvar. Tente novamente."

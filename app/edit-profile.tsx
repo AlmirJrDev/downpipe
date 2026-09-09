@@ -18,6 +18,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { FormField } from "@/components/ui/FormField";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { apiService } from "@/services/apiService";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isPlaceholderUsername } from "@/utils/profile";
@@ -85,7 +86,7 @@ export default function EditProfileScreen() {
       // No onboarding, emenda direto na primeira ação de verdade (adicionar
       // carro) em vez de largar o usuário num feed vazio.
       if (isOnboarding) router.replace("/add-car?onboarding=1");
-      else router.back();
+      else voltarOuIrPara("/(tabs)/profile");
     },
     onError: (err) => {
       setError(err instanceof ApiError ? err.message : "Não foi possível salvar. Tente novamente.");
@@ -111,7 +112,7 @@ export default function EditProfileScreen() {
         title={isOnboarding ? "BEM-VINDO" : "EDITAR PERFIL"}
         left={
           isOnboarding ? undefined : (
-            <Pressable hitSlop={8} onPress={() => router.back()}>
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/profile")}>
               <ArrowLeft size={22} color={colors.onSurface} />
             </Pressable>
           )

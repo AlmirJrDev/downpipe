@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/ui/States";
 import { useCarById, useUpdateCar, useUploadCarPhoto } from "@/stores/garageStore";
 import { carCatalogName } from "@/utils/car";
 import { ApiError } from "@/services/api";
+import { voltarOuIrPara } from "@/utils/navigation";
 import type { Category, ProjectStatus } from "@/types";
 
 const CATEGORIES: Category[] = ["JDM", "Euro", "Muscle", "Performance", "Clássicos", "Stance", "Other"];
@@ -88,10 +89,10 @@ export default function EditCarScreen() {
           if (photoUri) {
             uploadPhoto.mutate(
               { carId: car.id, localUri: photoUri },
-              { onSettled: () => router.back() }
+              { onSettled: () => voltarOuIrPara(`/car/${car.id}`) }
             );
           } else {
-            router.back();
+            voltarOuIrPara(`/car/${car.id}`);
           }
         },
         onError: (err) => {
@@ -115,7 +116,7 @@ export default function EditCarScreen() {
         <AppHeader
           title="EDITAR CARRO"
           left={
-            <Pressable hitSlop={8} onPress={() => router.back()}>
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/garage")}>
               <ArrowLeft size={22} color={colors.onSurface} />
             </Pressable>
           }
@@ -136,7 +137,7 @@ export default function EditCarScreen() {
       <AppHeader
         title="EDITAR CARRO"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/car/${car.id}`)}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

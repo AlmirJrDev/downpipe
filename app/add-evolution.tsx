@@ -19,6 +19,7 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { useMyGarage } from "@/stores/garageStore";
 import { useCreatePost } from "@/stores/socialStore";
 import { carTitle } from "@/utils/car";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { ApiError } from "@/services/api";
 
 // Mesma proporção do componente BeforeAfter — as duas fotos precisam do
@@ -106,7 +107,7 @@ export default function AddEvolutionScreen() {
       <AppHeader
         title="Antes e depois"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)")}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

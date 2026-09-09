@@ -18,6 +18,7 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ModificationCard } from "@/components/cards/ModificationCard";
 import { EmptyState } from "@/components/ui/States";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { PrimaryButton } from "@/components/ui/Button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { carCatalogName, carTitle, carYear } from "@/utils/car";
@@ -141,7 +142,11 @@ export default function CarDetailsScreen() {
             className="flex-row justify-between"
           >
             <Pressable
-              onPress={() => router.back()}
+              onPress={() =>
+                voltarOuIrPara(
+                  resolvedCar?.owner ? `/user/${resolvedCar.owner.username}` : "/(tabs)/garage"
+                )
+              }
               className="w-9 h-9 rounded-full items-center justify-center"
               style={{ backgroundColor: colors.overlayMedium }}
             >

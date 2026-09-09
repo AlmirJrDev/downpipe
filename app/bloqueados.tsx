@@ -12,6 +12,7 @@ import { ArrowLeft, UserX } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { apiService } from "@/services/apiService";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { colors, typography } from "@/constants/theme";
 
 export default function BloqueadosScreen() {
@@ -38,7 +39,7 @@ export default function BloqueadosScreen() {
       <AppHeader
         title="BLOQUEADOS"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/profile")}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

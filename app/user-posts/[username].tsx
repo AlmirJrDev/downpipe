@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
@@ -39,7 +40,7 @@ export default function UserPostsScreen() {
       <AppHeader
         title={`@${username}`}
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/user/${username}`)}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

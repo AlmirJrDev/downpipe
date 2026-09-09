@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Car, Wrench, Camera, Flag, GitCompareArrows, CalendarPlus, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { colors } from "@/constants/theme";
+import { voltarOuIrPara } from "@/utils/navigation";
 import type { AddAction } from "@/types";
 
 const actions: {
@@ -129,7 +130,7 @@ export default function AddActionScreen() {
 
       {/* flexShrink: 0 — o botão fica fora da lista e nunca é espremido. */}
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => voltarOuIrPara("/(tabs)")}
         style={{ flexShrink: 0, marginTop: 24 }}
         className="self-center w-14 h-14 rounded-full border border-outline-variant items-center justify-center"
       >

@@ -6,6 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ImageCropper } from "@/components/ImageCropper";
 import { Image } from "expo-image";
 import { colors } from "@/constants/theme";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { useMyGarage } from "@/stores/garageStore";
@@ -70,7 +71,7 @@ export default function AddProjectUpdateScreen() {
       <AppHeader
         title="Atualização do projeto"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)")}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

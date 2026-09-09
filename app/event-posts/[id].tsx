@@ -7,6 +7,7 @@ import { PostCard } from "@/components/cards/PostCard";
 import { EmptyState } from "@/components/ui/States";
 import { useEventPosts, useEventById } from "@/stores/eventsStore";
 import { colors, spacing } from "@/constants/theme";
+import { voltarOuIrPara } from "@/utils/navigation";
 import type { Post } from "@/types";
 
 /**
@@ -35,7 +36,7 @@ export default function EventPostsScreen() {
       <AppHeader
         title={event?.name ?? "No rolê"}
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/event/${id}`)}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

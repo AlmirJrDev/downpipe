@@ -27,6 +27,7 @@ import {
 import { inputsToIso, isoToDateInput, isoToTimeInput } from "@/utils/event";
 import { ApiError } from "@/services/api";
 import { colors } from "@/constants/theme";
+import { voltarOuIrPara } from "@/utils/navigation";
 import type { EventVisibility } from "@/types";
 
 const LABEL = { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 } as const;
@@ -122,7 +123,7 @@ export default function AddEventScreen() {
         {
           onSuccess: async () => {
             const subiu = await enviarFoto(eventId);
-            if (subiu) router.back();
+            if (subiu) voltarOuIrPara(`/event/${eventId}`);
           },
           onError,
         }
@@ -170,7 +171,10 @@ export default function AddEventScreen() {
     <AppHeader
       title={isEditing ? "Editar evento" : "Novo evento"}
       left={
-        <Pressable hitSlop={8} onPress={() => router.back()}>
+        <Pressable
+          hitSlop={8}
+          onPress={() => voltarOuIrPara(isEditing && eventId ? `/event/${eventId}` : "/(tabs)")}
+        >
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }

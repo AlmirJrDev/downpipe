@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/ui/States";
 import { useCarById } from "@/stores/garageStore";
 import { useProjectByCarId, useCreateProject, useUpdateProject } from "@/stores/projectStore";
 import { carTitle } from "@/utils/car";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { ApiError } from "@/services/api";
 
 /**
@@ -103,7 +104,7 @@ export default function EditProjectScreen() {
         <AppHeader
           title="PROJETO"
           left={
-            <Pressable hitSlop={8} onPress={() => router.back()}>
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/garage")}>
               <ArrowLeft size={22} color={colors.onSurface} />
             </Pressable>
           }
@@ -127,7 +128,9 @@ export default function EditProjectScreen() {
           // voltar, então o botão vira "pular" implícito indo pro feed.
           <Pressable
             hitSlop={8}
-            onPress={() => (isOnboarding ? router.replace("/(tabs)") : router.back())}
+            onPress={() =>
+              isOnboarding ? router.replace("/(tabs)") : voltarOuIrPara(`/project/${carId}`)
+            }
           >
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>

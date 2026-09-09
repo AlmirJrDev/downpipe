@@ -12,6 +12,7 @@ import { colors, typography } from "@/constants/theme";
 import { PrimaryButton } from "@/components/ui/Button";
 import { authService } from "@/services/authService";
 import { ApiError } from "@/services/api";
+import { voltarOuIrPara } from "@/utils/navigation";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -44,7 +45,7 @@ export default function ForgotPasswordScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => voltarOuIrPara("/login")}
           hitSlop={10}
           className="absolute left-6 top-14 flex-row items-center gap-2"
         >

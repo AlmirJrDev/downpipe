@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
-import { router } from "expo-router";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { ArrowLeft, Bookmark } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PostCard } from "@/components/cards/PostCard";
@@ -26,7 +26,7 @@ export default function SavedPostsScreen() {
       <AppHeader
         title="Salvos"
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/profile")}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

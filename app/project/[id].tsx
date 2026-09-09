@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { router, useLocalSearchParams } from "expo-router";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react-native";
 import { useCarById } from "@/stores/garageStore";
@@ -105,7 +106,7 @@ export default function ProjectDetailsScreen() {
         <AppHeader
           title={carTitle(car)}
           left={
-            <Pressable hitSlop={8} onPress={() => router.back()}>
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/car/${carId}`)}>
               <ArrowLeft size={22} color={colors.onSurface} />
             </Pressable>
           }
@@ -211,7 +212,7 @@ export default function ProjectDetailsScreen() {
     <View className="flex-1 bg-surface">
       <AppHeader
         left={
-          <Pressable hitSlop={8} onPress={() => router.back()}>
+          <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/car/${carId}`)}>
             <ArrowLeft size={22} color={colors.onSurface} />
           </Pressable>
         }

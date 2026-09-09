@@ -7,6 +7,7 @@ import { ApiError } from "@/services/api";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
@@ -29,7 +30,7 @@ function BackHeader({ title, right }: { title: string; right?: React.ReactNode }
     <AppHeader
       title={title}
       left={
-        <Pressable hitSlop={8} onPress={() => router.back()}>
+        <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)")}>
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }
@@ -70,7 +71,7 @@ export default function UserProfileScreen() {
       // alguém que você acabou de bloquear não faz sentido nenhum.
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["user", username] });
-      router.back();
+      voltarOuIrPara("/(tabs)");
     },
     onError: (err) =>
       Alert.alert(

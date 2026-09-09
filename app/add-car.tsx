@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ImageCropper } from "@/components/ImageCropper";
 import { Image } from "expo-image";
 import { colors, typography } from "@/constants/theme";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -150,7 +151,7 @@ export default function AddCarScreen() {
     // No onboarding não existe tela anterior pra voltar (viemos de um
     // replace), então "voltar" no primeiro passo equivale a pular.
     if (isOnboarding) router.replace("/(tabs)");
-    else router.back();
+    else voltarOuIrPara("/(tabs)/garage");
   };
 
   const isValid = skippedCatalog ? versionText.trim().length > 0 : !!version;

@@ -13,6 +13,7 @@ import { Alert } from "@/utils/alert";
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Trash2, Wrench } from "lucide-react-native";
 import { colors } from "@/constants/theme";
+import { voltarOuIrPara } from "@/utils/navigation";
 import { MOD_ICONS } from "@/constants/modIcons";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
@@ -129,7 +130,7 @@ export default function AddModificationScreen() {
     if (isEditing && modId) {
       updateModification.mutate(
         { id: modId, carId: selectedCarId, patch: fields },
-        { onSuccess: () => router.back(), onError }
+        { onSuccess: () => voltarOuIrPara(`/car/${selectedCarId}`), onError }
       );
       return;
     }
@@ -153,7 +154,7 @@ export default function AddModificationScreen() {
           onPress: () =>
             removeModification.mutate(
               { id: modId, carId: selectedCarId },
-              { onSuccess: () => router.back(), onError }
+              { onSuccess: () => voltarOuIrPara(`/car/${selectedCarId}`), onError }
             ),
         },
       ]
@@ -164,7 +165,7 @@ export default function AddModificationScreen() {
     <AppHeader
       title={isEditing ? "Editar modificação" : "Nova modificação"}
       left={
-        <Pressable hitSlop={8} onPress={() => router.back()}>
+        <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/car/${selectedCarId}`)}>
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }
