@@ -9,7 +9,10 @@ export function HouseAdCard({ post }: { post: Post }) {
   return (
     <View
       className="mb-6 border border-dashed border-outline items-center px-6 py-8"
-      style={{ backgroundColor: colors.onSurfaceVariant }}
+      // surfaceContainer, nao onSurfaceVariant: aquilo e cor de TEXTO (#a3a3a3).
+      // Usada como fundo, deixava o cartao claro no meio de um app escuro — e o
+      // megafone, declarado na mesma cor, ficava invisivel em cima dele.
+      style={{ backgroundColor: colors.surfaceContainer }}
     >
       <Megaphone size={22} color={colors.onSurfaceVariant} />
       <Text

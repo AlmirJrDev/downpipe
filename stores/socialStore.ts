@@ -64,46 +64,77 @@ interface InfiniteFeedData {
   pageParams: unknown[];
 }
 
+/** Os dois formatos em que uma lista de Post vive no cache. */
+type CacheDePosts = InfiniteFeedData | PaginatedResult<Post>;
+
+/**
+ * Todo cache que guarda Post.
+ *
+ * O PostCard lê `likedByMe`/`savedByMe` direto do objeto, sem estado
+ * próprio: o que não estiver nesta lista simplesmente não reage ao toque.
+ * Era o caso de Salvos e das publicações do rolê — o coração não pintava e
+ * o número não mexia, porque só o feed e o perfil eram atualizados aqui.
+ */
+const CHAVES_DE_POST = [
+  ["feed"],
+  ["posts-by-username"],
+  ["posts-by-car"],
+  ["saved-posts"],
+  ["event-posts"],
+];
+
+type CopiaDeCache = [readonly unknown[], CacheDePosts | undefined][];
+
+/** Aplica a mudança otimista em todos eles, devolvendo o antes pro rollback. */
+function mexerNosPosts(
+  queryClient: QueryClient,
+  transformar: (post: Post) => Post
+): CopiaDeCache {
+  const anteriores: CopiaDeCache = [];
+
+  for (const chave of CHAVES_DE_POST) {
+    anteriores.push(...queryClient.getQueriesData<CacheDePosts>({ queryKey: chave }));
+
+    queryClient.setQueriesData<CacheDePosts>({ queryKey: chave }, (old) => {
+      if (!old) return old;
+      if ("pages" in old) {
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({ ...page, data: page.data.map(transformar) })),
+        };
+      }
+      return { ...old, data: old.data.map(transformar) };
+    });
+  }
+
+  return anteriores;
+}
+
+async function pausarPosts(queryClient: QueryClient) {
+  await Promise.all(
+    CHAVES_DE_POST.map((chave) => queryClient.cancelQueries({ queryKey: chave }))
+  );
+}
+
+function revalidarPosts(queryClient: QueryClient) {
+  CHAVES_DE_POST.forEach((chave) => queryClient.invalidateQueries({ queryKey: chave }));
+}
+
 export function useToggleLike() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ postId, liked }: { postId: string; liked: boolean }) =>
       liked ? apiService.unlikePost(postId) : apiService.likePost(postId),
     onMutate: async ({ postId, liked }) => {
-      await queryClient.cancelQueries({ queryKey: ["feed"] });
-      await queryClient.cancelQueries({ queryKey: ["posts-by-username"] });
+      await pausarPosts(queryClient);
 
-      const previousFeed = queryClient.getQueriesData<InfiniteFeedData>({ queryKey: ["feed"] });
-      const previousProfile = queryClient.getQueriesData<PaginatedResult<Post>>({
-        queryKey: ["posts-by-username"],
-      });
+      const anteriores = mexerNosPosts(queryClient, (post) =>
+        post.id === postId
+          ? { ...post, likedByMe: !liked, likesCount: post.likesCount + (liked ? -1 : 1) }
+          : post
+      );
 
-      const applyLike = (post: Post): Post => ({
-        ...post,
-        likedByMe: !liked,
-        likesCount: post.likesCount + (liked ? -1 : 1),
-      });
-
-      queryClient.setQueriesData<InfiniteFeedData>({ queryKey: ["feed"] }, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((post) => (post.id === postId ? applyLike(post) : post)),
-          })),
-        };
-      });
-
-      // As publicações do perfil (grade e o feed dela) vivem em outro cache,
-      // não paginado — sem isto o coração não reagia ao toque quando o post
-      // era aberto por ali.
-      queryClient.setQueriesData<PaginatedResult<Post>>({ queryKey: ["posts-by-username"] }, (old) => {
-        if (!old) return old;
-        return { ...old, data: old.data.map((post) => (post.id === postId ? applyLike(post) : post)) };
-      });
-
-      return { previousFeed, previousProfile };
+      return { anteriores };
     },
     onError: (err, _vars, context) => {
       // ALREADY_LIKED (409) e LIKE_NOT_FOUND (404) não são falha de verdade:
@@ -115,12 +146,10 @@ export function useToggleLike() {
       const code = err instanceof ApiError ? err.code : undefined;
       if (code === "ALREADY_LIKED" || code === "LIKE_NOT_FOUND") return;
 
-      context?.previousFeed.forEach(([key, data]) => queryClient.setQueryData(key, data));
-      context?.previousProfile.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      context?.anteriores.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
     onSettled: (_data, _err, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      queryClient.invalidateQueries({ queryKey: ["posts-by-username"] });
+      revalidarPosts(queryClient);
       // A lista de quem curtiu mudou junto.
       queryClient.invalidateQueries({ queryKey: ["likers", variables.postId] });
     },
@@ -138,37 +167,25 @@ export function useToggleSave() {
     mutationFn: ({ postId, saved }: { postId: string; saved: boolean }) =>
       saved ? apiService.unsavePost(postId) : apiService.savePost(postId),
     onMutate: async ({ postId, saved }) => {
-      await queryClient.cancelQueries({ queryKey: ["feed"] });
-      await queryClient.cancelQueries({ queryKey: ["posts-by-username"] });
+      await pausarPosts(queryClient);
 
-      const previousFeed = queryClient.getQueriesData<InfiniteFeedData>({ queryKey: ["feed"] });
-      const previousProfile = queryClient.getQueriesData<PaginatedResult<Post>>({
-        queryKey: ["posts-by-username"],
-      });
-
-      const apply = (post: Post): Post =>
-        post.id === postId ? { ...post, savedByMe: !saved } : post;
-
-      queryClient.setQueriesData<InfiniteFeedData>({ queryKey: ["feed"] }, (old) =>
-        old
-          ? { ...old, pages: old.pages.map((page) => ({ ...page, data: page.data.map(apply) })) }
-          : old
-      );
-      queryClient.setQueriesData<PaginatedResult<Post>>({ queryKey: ["posts-by-username"] }, (old) =>
-        old ? { ...old, data: old.data.map(apply) } : old
+      const anteriores = mexerNosPosts(queryClient, (post) =>
+        post.id === postId ? { ...post, savedByMe: !saved } : post
       );
 
-      return { previousFeed, previousProfile };
+      return { anteriores };
     },
     onError: (err, _vars, context) => {
       // ALREADY_SAVED / SAVE_NOT_FOUND: o servidor já está no estado pedido.
       const code = err instanceof ApiError ? err.code : undefined;
       if (code === "ALREADY_SAVED" || code === "SAVE_NOT_FOUND") return;
 
-      context?.previousFeed.forEach(([key, data]) => queryClient.setQueryData(key, data));
-      context?.previousProfile.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      context?.anteriores.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
     onSettled: () => {
+      // Só a lista de Salvos muda de conteúdo ao salvar; nas outras o marcador
+      // já foi corrigido acima. Revalidar o feed aqui custaria um refetch de
+      // todas as páginas carregadas a cada toque, sem nada novo pra mostrar.
       queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
     },
   });

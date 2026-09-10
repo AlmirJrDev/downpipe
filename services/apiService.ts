@@ -391,15 +391,31 @@ function adToPost(raw: RawAd): Post {
   };
 }
 
-function interleaveAds(posts: Post[], ads: Post[], everyN = 4): Post[] {
+/**
+ * Intercala anúncios entre os posts, um a cada `everyN`.
+ *
+ * `vagaInicial` é o que faz a segunda página não recomeçar do primeiro
+ * anúncio. Sem ela, cada página do feed mostrava exatamente os mesmos
+ * anúncios na mesma ordem — e, pior, repetia o `id` deles na lista, que é a
+ * chave do FlatList: chave duplicada faz o React perder a conta de quem é
+ * quem e reaproveitar a célula errada ao rolar.
+ *
+ * A vaga é contada em posição absoluta no feed inteiro (não dentro da
+ * página), então o `id` que sai daqui é único mesmo quando a última página
+ * vem com menos posts que as outras.
+ */
+function interleaveAds(posts: Post[], ads: Post[], everyN: number, vagaInicial: number): Post[] {
   if (ads.length === 0) return posts;
   const result: Post[] = [];
-  let adIndex = 0;
+  let vaga = vagaInicial;
   posts.forEach((post, i) => {
     result.push(post);
-    if ((i + 1) % everyN === 0 && adIndex < ads.length) {
-      result.push(ads[adIndex]);
-      adIndex++;
+    if ((i + 1) % everyN === 0) {
+      // Dá a volta na lista quando os anúncios acabam: melhor repetir lá na
+      // frente do que deixar o feed sem nenhum a partir da segunda página.
+      const anuncio = ads[vaga % ads.length];
+      result.push({ ...anuncio, id: `${anuncio.id}-${vaga}` });
+      vaga++;
     }
   });
   return result;
@@ -410,14 +426,21 @@ async function getActiveAds(limit = 6): Promise<Post[]> {
   return ads.map(adToPost);
 }
 
+const POSTS_POR_ANUNCIO = 4;
+
 async function getFeed(page = 1, limit = 20): Promise<PaginatedResult<Post>> {
   const [postsPage, ads] = await Promise.all([
     api.getPaginated<RawPost>(`/feed${qs({ page, limit })}`),
     getActiveAds(6).catch(() => [] as Post[]),
   ]);
 
+  // Quantas vagas de anúncio as páginas anteriores já consumiram. Vem do
+  // `limit` pedido, não do tamanho da resposta: uma página curta no fim não
+  // pode fazer a contagem voltar e colidir com o que já foi mostrado.
+  const vagaInicial = (page - 1) * Math.floor(limit / POSTS_POR_ANUNCIO);
+
   return {
-    data: interleaveAds(postsPage.data.map(toPost), ads, 4),
+    data: interleaveAds(postsPage.data.map(toPost), ads, POSTS_POR_ANUNCIO, vagaInicial),
     pagination: postsPage.pagination,
   };
 }

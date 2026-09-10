@@ -68,7 +68,16 @@ export function inputsToIso(dateInput: string, timeInput: string): string | null
 
   // Pega 31/02: o Date reinterpreta e cai em outro dia, então comparar a
   // volta é o que detecta.
-  if (Number.isNaN(date.getTime()) || date.getDate() !== Number(dia)) return null;
+  // Conferir tambem mes e ano: sozinha, a checagem do dia deixava passar
+  // 01/13/2026, que o Date aceita calado como 01/01/2027 (getDate() volta 1,
+  // igual ao digitado) — e o role nascia um ano fora do lugar.
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getDate() !== Number(dia) ||
+    date.getMonth() !== Number(mes) - 1 ||
+    date.getFullYear() !== Number(ano)
+  )
+    return null;
 
   return date.toISOString();
 }
