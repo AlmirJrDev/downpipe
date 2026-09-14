@@ -42,6 +42,36 @@ if (!alvo) {
   process.exit(1);
 }
 
+/**
+ * Página pública com o mesmo nome de uma tela do app some em silêncio.
+ *
+ * O export escreve cada tela como <nome>.html na raiz do dist, a mesma
+ * pasta onde caem os arquivos de public/. Quando os nomes coincidem, a
+ * tela passa por cima da página e o build termina sem erro nenhum — foi
+ * assim que a página de excluir conta, que vai no Google Play, virou uma
+ * cópia do app.
+ */
+function colisoes() {
+  const telas = new Set(
+    readdirSync(join(raiz, 'app'))
+      .filter((f) => /\.tsx?$/.test(f) && !/^[_+]/.test(f))
+      .map((f) => f.replace(/\.tsx?$/, ''))
+  );
+  return readdirSync(join(raiz, 'public'))
+    .filter((f) => f.endsWith('.html'))
+    .map((f) => f.replace(/\.html$/, ''))
+    .filter((nome) => telas.has(nome));
+}
+
+const repetidos = colisoes();
+if (repetidos.length > 0) {
+  console.error(
+    'Página pública com o mesmo nome de uma tela do app: ' + repetidos.join(', ') + '\n' +
+      'A tela sobrescreveria a página no build. Renomeie uma das duas.'
+  );
+  process.exit(1);
+}
+
 console.log('1/3  exportando o PWA...');
 execSync('npx expo export --platform web --clear', { cwd: raiz, stdio: 'inherit' });
 

@@ -1,6 +1,10 @@
 /**
  * Excluir a conta.
  *
+ * O nome da rota não é "excluir-conta" de propósito: esse é o endereço da
+ * página pública (public/excluir-conta.html) que vai no Google Play, e uma
+ * tela com o mesmo nome a sobrescreveria no build.
+ *
  * Obrigatório nas duas lojas (Google Play e App Store exigem o caminho
  * dentro do app, não só por e-mail) e já prometido na política de
  * privacidade. É a única ação do app que não tem volta, então a tela

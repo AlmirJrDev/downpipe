@@ -82,7 +82,7 @@ export default function ProfileScreen() {
       { text: "Política de privacidade", onPress: () => abrirLegal("privacidade") },
       { text: "Termos de uso", onPress: () => abrirLegal("termos") },
       { text: "Sair da conta", style: "destructive", onPress: confirmLogout },
-      { text: "Excluir conta", style: "destructive", onPress: () => router.push("/excluir-conta") },
+      { text: "Excluir conta", style: "destructive", onPress: () => router.push("/excluir-minha-conta") },
       { text: "Cancelar", style: "cancel" },
     ];
     Alert.alert("Conta", undefined, opcoes);
