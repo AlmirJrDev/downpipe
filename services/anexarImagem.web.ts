@@ -45,6 +45,72 @@ async function lerImagem(uri: string): Promise<Blob> {
   return resposta.blob();
 }
 
+// Mesmo teto do recorte (LADO_MAXIMO em components/ImageCropper.tsx).
+const LADO_MAXIMO = 1600;
+const QUALIDADE = 0.82;
+
+function decodificar(blob: Blob): Promise<CanvasImageSource & { width: number; height: number }> {
+  if (typeof createImageBitmap === "function") return createImageBitmap(blob);
+
+  // Navegador antigo sem createImageBitmap: o bom e velho <img>.
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("o navegador não conseguiu abrir a imagem"));
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Última barreira antes do envio: reduz e recomprime a foto.
+ *
+ * O recorte já reduz, mas quando ele falha a tela envia a original — foi
+ * assim que um print de celular de 4,6 MB chegou ao feed. Como toda foto da
+ * web passa por aqui, é o lugar que garante o tamanho de qualquer caminho.
+ *
+ * De quebra, redesenhar num canvas descarta os metadados EXIF, que podem
+ * trazer modelo do aparelho e até a localização de onde a foto foi tirada.
+ *
+ * Falhou em qualquer ponto, segue com a original: foto grande é ruim, mas
+ * foto que não sobe é pior.
+ */
+async function reduzir(blob: Blob): Promise<Blob> {
+  try {
+    const imagem = await decodificar(blob);
+    const escala = Math.min(1, LADO_MAXIMO / Math.max(imagem.width, imagem.height));
+    const largura = Math.round(imagem.width * escala);
+    const altura = Math.round(imagem.height * escala);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = largura;
+    canvas.height = altura;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return blob;
+
+    // JPEG não tem transparência: sem fundo, PNG transparente sairia com
+    // preto puro atrás. A cor do app disfarça melhor.
+    ctx.fillStyle = "#121212";
+    ctx.fillRect(0, 0, largura, altura);
+    ctx.drawImage(imagem, 0, 0, largura, altura);
+
+    const reduzida = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", QUALIDADE)
+    );
+
+    // Imagem pequena e já bem comprimida pode crescer ao recomprimir.
+    return reduzida && reduzida.size < blob.size ? reduzida : blob;
+  } catch {
+    return blob;
+  }
+}
+
 export async function anexarImagem(
   form: FormData,
   campo: string,
@@ -52,7 +118,7 @@ export async function anexarImagem(
 ): Promise<void> {
   let blob: Blob;
   try {
-    blob = await lerImagem(uriLocal);
+    blob = await reduzir(await lerImagem(uriLocal));
   } catch (err) {
     // O motivo real vai junto: sem ele, todo problema de leitura vira a
     // mesma frase genérica, e foi exatamente isso que atrasou o diagnóstico
@@ -61,6 +127,8 @@ export async function anexarImagem(
     throw new Error(`não deu pra ler a imagem (${uriLocal.slice(0, 12)}…): ${motivo}`);
   }
 
+  // Conferido depois de reduzir: uma foto de 8 MB da câmera que cabe depois
+  // da redução não precisa ser recusada.
   if (blob.size > TAMANHO_MAXIMO) {
     const mb = (blob.size / 1024 / 1024).toFixed(1);
     throw new Error(`a imagem tem ${mb} MB e o limite é 5 MB`);

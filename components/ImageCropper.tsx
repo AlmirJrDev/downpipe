@@ -18,6 +18,17 @@ import { colors } from "@/constants/theme";
 const MAX_ZOOM = 5;
 const FRAME_MARGIN = 16;
 
+/**
+ * Maior lado da foto que sobe, em pixels.
+ *
+ * Antes o recorte mantinha a resolução da câmera: uma foto de 3024x3780
+ * chegava a 4 MB, pra aparecer com uns 360 pixels de largura no feed. Cada
+ * pessoa que rola o feed baixa o arquivo inteiro, e é esse tráfego que o
+ * Supabase cobra. 1600 ainda fica nítido em tela cheia num celular de alta
+ * densidade.
+ */
+const LADO_MAXIMO = 1600;
+
 interface ImageCropperProps {
   /** URI local da imagem escolhida; null fecha o recortador. */
   uri: string | null;
@@ -137,11 +148,23 @@ export function ImageCropper({ uri, aspect, onCancel, onDone }: ImageCropperProp
         Math.max(0, source.height - cropHeight)
       );
 
-      const result = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ crop: { originX, originY, width: cropWidth, height: cropHeight } }],
-        { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const acoes: ImageManipulator.Action[] = [
+        { crop: { originX, originY, width: cropWidth, height: cropHeight } },
+      ];
+      // Só um dos lados no resize: o outro acompanha, e a proporção do
+      // recorte fica intacta.
+      if (Math.max(cropWidth, cropHeight) > LADO_MAXIMO) {
+        acoes.push(
+          cropWidth >= cropHeight
+            ? { resize: { width: LADO_MAXIMO } }
+            : { resize: { height: LADO_MAXIMO } }
+        );
+      }
+
+      const result = await ImageManipulator.manipulateAsync(uri, acoes, {
+        compress: 0.82,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
       onDone(result.uri);
     } catch {
       // Se o recorte falhar, envia a original em vez de travar o fluxo.
