@@ -110,6 +110,14 @@ async function updateMyProfile(patch: {
   return toUser(raw);
 }
 
+/**
+ * Exclui a conta de quem está logado. `username` é o @ digitado na tela de
+ * confirmação: o servidor confere de novo e recusa se não bater.
+ */
+async function deleteMyAccount(username: string): Promise<void> {
+  await api.post("/profile/me/delete", { username });
+}
+
 async function uploadAvatar(localUri: string): Promise<User> {
   const raw = await api.postForm<RawProfile>("/profile/me/avatar", await imageFormData("file", localUri));
   return toUser(raw);
@@ -851,6 +859,7 @@ export const apiService = {
   getUserByUsername,
   updateMyProfile,
   uploadAvatar,
+  deleteMyAccount,
 
   getVehicleBrands,
   getVehicleModelsByBrand,
