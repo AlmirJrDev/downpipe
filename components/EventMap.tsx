@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { PlatformWebView } from "@/components/ui/PlatformWebView";
 import { Navigation, TriangleAlert } from "lucide-react-native";
 import { colors } from "@/constants/theme";
+import { estiloDoMapa } from "@/constants/mapa";
 import { openDirections } from "@/utils/maps";
 
 /**
@@ -18,7 +19,6 @@ import { openDirections } from "@/utils/maps";
  */
 
 const MAPLIBRE_VERSION = "4.7.1";
-const CARTO_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
 function buildHtml(latitude: number, longitude: number, accent: string, zoom: number) {
   return `<!doctype html>
@@ -46,7 +46,7 @@ function buildHtml(latitude: number, longitude: number, accent: string, zoom: nu
 <script>
   var map = new maplibregl.Map({
     container: 'map',
-    style: '${CARTO_STYLE}',
+    ${estiloDoMapa()}
     center: [${longitude}, ${latitude}],
     zoom: ${zoom},
     // Sem interação: o mapa vive dentro de um ScrollView, e arrastar nele

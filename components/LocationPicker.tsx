@@ -16,6 +16,7 @@ import { Check, Crosshair, MapPin, Search, X } from "lucide-react-native";
 import { PrimaryButton } from "@/components/ui/Button";
 import { apiService } from "@/services/apiService";
 import { colors } from "@/constants/theme";
+import { estiloDoMapa } from "@/constants/mapa";
 
 /**
  * Escolha do local do evento — os três caminhos que eliminam a adivinhação:
@@ -31,7 +32,6 @@ import { colors } from "@/constants/theme";
  */
 
 const MAPLIBRE_VERSION = "4.7.1";
-const CARTO_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
 // São Paulo, só como ponto de partida quando não há nada escolhido ainda.
 const FALLBACK = { latitude: -23.5505, longitude: -46.6333 };
@@ -57,7 +57,7 @@ function buildHtml(latitude: number, longitude: number, accent: string) {
 <script>
   var map = new maplibregl.Map({
     container: 'map',
-    style: '${CARTO_STYLE}',
+    ${estiloDoMapa()}
     center: [${longitude}, ${latitude}],
     zoom: 15,
     attributionControl: { compact: true }
@@ -118,7 +118,8 @@ export function LocationPicker({
 
   const [coords, setCoords] = useState(initial ?? FALLBACK);
   const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
+  // O termo que a pessoa mandou buscar, não o que está digitando agora.
+  const [buscado, setBuscado] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [endereco, setEndereco] = useState<{ location: string; city: string } | null>(null);
   const [resolvendo, setResolvendo] = useState(false);
@@ -137,10 +138,19 @@ export function LocationPicker({
     [initial?.latitude, initial?.longitude]
   );
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(query.trim()), 400);
-    return () => clearTimeout(timer);
-  }, [query]);
+  /**
+   * Busca só quando a pessoa pede, pelo botão ou pelo Enter do teclado.
+   *
+   * Antes era a cada pausa na digitação. O Nominatim, que resolve os
+   * endereços, proíbe busca enquanto se digita e bloqueia quem insiste — e
+   * o bloqueio pega o servidor, então a busca parava pra todo mundo.
+   */
+  const buscar = () => {
+    const termo = query.trim();
+    if (termo.length < 3) return;
+    setBuscado(termo);
+    setShowResults(true);
+  };
 
   /**
    * Abre o mapa já em cima de quem está usando.
@@ -213,9 +223,11 @@ export function LocationPicker({
   }, [visible]);
 
   const { data: suggestions = [], isFetching } = useQuery({
-    queryKey: ["address-search", debounced],
-    queryFn: () => apiService.searchAddresses(debounced),
-    enabled: visible && debounced.length >= 3,
+    queryKey: ["address-search", buscado],
+    queryFn: () => apiService.searchAddresses(buscado),
+    enabled: visible && buscado.length >= 3,
+    // Mesma busca de novo não precisa voltar ao servidor.
+    staleTime: Infinity,
   });
 
   const moveMap = (latitude: number, longitude: number) => {
@@ -272,16 +284,31 @@ export function LocationPicker({
             <Search size={16} color={colors.inputPlaceholder} />
             <TextInput
               value={query}
-              onChangeText={(t) => {
-                setQuery(t);
-                setShowResults(true);
-              }}
+              onChangeText={setQuery}
+              onSubmitEditing={buscar}
+              returnKeyType="search"
               placeholder="Buscar endereço ou lugar..."
               placeholderTextColor={colors.inputPlaceholder}
               style={{ flex: 1, color: colors.onInputSurface, paddingVertical: 12, fontSize: 15 }}
             />
-            {isFetching && <ActivityIndicator size="small" color={colors.inputPlaceholder} />}
+            {isFetching ? (
+              <ActivityIndicator size="small" color={colors.inputPlaceholder} />
+            ) : (
+              query.trim().length >= 3 &&
+              query.trim() !== buscado && (
+                <Pressable hitSlop={8} onPress={buscar} className="py-2 active:opacity-60">
+                  <Text className="text-primary" style={{ fontSize: 13, fontWeight: "700", letterSpacing: 1 }}>
+                    BUSCAR
+                  </Text>
+                </Pressable>
+              )
+            )}
           </View>
+          {showResults && !isFetching && buscado.length >= 3 && suggestions.length === 0 && (
+            <Text className="text-muted mt-2" style={{ fontSize: 13 }}>
+              Nada encontrado. Tente com a cidade junto, ou arraste o pino no mapa.
+            </Text>
+          )}
         </View>
 
         {showResults && suggestions.length > 0 && (

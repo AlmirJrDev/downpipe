@@ -2,6 +2,7 @@ import React, { useMemo, useRef } from "react";
 import { View } from "react-native";
 import { PlatformWebView, type PlatformWebViewRef } from "@/components/ui/PlatformWebView";
 import { colors } from "@/constants/theme";
+import { estiloDoMapa } from "@/constants/mapa";
 import type { CarEvent } from "@/types";
 
 /**
@@ -14,7 +15,6 @@ import type { CarEvent } from "@/types";
  */
 
 const MAPLIBRE_VERSION = "4.7.1";
-const CARTO_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
 interface MapPoint {
   id: string;
@@ -81,7 +81,7 @@ function buildHtml(
   var pontos = ${dados};
   var map = new maplibregl.Map({
     container: 'map',
-    style: '${CARTO_STYLE}',
+    ${estiloDoMapa()}
     center: [${partida.longitude}, ${partida.latitude}],
     zoom: 9,
     attributionControl: { compact: true }
