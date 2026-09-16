@@ -1,5 +1,14 @@
-import React, { useMemo } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import React, { useMemo, useRef } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+  type ViewToken,
+} from "react-native";
+import { Image } from "expo-image";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { apiService } from "@/services/apiService";
@@ -14,6 +23,13 @@ import { colors, spacing } from "@/constants/theme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadCount } from "@/stores/notificationsStore";
 import { Bell } from "lucide-react-native";
+
+/** Quantas publicações à frente já começam a baixar a foto. */
+const ADIANTAR = 4;
+
+// Conta como visível a partir de 30% do card na tela. Esperar o card inteiro
+// avisaria tarde demais pra adiantar alguma coisa.
+const VISIBILIDADE = { itemVisiblePercentThreshold: 30 };
 
 export default function HomeScreen() {
   const { data: me } = useCurrentUser();
@@ -40,6 +56,39 @@ export default function HomeScreen() {
   // (useToggleLike faz optimistic update aqui) — não precisa mais mesclar
   // com nenhuma store local.
   const feed = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+
+  /**
+   * Começa a baixar as fotos das próximas publicações antes de elas entrarem
+   * na tela.
+   *
+   * O feed é foto grande. Esperar o card aparecer pra só então pedir a imagem
+   * é o que faz a rolagem parecer lenta: a pessoa chega antes do arquivo. Com
+   * isso, o download começa enquanto ela ainda está lendo o card de cima.
+   *
+   * Só as ADIANTAR seguintes, e cada uma uma vez só, pra não puxar o feed
+   * inteiro no plano de dados de quem parou de rolar.
+   */
+  const feedRef = useRef(feed);
+  feedRef.current = feed;
+  const jaPedidas = useRef(new Set<string>());
+
+  const adiantarProximasFotos = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const ultimoVisivel = viewableItems[viewableItems.length - 1]?.index;
+      if (ultimoVisivel == null) return;
+
+      const proximas = feedRef.current
+        .slice(ultimoVisivel + 1, ultimoVisivel + 1 + ADIANTAR)
+        .map((p) => p.imageUrl)
+        .filter((url): url is string => !!url && !jaPedidas.current.has(url));
+
+      if (proximas.length === 0) return;
+      proximas.forEach((url) => jaPedidas.current.add(url));
+      // Sem await: é adiantamento, e falhar aqui não muda nada — a imagem
+      // será pedida de novo quando o card aparecer.
+      void Image.prefetch(proximas);
+    }
+  ).current;
 
   return (
     <View className="flex-1 bg-surface">
@@ -119,6 +168,8 @@ export default function HomeScreen() {
               description="Siga outros gearheads ou publique o primeiro post do seu build."
             />
           }
+          onViewableItemsChanged={adiantarProximasFotos}
+          viewabilityConfig={VISIBILIDADE}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}

@@ -399,6 +399,10 @@ function NormalPost({ post }: { post: Post }) {
       {post.imageUrl && (
         <Image
           source={{ uri: post.imageUrl }}
+          // A FlatList reaproveita a linha ao rolar. Sem isto, o card novo
+          // mostra por um instante a foto do post anterior, que já estava
+          // carregada, e depois troca.
+          recyclingKey={post.id}
           style={{ width: "100%", height: 420 }}
           contentFit="cover"
           transition={200}
@@ -451,6 +455,7 @@ function ProjectUpdatePost({ post }: { post: Post }) {
         {post.imageUrl && (
           <Image
             source={{ uri: post.imageUrl }}
+            recyclingKey={post.id}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             transition={200}
@@ -529,6 +534,7 @@ function EvolutionPost({ post }: { post: Post }) {
           // parcial) — mostra o que existe em vez de quebrar o card.
           <Image
             source={{ uri: post.beforeImageUrl ?? post.afterImageUrl }}
+            recyclingKey={post.id}
             style={{ width: "100%", aspectRatio: 4 / 3 }}
             contentFit="cover"
           />
