@@ -10,7 +10,6 @@
  * instrução que não vai funcionar ali.
  */
 import React, { useEffect, useState } from "react";
-import { useSegments } from "expo-router";
 
 type Situacao =
   | "instalando" // Chrome/Edge: dá pra instalar com um toque
@@ -116,18 +115,7 @@ export function InstallPrompt() {
     }
   };
 
-  /**
-   * O cartão é fixo no rodapé, posicionado pra ficar logo acima da barra de
-   * abas. Fora das abas não existe barra nenhuma, e ele flutua por cima do
-   * conteúdo: na tela de excluir conta chegou a cobrir o próprio botão, e só
-   * dava pra tocar depois de fechar o cartão.
-   *
-   * O hook fica antes de qualquer return, porque a ordem dos hooks não pode
-   * variar entre renderizações.
-   */
-  const naAbaPrincipal = useSegments()[0] === "(tabs)";
-
-  if (!naAbaPrincipal || !aberto || situacao === "nenhuma") return null;
+  if (!aberto || situacao === "nenhuma") return null;
 
   return (
     <div style={estilos.fundo}>

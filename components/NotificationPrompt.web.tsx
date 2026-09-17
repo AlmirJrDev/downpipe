@@ -17,7 +17,6 @@
  *  - uma vez: decidiu (ativou ou dispensou), não aparece de novo.
  */
 import React, { useEffect, useState } from "react";
-import { useSegments } from "expo-router";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useAuthStore } from "@/stores/authStore";
 import { isPlaceholderUsername } from "@/utils/profile";
@@ -96,18 +95,7 @@ export function NotificationPrompt() {
     }
   };
 
-  /**
-   * O cartão é fixo no rodapé, posicionado pra ficar logo acima da barra de
-   * abas. Fora das abas não existe barra nenhuma, e ele flutua por cima do
-   * conteúdo: na tela de excluir conta chegou a cobrir o próprio botão, e só
-   * dava pra tocar depois de fechar o cartão.
-   *
-   * O hook fica antes de qualquer return, porque a ordem dos hooks não pode
-   * variar entre renderizações.
-   */
-  const naAbaPrincipal = useSegments()[0] === "(tabs)";
-
-  if (!naAbaPrincipal || !aberto) return null;
+  if (!aberto) return null;
 
   return (
     <div style={estilos.fundo}>
