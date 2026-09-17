@@ -445,7 +445,11 @@ async function getFeed(page = 1, limit = 20): Promise<PaginatedResult<Post>> {
   // Quantas vagas de anúncio as páginas anteriores já consumiram. Vem do
   // `limit` pedido, não do tamanho da resposta: uma página curta no fim não
   // pode fazer a contagem voltar e colidir com o que já foi mostrado.
-  const vagaInicial = (page - 1) * Math.floor(limit / POSTS_POR_ANUNCIO);
+  //
+  // O mínimo de 1 cobre o caso de um limite menor que POSTS_POR_ANUNCIO: sem
+  // ele a conta daria zero vaga por página, toda página começaria do mesmo
+  // anúncio e as chaves voltariam a se repetir na lista.
+  const vagaInicial = (page - 1) * Math.max(1, Math.floor(limit / POSTS_POR_ANUNCIO));
 
   return {
     data: interleaveAds(postsPage.data.map(toPost), ads, POSTS_POR_ANUNCIO, vagaInicial),

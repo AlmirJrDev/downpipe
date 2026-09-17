@@ -50,7 +50,15 @@ const LADO_MAXIMO = 1600;
 const QUALIDADE = 0.82;
 
 function decodificar(blob: Blob): Promise<CanvasImageSource & { width: number; height: number }> {
-  if (typeof createImageBitmap === "function") return createImageBitmap(blob);
+  // "from-image" pedido na mão, e não confiando no padrão: foto de celular
+  // costuma vir com a orientação nos metadados em vez de nos pixels, e o
+  // canvas descarta metadados. Se o navegador não girar na hora de decodificar,
+  // a foto seria salva deitada. A especificação hoje manda girar por padrão,
+  // mas não deu pra confirmar isso no navegador de teste, e pedir explicitamente
+  // custa nada.
+  if (typeof createImageBitmap === "function") {
+    return createImageBitmap(blob, { imageOrientation: "from-image" });
+  }
 
   // Navegador antigo sem createImageBitmap: o bom e velho <img>.
   return new Promise((resolve, reject) => {
