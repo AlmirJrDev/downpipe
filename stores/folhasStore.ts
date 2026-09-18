@@ -18,7 +18,14 @@ import { create } from "zustand";
 export type Aberta =
   | { tipo: "comentarios"; postId: string }
   | { tipo: "curtidas"; postId: string }
-  | { tipo: "foto"; url: string };
+  // Mais de uma foto quando o post compara antes e depois: a tela cheia
+  // mostra um seletor entre elas, abrindo na de índice `inicial`.
+  | { tipo: "foto"; fotos: FotoAberta[]; inicial?: number };
+
+export interface FotoAberta {
+  url: string;
+  rotulo?: string;
+}
 
 interface FolhasState {
   aberta: Aberta | null;

@@ -10,6 +10,7 @@ import {
 import { Alert } from "@/utils/alert";
 import type { AlertButton } from "react-native";
 import { Share } from "@/utils/share";
+import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
 import { LogOut, MoreVertical, Share2 } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -140,8 +141,7 @@ export default function ProfileScreen() {
   const myPosts = postsPage?.data ?? [];
   const cars = myCars ?? [];
 
-  // Texto, e não link: o app ainda não tem endereço público, e um deep link
-  // downpipe:// não abre nada pra quem não tem o app.
+  // O link abre o perfil, com foto e nome na prévia do WhatsApp.
   const shareProfile = async () => {
     if (!me) return;
     const garagem = cars.length > 0 ? cars.map((car) => carTitle(car)).join(", ") : null;
@@ -152,7 +152,7 @@ export default function ProfileScreen() {
     ].filter(Boolean);
 
     try {
-      await Share.share({ message: linhas.join("\n") });
+      await Share.share({ message: linhas.join("\n"), url: linkPublico.perfil(me.username) });
     } catch {
       // Cancelar o menu de compartilhamento não é erro.
     }

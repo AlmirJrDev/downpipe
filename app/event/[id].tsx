@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { Share } from "@/utils/share";
+import { linkPublico } from "@/utils/linkPublico";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -162,7 +163,8 @@ export default function EventDetailsScreen() {
     ].filter(Boolean);
 
     try {
-      await Share.share({ message: linhas.join("\n") });
+      // O link é o que faz quem recebe cair direto no rolê pra confirmar.
+      await Share.share({ message: linhas.join("\n"), url: linkPublico.evento(event.id) });
     } catch {
       // Cancelar o menu não é erro.
     }

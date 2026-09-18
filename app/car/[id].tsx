@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Share } from "@/utils/share";
+import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -104,8 +105,7 @@ export default function CarDetailsScreen() {
     },
   ];
 
-  // Texto, e não link: o app ainda não tem endereço público, e um deep link
-  // downpipe:// não abre nada pra quem não tem o app.
+  // O link abre o carro, com a foto dele na prévia do WhatsApp.
   const shareCar = async () => {
     const linhas = [
       resolvedCar.owner
@@ -117,7 +117,7 @@ export default function CarDetailsScreen() {
     ].filter(Boolean);
 
     try {
-      await Share.share({ message: linhas.join("\n") });
+      await Share.share({ message: linhas.join("\n"), url: linkPublico.carro(resolvedCar.id) });
     } catch {
       // Cancelar o menu de compartilhamento não é erro.
     }

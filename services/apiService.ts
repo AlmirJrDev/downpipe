@@ -833,6 +833,10 @@ export interface ChatWindow {
   isOrganizer: boolean;
   /** Há mensagens mais antigas que as desta janela. */
   hasOlder: boolean;
+  /** Hora do servidor nesta resposta; volta na próxima como removidasDesde. */
+  agora: string;
+  /** Mensagens apagadas desde a conferida anterior. */
+  removedIds: string[];
   messages: ChatMessage[];
 }
 
@@ -841,7 +845,10 @@ export interface ChatWindow {
  * daquela mensagem (inclusive, o app descarta por id o que já tem). `antes`:
  * as anteriores, pra rolar pra cima.
  */
-async function getEventChat(eventId: string, janela: { desde?: string; antes?: string } = {}): Promise<ChatWindow> {
+async function getEventChat(
+  eventId: string,
+  janela: { desde?: string; antes?: string; removidasDesde?: string } = {}
+): Promise<ChatWindow> {
   return api.get<ChatWindow>(`/events/${eventId}/chat${qs(janela)}`);
 }
 

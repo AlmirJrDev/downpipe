@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { Share } from "@/utils/share";
+import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import {
@@ -42,7 +43,7 @@ import {
 } from "@/stores/socialStore";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Post } from "@/types";
-import { useFolhas } from "@/stores/folhasStore";
+import { useFolhas, type FotoAberta } from "@/stores/folhasStore";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { AdCard } from "./AdCard";
 import { HouseAdCard } from "./HouseAdCard";
@@ -268,11 +269,14 @@ function CarTagPending({ post }: { post: Post }) {
  */
 function FotoTocavel({
   post,
-  url,
+  fotos,
+  inicial = 0,
   children,
 }: {
   post: Post;
-  url: string | undefined;
+  /** O que a tela cheia mostra. No antes e depois, as duas. */
+  fotos: FotoAberta[];
+  inicial?: number;
   children: React.ReactNode;
 }) {
   const toggleLike = useToggleLike();
@@ -294,17 +298,21 @@ function FotoTocavel({
     toggleLike.mutate({ postId: post.id, liked });
   };
 
+  // maxDistance nos dois toques: no antes e depois, arrastar o divisor não
+  // pode terminar contando como toque e abrir a tela cheia ao soltar.
   const toqueDuplo = Gesture.Tap()
     .numberOfTaps(2)
+    .maxDistance(10)
     .runOnJS(true)
     .onEnd((_e, sucesso) => {
       if (sucesso) curtirOuDescurtir();
     });
 
   const toqueSimples = Gesture.Tap()
+    .maxDistance(10)
     .runOnJS(true)
     .onEnd((_e, sucesso) => {
-      if (sucesso && url) abrir({ tipo: "foto", url });
+      if (sucesso && fotos.length > 0) abrir({ tipo: "foto", fotos, inicial });
     });
 
   const coracaoStyle = useAnimatedStyle(() => ({
@@ -392,11 +400,7 @@ function EngagementBar({ post }: { post: Post }) {
     toggleSave.mutate({ postId: post.id, saved });
   };
 
-  /**
-   * Compartilhamento por texto, não por link: o app ainda não tem endereço
-   * público, e um deep link `downpipe://` não abre nada pra quem não tem o
-   * app instalado. Quando existir web, é só acrescentar a `url` aqui.
-   */
+  /** O link abre esta publicação, com a foto na prévia do WhatsApp. */
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const autor = post.author ? `@${post.author.username}` : "alguém";
@@ -408,7 +412,7 @@ function EngagementBar({ post }: { post: Post }) {
     ].filter(Boolean);
 
     try {
-      await Share.share({ message: linhas.join("\n") });
+      await Share.share({ message: linhas.join("\n"), url: linkPublico.post(post.id) });
     } catch {
       // Cancelar o menu de compartilhamento não é erro — nada a fazer.
     }
@@ -510,7 +514,7 @@ function NormalPost({ post }: { post: Post }) {
     <View className="mb-6 border border-border bg-card">
       <PostHeader post={post} />
       {post.imageUrl && (
-        <FotoTocavel post={post} url={post.imageUrl}>
+        <FotoTocavel post={post} fotos={[{ url: post.imageUrl }]}>
           <Image
             source={{ uri: post.imageUrl }}
             // A FlatList reaproveita a linha ao rolar. Sem isto, o card novo
@@ -567,7 +571,7 @@ function ProjectUpdatePost({ post }: { post: Post }) {
         <OwnerMenu post={post} />
       </View>
 
-      <FotoTocavel post={post} url={post.imageUrl}>
+      <FotoTocavel post={post} fotos={post.imageUrl ? [{ url: post.imageUrl }] : []}>
         <View style={{ height: 300 }}>
           {post.imageUrl && (
             <Image
@@ -648,11 +652,22 @@ function EvolutionPost({ post }: { post: Post }) {
 
       <View className="relative">
         {hasBoth ? (
-          <BeforeAfter beforeUri={post.beforeImageUrl!} afterUri={post.afterImageUrl!} />
+          // Abre no depois, que é o que a pessoa quer ver primeiro; o seletor
+          // da tela cheia leva ao antes.
+          <FotoTocavel
+            post={post}
+            fotos={[
+              { url: post.beforeImageUrl!, rotulo: "ANTES" },
+              { url: post.afterImageUrl!, rotulo: "DEPOIS" },
+            ]}
+            inicial={1}
+          >
+            <BeforeAfter beforeUri={post.beforeImageUrl!} afterUri={post.afterImageUrl!} />
+          </FotoTocavel>
         ) : (
           // Post marcado como evolução mas com uma foto só (ex.: upload
           // parcial) — mostra o que existe em vez de quebrar o card.
-          <FotoTocavel post={post} url={post.beforeImageUrl ?? post.afterImageUrl}>
+          <FotoTocavel post={post} fotos={[{ url: (post.beforeImageUrl ?? post.afterImageUrl)! }]}>
             <Image
               source={{ uri: post.beforeImageUrl ?? post.afterImageUrl }}
               recyclingKey={post.id}

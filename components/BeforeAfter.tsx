@@ -89,7 +89,14 @@ export function BeforeAfter({ beforeUri, afterUri }: { beforeUri: string; afterU
   const dividerStyle = useAnimatedStyle(() => ({ left: `${position.value}%` }));
 
   return (
-    <GestureDetector gesture={pan}>
+    <GestureDetector
+      gesture={pan}
+      // Só no navegador. O failOffsetY acima devolve a rolagem vertical à
+      // lista no celular, mas no navegador a biblioteca põe touch-action
+      // "none" na área do gesto, e aí o navegador nem tenta rolar. "pan-y"
+      // deixa a rolagem vertical com ele e o arrasto horizontal com o divisor.
+      touchAction="pan-y"
+    >
       <View
         style={{ width: "100%", aspectRatio: ASPECT, overflow: "hidden" }}
         onLayout={(e) => {

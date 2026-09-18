@@ -82,6 +82,11 @@ export default function EventChatScreen() {
   const mensagensRef = useRef(mensagens);
   mensagensRef.current = mensagens;
 
+  // Hora do servidor na última conferida. Vai de volta na seguinte pra saber
+  // o que foi apagado desde então — sem isso, a mensagem apagada por alguém
+  // continuava na tela de quem estava com a conversa aberta.
+  const ultimaConferida = useRef<string | null>(null);
+
   /** Abrir ou conferir o chat zera o contador que aparece na tela do rolê. */
   const zerarContador = useCallback(() => {
     queryClient.setQueryData(["event-chat-unread", eventId], 0);
@@ -101,6 +106,7 @@ export default function EventChatScreen() {
         setOrganizerId(janela.organizerId);
         setSouOrganizador(janela.isOrganizer);
         setTemAntigas(janela.hasOlder);
+        ultimaConferida.current = janela.agora;
         zerarContador();
       })
       .catch((err) => {
@@ -125,11 +131,15 @@ export default function EventChatScreen() {
         if (Platform.OS === "web" && typeof document !== "undefined" && document.hidden) return;
         const maisNova = mensagensRef.current[0];
         try {
-          const janela = await apiService.getEventChat(
-            eventId,
-            maisNova ? { desde: maisNova.createdAt } : {}
+          const janela = await apiService.getEventChat(eventId, {
+            desde: maisNova?.createdAt,
+            removidasDesde: ultimaConferida.current ?? undefined,
+          });
+          ultimaConferida.current = janela.agora;
+          const removidas = new Set(janela.removedIds);
+          setMensagens((atuais) =>
+            juntar(atuais, janela.messages).filter((m) => !removidas.has(m.id))
           );
-          setMensagens((atuais) => juntar(atuais, janela.messages));
           zerarContador();
         } catch {
           // Falha pontual de rede: a próxima conferida tenta de novo.

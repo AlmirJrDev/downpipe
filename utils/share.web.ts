@@ -6,14 +6,14 @@
  * quase nunca existe, e aí copiar pro clipboard é o comportamento honesto:
  * o texto vai pra algum lugar, em vez de o botão não fazer nada.
  *
- * Mesma assinatura do Share do react-native, então as telas só trocam o
- * import.
+ * O link vai no campo próprio (url) da Web Share API: aí o WhatsApp monta o
+ * cartão com a prévia do conteúdo em vez de tratar como texto solto.
  */
 export const Share = {
-  async share({ message }: { message: string }): Promise<{ action: string }> {
+  async share({ message, url }: { message: string; url?: string }): Promise<{ action: string }> {
     if (navigator.share) {
       try {
-        await navigator.share({ text: message });
+        await navigator.share(url ? { text: message, url } : { text: message });
         return { action: "sharedAction" };
       } catch {
         // Cancelar a bandeja não é erro, e cai pro clipboard abaixo só se
@@ -23,11 +23,13 @@ export const Share = {
     }
 
     try {
-      await navigator.clipboard.writeText(message);
+      await navigator.clipboard.writeText(url ? `${message}
+${url}` : message);
       window.alert("Copiado para a área de transferência.");
       return { action: "sharedAction" };
     } catch {
-      window.prompt("Copie o texto:", message);
+      window.prompt("Copie o texto:", url ? `${message}
+${url}` : message);
       return { action: "sharedAction" };
     }
   },

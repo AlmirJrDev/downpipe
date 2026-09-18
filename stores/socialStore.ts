@@ -64,8 +64,11 @@ interface InfiniteFeedData {
   pageParams: unknown[];
 }
 
-/** Os dois formatos em que uma lista de Post vive no cache. */
-type CacheDePosts = InfiniteFeedData | PaginatedResult<Post>;
+/**
+ * Os formatos em que um Post vive no cache: as duas formas de lista, e a
+ * publicação sozinha da tela aberta por link (null quando não existe).
+ */
+type CacheDePosts = InfiniteFeedData | PaginatedResult<Post> | Post | null;
 
 /**
  * Todo cache que guarda Post.
@@ -81,6 +84,8 @@ const CHAVES_DE_POST = [
   ["posts-by-car"],
   ["saved-posts"],
   ["event-posts"],
+  // A publicação aberta sozinha, pelo link compartilhado.
+  ["post"],
 ];
 
 type CopiaDeCache = [readonly unknown[], CacheDePosts | undefined][];
@@ -103,7 +108,8 @@ function mexerNosPosts(
           pages: old.pages.map((page) => ({ ...page, data: page.data.map(transformar) })),
         };
       }
-      return { ...old, data: old.data.map(transformar) };
+      if ("data" in old) return { ...old, data: old.data.map(transformar) };
+      return transformar(old);
     });
   }
 

@@ -10,19 +10,36 @@
  * cheia existe pra olhar detalhe (a solda, o número do motor), e curtir já
  * está a um toque de distância no card.
  */
-import React, { useEffect } from "react";
-import { Modal, Pressable, useWindowDimensions, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
 import { colors } from "@/constants/theme";
+import type { FotoAberta } from "@/stores/folhasStore";
 
 const ZOOM_MAXIMO = 4;
 const ZOOM_DO_TOQUE_DUPLO = 2.5;
 
-export function VisualizadorDeFoto({ url, onClose }: { url: string | null; onClose: () => void }) {
+export function VisualizadorDeFoto({
+  fotos,
+  inicial,
+  onClose,
+}: {
+  fotos: FotoAberta[] | null;
+  inicial: number;
+  onClose: () => void;
+}) {
+  const [indice, setIndice] = useState(inicial);
+  const atual = fotos?.[indice] ?? fotos?.[0];
+  const url = atual?.url ?? null;
+
+  // Cada abertura começa na foto pedida (no antes e depois, a do depois).
+  useEffect(() => {
+    if (fotos) setIndice(inicial);
+  }, [fotos, inicial]);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
@@ -93,7 +110,7 @@ export function VisualizadorDeFoto({ url, onClose }: { url: string | null; onClo
   }));
 
   return (
-    <Modal visible={!!url} transparent={false} animationType="fade" onRequestClose={onClose}>
+    <Modal visible={!!fotos} transparent={false} animationType="fade" onRequestClose={onClose}>
       {/* GestureHandlerRootView próprio: o Modal renderiza numa árvore de
           views separada, e sem isto os gestos não chegam aqui dentro. */}
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000" }}>
@@ -109,6 +126,40 @@ export function VisualizadorDeFoto({ url, onClose }: { url: string | null; onClo
             )}
           </Animated.View>
         </GestureDetector>
+
+        {fotos && fotos.length > 1 && (
+          <View
+            className="flex-row"
+            style={{ position: "absolute", top: insets.top + 12, left: 16, gap: 6 }}
+          >
+            {fotos.map((foto, i) => {
+              const escolhida = i === indice;
+              return (
+                <Pressable
+                  key={foto.url}
+                  onPress={() => setIndice(i)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: escolhida }}
+                  className="px-3.5 py-2"
+                  style={{
+                    backgroundColor: escolhida ? colors.primaryContainer : colors.overlayMedium,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.onSurface,
+                      fontSize: 12,
+                      fontWeight: "700",
+                      letterSpacing: 1.5,
+                    }}
+                  >
+                    {foto.rotulo ?? String(i + 1)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
 
         <View style={{ position: "absolute", top: insets.top + 12, right: 16 }}>
           <Pressable

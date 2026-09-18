@@ -1,6 +1,6 @@
 import "../global.css";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -32,6 +32,23 @@ const navigationTheme = {
   },
 };
 
+/**
+ * Pra onde a pessoa estava indo quando foi mandada pro login.
+ *
+ * Link compartilhado é o caso: quem recebe um rolê pelo WhatsApp e ainda não
+ * tem conta cai no login, cria a conta, passa pelo onboarding — e antes disto
+ * terminava no feed, sem nem sinal do rolê que abriu. Guardado em memória:
+ * o login não recarrega a página, então o valor atravessa até o fim.
+ */
+let destinoDepoisDoLogin: string | null = null;
+
+/** O caminho aberto no navegador, sem o /app do começo. Só existe na web. */
+function caminhoAberto(): string | null {
+  if (Platform.OS !== "web" || typeof window === "undefined") return null;
+  const semBase = window.location.pathname.replace(/^\/app(?=\/|$)/, "") || "/";
+  return semBase + window.location.search;
+}
+
 // Redireciona entre (tabs), login/register e o onboarding (edit-profile
 // forçado pra quem ainda está com o @ placeholder do signup) conforme o
 // status de auth. Fica dentro do Stack (não antes dele) porque
@@ -47,8 +64,16 @@ function AuthRedirect() {
   // do profile sequer ter carregado.
   const { data: me, isPending: mePending } = useCurrentUser();
 
+  // Só a primeira avaliação guarda destino: é quando a pessoa abriu o app
+  // (ou um link) já deslogada. Depois disso, ficar deslogado é sair da conta
+  // ou excluí-la — e guardar o caminho faria o próximo login, talvez de outra
+  // conta, cair na tela de excluir conta.
+  const primeiraAvaliacao = useRef(true);
+
   useEffect(() => {
     if (status === "hydrating") return;
+    const abriuAgora = primeiraAvaliacao.current;
+    primeiraAvaliacao.current = false;
     // Recuperação de senha entra aqui: quem chega nessas telas está
     // deslogado por definição, e sem esta exceção o redirect as expulsaria
     // pro login no mesmo instante em que abrissem.
@@ -59,7 +84,13 @@ function AuthRedirect() {
       segments[0] === "nova-senha";
 
     if (status === "signedOut") {
-      if (!inAuthScreen) router.replace("/login");
+      if (!inAuthScreen) {
+        // A home não conta como destino: é pra lá que a pessoa vai de
+        // qualquer jeito depois de entrar.
+        const aberto = caminhoAberto();
+        if (abriuAgora && aberto && aberto !== "/") destinoDepoisDoLogin = aberto;
+        router.replace("/login");
+      }
       return;
     }
 
@@ -74,6 +105,13 @@ function AuthRedirect() {
 
     if (needsOnboarding && !inOnboardingFlow) {
       router.replace("/welcome");
+    } else if (!needsOnboarding && destinoDepoisDoLogin) {
+      // Entrou (ou terminou o onboarding de conta nova): segue pro link que
+      // tinha aberto. Usado uma vez só, pra nunca puxar a pessoa de volta
+      // pra ele mais tarde.
+      const destino = destinoDepoisDoLogin;
+      destinoDepoisDoLogin = null;
+      router.replace(destino as never);
     } else if (!needsOnboarding && inAuthScreen) {
       router.replace("/(tabs)");
     }
@@ -146,6 +184,7 @@ export default function RootLayout() {
                   <Stack.Screen name="excluir-minha-conta" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-chat/[id]" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="post/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen
                     name="add-event"
                     options={{ presentation: "modal", animation: "slide_from_bottom" }}

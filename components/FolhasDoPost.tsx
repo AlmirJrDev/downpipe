@@ -27,7 +27,11 @@ export function FolhasDoPost() {
         visible={aberta?.tipo === "curtidas"}
         onClose={fechar}
       />
-      <VisualizadorDeFoto url={aberta?.tipo === "foto" ? aberta.url : null} onClose={fechar} />
+      <VisualizadorDeFoto
+        fotos={aberta?.tipo === "foto" ? aberta.fotos : null}
+        inicial={aberta?.tipo === "foto" ? aberta.inicial ?? 0 : 0}
+        onClose={fechar}
+      />
     </>
   );
 }
