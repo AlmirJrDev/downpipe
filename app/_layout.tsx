@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isPlaceholderUsername } from "@/utils/profile";
 import { AlertHost } from "@/components/ui/AlertHost";
+import { FolhasDoPost } from "@/components/FolhasDoPost";
 
 // expo-router monta o NavigationContainer com o DefaultTheme, cujo
 // colors.background é rgb(242,242,242) — quase branco. Cada navegador usa esse
@@ -176,6 +177,9 @@ export default function RootLayout() {
                 </Stack>
                 {/* Diálogos do app. No celular não renderiza nada — lá o
                     Alert é do sistema. */}
+                {/* Comentários, curtidas e foto em tela cheia: fora de qualquer
+                    lista, ou a lista de dentro não rola (ver folhasStore). */}
+                <FolhasDoPost />
                 <AlertHost />
               </>
             )}

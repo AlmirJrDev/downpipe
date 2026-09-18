@@ -312,26 +312,24 @@ interface InfiniteComments {
   pageParams: unknown[];
 }
 
+/** Quantos comentários a prévia do card mostra — o mesmo número do servidor. */
+const COMENTARIOS_NA_PREVIA = 2;
+
 /**
- * Mexe no commentsCount direto no cache do feed e do perfil, em vez de
- * invalidar as duas listas. Invalidar recarregaria o feed inteiro com a
+ * Contador e prévia de comentários, direto no cache de toda lista onde o post
+ * aparece, em vez de invalidar. Invalidar recarregaria o feed inteiro com a
  * folha de comentários aberta por cima — o post podia até trocar de lugar
  * embaixo dela.
+ *
+ * Antes só o feed e o perfil eram atualizados, a mesma falha que o curtir
+ * tinha: em Salvos e nas publicações do rolê o número não mexia.
  */
-function bumpCommentsCount(queryClient: QueryClient, postId: string, delta: number) {
-  const apply = (post: Post): Post =>
-    post.id === postId
-      ? { ...post, commentsCount: Math.max(0, post.commentsCount + delta) }
-      : post;
-
-  queryClient.setQueriesData<InfiniteFeedData>({ queryKey: ["feed"] }, (old) =>
-    old
-      ? { ...old, pages: old.pages.map((page) => ({ ...page, data: page.data.map(apply) })) }
-      : old
-  );
-  queryClient.setQueriesData<PaginatedResult<Post>>({ queryKey: ["posts-by-username"] }, (old) =>
-    old ? { ...old, data: old.data.map(apply) } : old
-  );
+function mexerNosComentariosDoCard(
+  queryClient: QueryClient,
+  postId: string,
+  mudar: (post: Post) => Partial<Post>
+) {
+  mexerNosPosts(queryClient, (post) => (post.id === postId ? { ...post, ...mudar(post) } : post));
 }
 
 export function useAddComment(postId: string) {
@@ -355,7 +353,13 @@ export function useAddComment(postId: string) {
         };
         return { ...old, pages };
       });
-      bumpCommentsCount(queryClient, postId, +1);
+      mexerNosComentariosDoCard(queryClient, postId, (post) => ({
+        commentsCount: post.commentsCount + 1,
+        commentsPreview: [
+          ...(post.commentsPreview ?? []),
+          { id: created.id, text: created.text, author: { username: created.author?.username ?? "" } },
+        ].slice(-COMENTARIOS_NA_PREVIA),
+      }));
     },
   });
 }
@@ -377,6 +381,11 @@ export function useUpdateComment(postId: string) {
             }
           : old
       );
+      mexerNosComentariosDoCard(queryClient, postId, (post) => ({
+        commentsPreview: (post.commentsPreview ?? []).map((c) =>
+          c.id === variables.id ? { ...c, text: updated.text } : c
+        ),
+      }));
     },
   });
 }
@@ -397,7 +406,12 @@ export function useDeleteComment(postId: string) {
             }
           : old
       );
-      bumpCommentsCount(queryClient, postId, -1);
+      // Tirar da prévia deixa um buraco (o anterior não está no cache); o
+      // próximo recarregamento do feed completa. Melhor que mostrar o apagado.
+      mexerNosComentariosDoCard(queryClient, postId, (post) => ({
+        commentsCount: Math.max(0, post.commentsCount - 1),
+        commentsPreview: (post.commentsPreview ?? []).filter((c) => c.id !== id),
+      }));
     },
   });
 }

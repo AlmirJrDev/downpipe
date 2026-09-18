@@ -26,6 +26,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/apiService";
 import { ApiError } from "@/services/api";
@@ -41,8 +42,7 @@ import {
 } from "@/stores/socialStore";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Post } from "@/types";
-import { CommentsSheet } from "@/components/CommentsSheet";
-import { LikersSheet } from "@/components/LikersSheet";
+import { useFolhas } from "@/stores/folhasStore";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { AdCard } from "./AdCard";
 import { HouseAdCard } from "./HouseAdCard";
@@ -255,11 +255,126 @@ function CarTagPending({ post }: { post: Post }) {
   );
 }
 
+/**
+ * Foto do card que responde a toque.
+ *
+ * Toque simples abre a foto em tela cheia, com zoom. Toque duplo curte ou
+ * descurte, com um coração grande por cima da foto pra confirmar o que
+ * aconteceu — sem ele, o toque duplo que descurte passaria despercebido.
+ *
+ * Exclusive, e não Simultaneous: o toque simples espera o tempo de um
+ * possível segundo toque antes de abrir a foto. Sem isso, todo toque duplo
+ * abriria a tela cheia por cima do coração.
+ */
+function FotoTocavel({
+  post,
+  url,
+  children,
+}: {
+  post: Post;
+  url: string | undefined;
+  children: React.ReactNode;
+}) {
+  const toggleLike = useToggleLike();
+  const abrir = useFolhas((s) => s.abrir);
+  const [coracaoCheio, setCoracaoCheio] = useState(true);
+  const escala = useSharedValue(0);
+  const opacidade = useSharedValue(0);
+
+  const curtirOuDescurtir = () => {
+    const liked = !!post.likedByMe;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setCoracaoCheio(!liked);
+    escala.value = withSequence(withTiming(1.15, { duration: 160 }), withTiming(1, { duration: 120 }));
+    opacidade.value = withSequence(
+      withTiming(1, { duration: 120 }),
+      withTiming(1, { duration: 380 }),
+      withTiming(0, { duration: 220 })
+    );
+    toggleLike.mutate({ postId: post.id, liked });
+  };
+
+  const toqueDuplo = Gesture.Tap()
+    .numberOfTaps(2)
+    .runOnJS(true)
+    .onEnd((_e, sucesso) => {
+      if (sucesso) curtirOuDescurtir();
+    });
+
+  const toqueSimples = Gesture.Tap()
+    .runOnJS(true)
+    .onEnd((_e, sucesso) => {
+      if (sucesso && url) abrir({ tipo: "foto", url });
+    });
+
+  const coracaoStyle = useAnimatedStyle(() => ({
+    opacity: opacidade.value,
+    transform: [{ scale: escala.value }],
+  }));
+
+  return (
+    <GestureDetector
+      gesture={Gesture.Exclusive(toqueDuplo, toqueSimples)}
+      // Só no navegador. O padrão da biblioteca é "none", que entrega todo
+      // toque ao gesto e trava a rolagem do feed sempre que o dedo começa
+      // numa foto — que é quase a tela inteira. "pan-y" devolve a rolagem
+      // vertical ao navegador e, de quebra, desliga o zoom da página no
+      // toque duplo, que brigaria com o curtir.
+      touchAction="pan-y"
+    >
+      <View>
+        {children}
+        <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+          <Animated.View style={coracaoStyle}>
+            <Heart
+              size={96}
+              color={colors.onPrimaryContainer}
+              fill={coracaoCheio ? colors.primaryContainer : "transparent"}
+              strokeWidth={coracaoCheio ? 1 : 1.5}
+            />
+          </Animated.View>
+        </View>
+      </View>
+    </GestureDetector>
+  );
+}
+
+/**
+ * Os comentários mais recentes, abaixo da legenda, e o convite pra ver o
+ * resto. Tocar em qualquer parte abre a lista inteira.
+ */
+function PreviaDeComentarios({ post }: { post: Post }) {
+  const abrir = useFolhas((s) => s.abrir);
+  const previa = post.commentsPreview ?? [];
+  if (post.commentsCount === 0) return null;
+
+  const restantes = post.commentsCount - previa.length;
+
+  return (
+    <Pressable
+      onPress={() => abrir({ tipo: "comentarios", postId: post.id })}
+      style={{ gap: 4 }}
+      className="active:opacity-70"
+    >
+      {restantes > 0 && (
+        <Text className="text-muted" style={{ fontSize: 13 }}>
+          {post.commentsCount === 1 ? "Ver o comentário" : `Ver os ${post.commentsCount} comentários`}
+        </Text>
+      )}
+      {previa.map((c) => (
+        <Text key={c.id} className="text-on-surface" style={{ fontSize: 13 }} numberOfLines={2}>
+          <Text style={{ fontWeight: "600" }}>@{c.author.username} </Text>
+          {c.text}
+        </Text>
+      ))}
+    </Pressable>
+  );
+}
+
 function EngagementBar({ post }: { post: Post }) {
   const toggleLike = useToggleLike();
   const toggleSave = useToggleSave();
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [likersOpen, setLikersOpen] = useState(false);
+  const abrir = useFolhas((s) => s.abrir);
   const scale = useSharedValue(1);
 
   const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -317,7 +432,7 @@ function EngagementBar({ post }: { post: Post }) {
               </Animated.View>
             </Pressable>
             <Pressable
-              onPress={() => setLikersOpen(true)}
+              onPress={() => abrir({ tipo: "curtidas", postId: post.id })}
               disabled={post.likesCount === 0}
               hitSlop={6}
             >
@@ -327,7 +442,7 @@ function EngagementBar({ post }: { post: Post }) {
             </Pressable>
           </View>
           <Pressable
-            onPress={() => setCommentsOpen(true)}
+            onPress={() => abrir({ tipo: "comentarios", postId: post.id })}
             className="flex-row items-center gap-1.5"
           >
             <MessageCircle size={21} color={colors.onSurface} />
@@ -349,8 +464,6 @@ function EngagementBar({ post }: { post: Post }) {
           </Pressable>
         </View>
       </View>
-      <CommentsSheet postId={post.id} visible={commentsOpen} onClose={() => setCommentsOpen(false)} />
-      <LikersSheet postId={post.id} visible={likersOpen} onClose={() => setLikersOpen(false)} />
     </>
   );
 }
@@ -397,16 +510,18 @@ function NormalPost({ post }: { post: Post }) {
     <View className="mb-6 border border-border bg-card">
       <PostHeader post={post} />
       {post.imageUrl && (
-        <Image
-          source={{ uri: post.imageUrl }}
-          // A FlatList reaproveita a linha ao rolar. Sem isto, o card novo
-          // mostra por um instante a foto do post anterior, que já estava
-          // carregada, e depois troca.
-          recyclingKey={post.id}
-          style={{ width: "100%", height: 420 }}
-          contentFit="cover"
-          transition={200}
-        />
+        <FotoTocavel post={post} url={post.imageUrl}>
+          <Image
+            source={{ uri: post.imageUrl }}
+            // A FlatList reaproveita a linha ao rolar. Sem isto, o card novo
+            // mostra por um instante a foto do post anterior, que já estava
+            // carregada, e depois troca.
+            recyclingKey={post.id}
+            style={{ width: "100%", height: 420 }}
+            contentFit="cover"
+            transition={200}
+          />
+        </FotoTocavel>
       )}
       <EngagementBar post={post} />
       <View className="px-4 pb-4 pt-1" style={{ gap: 8 }}>
@@ -419,6 +534,7 @@ function NormalPost({ post }: { post: Post }) {
           </Text>
           {post.caption}
         </Text>
+        <PreviaDeComentarios post={post} />
         <EventTag post={post} />
       </View>
       <CarTagPending post={post} />
@@ -451,40 +567,42 @@ function ProjectUpdatePost({ post }: { post: Post }) {
         <OwnerMenu post={post} />
       </View>
 
-      <View style={{ height: 300 }}>
-        {post.imageUrl && (
-          <Image
-            source={{ uri: post.imageUrl }}
-            recyclingKey={post.id}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            transition={200}
-          />
-        )}
-        <View className="absolute top-3 right-3 bg-primary-container px-2 py-1 flex-row items-center gap-1.5">
-          <View style={{ width: 6, height: 6, backgroundColor: colors.onPrimaryContainer }} />
-          <Text
-            className="text-on-primary-container"
-            style={{ fontSize: 9, fontWeight: "700", letterSpacing: 1 }}
+      <FotoTocavel post={post} url={post.imageUrl}>
+        <View style={{ height: 300 }}>
+          {post.imageUrl && (
+            <Image
+              source={{ uri: post.imageUrl }}
+              recyclingKey={post.id}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+              transition={200}
+            />
+          )}
+          <View className="absolute top-3 right-3 bg-primary-container px-2 py-1 flex-row items-center gap-1.5">
+            <View style={{ width: 6, height: 6, backgroundColor: colors.onPrimaryContainer }} />
+            <Text
+              className="text-on-primary-container"
+              style={{ fontSize: 9, fontWeight: "700", letterSpacing: 1 }}
+            >
+              PROJETO EM BUILD
+            </Text>
+          </View>
+          {/* Faixa escura: sem ela o texto branco desaparece em foto clara. */}
+          <View
+            className="absolute bottom-0 left-0 right-0 px-4 py-3 flex-row items-center gap-2"
+            style={{ backgroundColor: colors.overlayMedium }}
           >
-            PROJETO EM BUILD
-          </Text>
+            <Wrench size={16} color={colors.onSurface} />
+            <Text
+              className="text-on-surface flex-1"
+              style={{ fontSize: 17, fontWeight: "600" }}
+              numberOfLines={1}
+            >
+              {post.caption}
+            </Text>
+          </View>
         </View>
-        {/* Faixa escura: sem ela o texto branco desaparece em foto clara. */}
-        <View
-          className="absolute bottom-0 left-0 right-0 px-4 py-3 flex-row items-center gap-2"
-          style={{ backgroundColor: colors.overlayMedium }}
-        >
-          <Wrench size={16} color={colors.onSurface} />
-          <Text
-            className="text-on-surface flex-1"
-            style={{ fontSize: 17, fontWeight: "600" }}
-            numberOfLines={1}
-          >
-            {post.caption}
-          </Text>
-        </View>
-      </View>
+      </FotoTocavel>
 
       <View className="px-4 py-4">
         <Text className="text-on-surface-variant" style={{ fontSize: 10, letterSpacing: 1.5 }}>
@@ -514,7 +632,9 @@ function ProjectUpdatePost({ post }: { post: Post }) {
       </View>
 
       <EngagementBar post={post} />
-      <View className="h-3" />
+      <View className="px-4 pt-1 pb-4">
+        <PreviaDeComentarios post={post} />
+      </View>
     </View>
   );
 }
@@ -532,12 +652,14 @@ function EvolutionPost({ post }: { post: Post }) {
         ) : (
           // Post marcado como evolução mas com uma foto só (ex.: upload
           // parcial) — mostra o que existe em vez de quebrar o card.
-          <Image
-            source={{ uri: post.beforeImageUrl ?? post.afterImageUrl }}
-            recyclingKey={post.id}
-            style={{ width: "100%", aspectRatio: 4 / 3 }}
-            contentFit="cover"
-          />
+          <FotoTocavel post={post} url={post.beforeImageUrl ?? post.afterImageUrl}>
+            <Image
+              source={{ uri: post.beforeImageUrl ?? post.afterImageUrl }}
+              recyclingKey={post.id}
+              style={{ width: "100%", aspectRatio: 4 / 3 }}
+              contentFit="cover"
+            />
+          </FotoTocavel>
         )}
         <View className="absolute top-3 right-3 bg-primary-container px-2 py-1">
           <Text
@@ -554,6 +676,7 @@ function EvolutionPost({ post }: { post: Post }) {
         <Text className="text-on-surface" style={{ fontSize: 14 }}>
           {post.caption}
         </Text>
+        <PreviaDeComentarios post={post} />
         <EventTag post={post} />
       </View>
     </View>

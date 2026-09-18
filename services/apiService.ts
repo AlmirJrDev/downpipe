@@ -9,6 +9,7 @@ import type {
   AppNotification,
   Car,
   Comment,
+  CommentPreview,
   Modification,
   ModificationCategory,
   Category,
@@ -338,6 +339,7 @@ interface RawPost {
   media: PostMedia[];
   likesCount: number;
   commentsCount: number;
+  commentsPreview?: CommentPreview[];
   likedByMe: boolean | null;
   savedByMe: boolean | null;
   carTagStatus: "approved" | "pending" | null;
@@ -365,6 +367,7 @@ function toPost(raw: RawPost): Post {
     progressPercent: raw.progressPercent ?? undefined,
     likesCount: raw.likesCount,
     commentsCount: raw.commentsCount,
+    commentsPreview: raw.commentsPreview ?? [],
     likedByMe: raw.likedByMe,
     savedByMe: raw.savedByMe,
     carTagStatus: raw.carTagStatus,

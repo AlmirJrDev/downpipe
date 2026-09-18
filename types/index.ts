@@ -195,6 +195,8 @@ export interface Post extends AdFields {
   progressPercent?: number;
   likesCount: number;
   commentsCount: number;
+  /** Os comentários mais recentes (até 2), o mais novo por último. */
+  commentsPreview?: CommentPreview[];
   likedByMe?: boolean | null;
   // Salvar é privado: null pra quem não está logado, como likedByMe.
   savedByMe?: boolean | null;
@@ -207,6 +209,13 @@ export interface Post extends AdFields {
   /** Rolê marcado na publicação — embutido via join, sem requisição extra. */
   event?: { id: string; name: string; startsAt: string; city: string } | null;
   createdAt: string;
+}
+
+/** Comentário resumido, pra prévia no card do feed. */
+export interface CommentPreview {
+  id: string;
+  text: string;
+  author: { username: string };
 }
 
 export interface Comment {
