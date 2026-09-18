@@ -216,7 +216,7 @@ export default function EventChatScreen() {
     <AppHeader
       title={evento?.name ? evento.name.toUpperCase() : "CHAT DO ROLÊ"}
       left={
-        <Pressable hitSlop={8} onPress={voltar}>
+        <Pressable hitSlop={8} onPress={voltar} accessibilityRole="button" accessibilityLabel="Voltar pro rolê">
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }
@@ -315,6 +315,9 @@ export default function EventChatScreen() {
         />
         <Pressable
           onPress={enviar}
+          // Botão só com ícone: sem nome, o leitor de tela anuncia "botão" e nada mais.
+          accessibilityRole="button"
+          accessibilityLabel="Enviar mensagem"
           disabled={!texto.trim() || enviando}
           hitSlop={6}
           className="items-center justify-center active:opacity-70"
