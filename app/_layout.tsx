@@ -144,6 +144,7 @@ export default function RootLayout() {
                   <Stack.Screen name="bloqueados" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="excluir-minha-conta" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="event-chat/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen
                     name="add-event"
                     options={{ presentation: "modal", animation: "slide_from_bottom" }}

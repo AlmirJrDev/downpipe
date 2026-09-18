@@ -786,6 +786,7 @@ async function denunciar(alvo: {
   postId?: string;
   commentId?: string;
   profileId?: string;
+  messageId?: string;
   reason: MotivoDenuncia;
   details?: string;
 }): Promise<{ message: string }> {
@@ -811,6 +812,50 @@ async function respondCarTag(postId: string, accept: boolean): Promise<Post> {
 }
 
 /** O que o pessoal registrou no rolê — a memória coletiva do encontro. */
+// ---------------------------------------------------------------------------
+// Chat do rolê
+// ---------------------------------------------------------------------------
+
+export interface ChatMessage {
+  id: string;
+  /** "sistema" = escrita pelo app, como "horário mudou". Não tem autor. */
+  kind: "mensagem" | "sistema";
+  text: string;
+  createdAt: string;
+  author: { id: string; username: string; displayName: string; avatarUrl: string | null } | null;
+}
+
+export interface ChatWindow {
+  organizerId: string;
+  isOrganizer: boolean;
+  /** Há mensagens mais antigas que as desta janela. */
+  hasOlder: boolean;
+  messages: ChatMessage[];
+}
+
+/**
+ * Sem janela: as mensagens mais recentes. `desde`: o que chegou a partir
+ * daquela mensagem (inclusive, o app descarta por id o que já tem). `antes`:
+ * as anteriores, pra rolar pra cima.
+ */
+async function getEventChat(eventId: string, janela: { desde?: string; antes?: string } = {}): Promise<ChatWindow> {
+  return api.get<ChatWindow>(`/events/${eventId}/chat${qs(janela)}`);
+}
+
+async function sendEventMessage(eventId: string, text: string): Promise<ChatMessage> {
+  return api.post<ChatMessage>(`/events/${eventId}/chat`, { text });
+}
+
+async function deleteEventMessage(eventId: string, messageId: string): Promise<void> {
+  await api.delete(`/events/${eventId}/chat/${messageId}`);
+}
+
+/** null = quem pergunta não participa do rolê, e o chat nem aparece pra ele. */
+async function getEventChatUnread(eventId: string): Promise<number | null> {
+  const { unread } = await api.get<{ unread: number | null }>(`/events/${eventId}/chat/unread`);
+  return unread;
+}
+
 async function getPostsByEvent(
   eventId: string,
   page = 1,
@@ -938,6 +983,10 @@ export const apiService = {
   updateAttendanceCar,
   getEventAttendees,
   getPostsByEvent,
+  getEventChat,
+  sendEventMessage,
+  deleteEventMessage,
+  getEventChatUnread,
   respondCarTag,
   denunciar,
   bloquear,

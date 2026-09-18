@@ -12,6 +12,8 @@ import { Share } from "@/utils/share";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { apiService } from "@/services/apiService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ArrowLeft,
@@ -20,6 +22,7 @@ import {
   Globe,
   Link2,
   MapPin,
+  MessagesSquare,
   Navigation,
   Pencil,
   Share2,
@@ -89,6 +92,19 @@ export default function EventDetailsScreen() {
   // Grade de 3 colunas com 3px de respiro, dentro do padding de 20 da tela.
   const thumbSize = (width - 40 - 6) / 3;
 
+  // Chat é de quem vai: confirmados e o organizador. Aqui em cima, antes dos
+  // returns de carregamento, porque hook não pode ficar condicional.
+  const participa =
+    !!event && (!!event.attendingByMe || (!!me && me.id === event.organizerId));
+  const { data: naoLidas } = useQuery({
+    queryKey: ["event-chat-unread", id],
+    queryFn: () => apiService.getEventChatUnread(id),
+    enabled: !!id && participa,
+    // A tela do rolê fica aberta enquanto a pessoa decide ou confere o local;
+    // o número acompanha sem ela precisar sair e voltar.
+    refetchInterval: 30_000,
+  });
+
   if (isPending) {
     return (
       <View className="flex-1 bg-surface">
@@ -126,7 +142,7 @@ export default function EventDetailsScreen() {
   const restantes = event.attendeesCount - attendees.length;
 
   const confirmDelete = () =>
-    Alert.alert("Cancelar evento", `Remover "${event.name}"? Essa ação não pode ser desfeita.`, [
+    Alert.alert("Cancelar evento", `Remover "${event.name}"? Quem confirmou presença recebe um aviso, e não dá pra desfazer.`, [
       { text: "Voltar", style: "cancel" },
       {
         text: "Cancelar evento",
@@ -347,6 +363,40 @@ export default function EventDetailsScreen() {
               </Text>
             </Pressable>
           </View>
+
+          {/* Logo abaixo de "vou": é pra quem vai. Quem ainda não confirmou
+              não vê o botão — veria só um convite pra confirmar do outro lado. */}
+          {participa && (
+            <Pressable
+              onPress={() => router.push(`/event-chat/${event.id}`)}
+              className="flex-row items-center justify-between mt-2.5 px-4 py-4 border border-outline active:bg-white/5"
+            >
+              <View className="flex-row items-center gap-2">
+                <MessagesSquare size={16} color={colors.onSurface} />
+                <Text
+                  className="text-on-surface"
+                  style={{ fontSize: 13, fontWeight: "700", letterSpacing: 1.2 }}
+                >
+                  CHAT DO ROLÊ
+                </Text>
+              </View>
+              {!!naoLidas && naoLidas > 0 && (
+                <View
+                  className="items-center justify-center"
+                  style={{
+                    minWidth: 22,
+                    height: 22,
+                    paddingHorizontal: 6,
+                    backgroundColor: colors.primaryContainer,
+                  }}
+                >
+                  <Text style={{ color: colors.onPrimaryContainer, fontSize: 12, fontWeight: "700" }}>
+                    {naoLidas > 99 ? "99+" : naoLidas}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          )}
 
           {/* Qual carro vou levar. Só aparece depois de confirmar, e só pra
               quem tem carro — quem vai de carona ou pra fotografar não

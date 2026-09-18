@@ -17,7 +17,8 @@ import { colors, typography } from "@/constants/theme";
 type Alvo =
   | { postId: string }
   | { commentId: string }
-  | { profileId: string };
+  | { profileId: string }
+  | { messageId: string };
 
 const MOTIVOS: { valor: MotivoDenuncia; rotulo: string }[] = [
   { valor: "conteudo_improprio", rotulo: "Conteúdo impróprio" },
