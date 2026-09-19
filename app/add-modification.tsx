@@ -11,12 +11,12 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { router, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, Trash2, Wrench } from "lucide-react-native";
+import { ArrowLeft, CheckCircle2, Megaphone, Trash2, Wrench } from "lucide-react-native";
 import { colors } from "@/constants/theme";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { MOD_ICONS } from "@/constants/modIcons";
 import { AppHeader } from "@/components/AppHeader";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { useMyGarage } from "@/stores/garageStore";
 import {
   useModsByCar,
@@ -27,6 +27,7 @@ import {
 import { carTitle } from "@/utils/car";
 import { categoryLabel } from "@/utils/labels";
 import { ApiError } from "@/services/api";
+import { rotaDeCompartilharMod } from "@/utils/compartilharMod";
 import type { ModificationCategory } from "@/types";
 
 // Espelha modificationCategoryEnum do backend.
@@ -84,6 +85,13 @@ export default function AddModificationScreen() {
   const [date, setDate] = useState(todayDisplay());
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Modificação nova acabou de ser salva: a tela vira o convite pra publicar.
+  const [registrada, setRegistrada] = useState<{
+    carId: string;
+    name: string;
+    category: ModificationCategory;
+    cost: number;
+  } | null>(null);
 
   const cars = myCars ?? [];
   const selectedCarId = carId ?? cars[0]?.id;
@@ -137,7 +145,11 @@ export default function AddModificationScreen() {
 
     addModification.mutate(
       { carId: selectedCarId, input: fields },
-      { onSuccess: () => router.replace(`/car/${selectedCarId}`), onError }
+      {
+        onSuccess: () =>
+          setRegistrada({ carId: selectedCarId, name: fields.name, category, cost: fields.cost }),
+        onError,
+      }
     );
   };
 
@@ -171,6 +183,38 @@ export default function AddModificationScreen() {
       }
     />
   );
+
+  // Registrar a mod não aparece pra ninguém: ela fica na aba do carro. Publicar
+  // é o que leva pro feed — e oferecer aqui, com tudo preenchido, é a hora em
+  // que a pessoa ainda está empolgada com a peça nova.
+  if (registrada) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        <AppHeader title="Modificação registrada" />
+        <View className="flex-1 justify-center px-6" style={{ gap: 12 }}>
+          <View className="items-center mb-4">
+            <CheckCircle2 size={40} color={colors.primary} />
+            <Text className="text-on-surface text-center mt-4" style={{ fontSize: 20, fontWeight: "600" }}>
+              {registrada.name}
+            </Text>
+            <Text className="text-on-surface-variant text-center mt-2" style={{ fontSize: 14, lineHeight: 20 }}>
+              Já entrou no investimento do carro. Quer mostrar pra galera? Publica uma atualização
+              do projeto no feed — só falta a foto.
+            </Text>
+          </View>
+          <PrimaryButton
+            label="Publicar no feed"
+            onPress={() => router.replace(rotaDeCompartilharMod(registrada.carId, registrada) as never)}
+            icon={<Megaphone size={15} color={colors.onPrimaryContainer} />}
+          />
+          <SecondaryButton
+            label="Agora não"
+            onPress={() => router.replace(`/car/${registrada.carId}`)}
+          />
+        </View>
+      </View>
+    );
+  }
 
   // Em edição a lista do carro precisa chegar antes de preencher o
   // formulário — sem isso a tela abriria com os campos vazios.

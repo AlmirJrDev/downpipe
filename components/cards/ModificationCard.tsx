@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { Pencil } from "lucide-react-native";
+import { Megaphone, Pencil } from "lucide-react-native";
 import { colors } from "@/constants/theme";
 import { modIconComponent } from "@/constants/modIcons";
 import { categoryLabel } from "@/utils/labels";
@@ -20,10 +20,13 @@ function monthLabel(date: string | null): string {
 export function ModificationCard({
   mod,
   onPress,
+  onShare,
 }: {
   mod: Modification;
   /** Só o dono recebe isso — sem ele o card continua sendo só leitura. */
   onPress?: () => void;
+  /** Publicar a mod no feed como atualização do projeto. Também só do dono. */
+  onShare?: () => void;
 }) {
   const Icon = modIconComponent(mod.icon);
 
@@ -57,8 +60,21 @@ export function ModificationCard({
         <Text className="text-primary mt-0.5" style={{ fontSize: 14, fontWeight: "600" }}>
           R$ {(mod.cost ?? 0).toLocaleString("pt-BR")}
         </Text>
-        {/* Sem o lápis, um card tocável não se distingue de um de leitura. */}
-        {onPress && <Pencil size={13} color={colors.onSurfaceVariant} style={{ marginTop: 4 }} />}
+        <View className="flex-row items-center gap-3" style={{ marginTop: 6 }}>
+          {onShare && (
+            <Pressable
+              onPress={onShare}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={`Publicar ${mod.name} no feed`}
+              className="active:opacity-60"
+            >
+              <Megaphone size={14} color={colors.primary} />
+            </Pressable>
+          )}
+          {/* Sem o lápis, um card tocável não se distingue de um de leitura. */}
+          {onPress && <Pencil size={13} color={colors.onSurfaceVariant} />}
+        </View>
       </View>
     </>
   );

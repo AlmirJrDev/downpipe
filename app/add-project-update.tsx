@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Camera, Flag } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ImageCropper } from "@/components/ImageCropper";
@@ -21,19 +21,36 @@ export default function AddProjectUpdateScreen() {
   const { data: myCars } = useMyGarage();
   const createPost = useCreatePost();
 
-  const [carId, setCarId] = useState<string | undefined>(undefined);
+  // Vindo de uma modificação (ver rotaDeCompartilharMod), a tela abre
+  // preenchida com ela e só falta a foto.
+  const params = useLocalSearchParams<{
+    carId?: string;
+    subtitle?: string;
+    caption?: string;
+    cost?: string;
+  }>();
+
+  const [carId, setCarId] = useState<string | undefined>(params.carId);
   const [photoUri, setPhotoUri] = useState<string | undefined>();
   // Foto escolhida aguardando recorte (abre o ImageCropper).
   const [pendingUri, setPendingUri] = useState<string | null>(null);
-  const [subtitle, setSubtitle] = useState("");
-  const [caption, setCaption] = useState("");
-  const [cost, setCost] = useState("");
+  const [subtitle, setSubtitle] = useState(params.subtitle ?? "");
+  const [caption, setCaption] = useState(params.caption ?? "");
+  const [cost, setCost] = useState(params.cost ?? "");
   const [progress, setProgress] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const cars = myCars ?? [];
   const selectedCarId = carId ?? cars[0]?.id;
   const car = cars.find((c) => c.id === selectedCarId);
+
+  // A evolução que o próprio app já calcula pelas etapas do projeto, pra
+  // ninguém ter que ir lá conferir. Só enquanto o campo está vazio: o que a
+  // pessoa digitou manda.
+  const progressoDoCarro = car?.projectProgress ?? 0;
+  useEffect(() => {
+    if (progressoDoCarro > 0) setProgress((atual) => atual || String(progressoDoCarro));
+  }, [progressoDoCarro]);
 
   const pickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });

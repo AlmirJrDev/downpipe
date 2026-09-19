@@ -18,6 +18,7 @@ import { useModsByCar } from "@/stores/projectStore";
 import { ImageGallery } from "@/components/ImageGallery";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ModificationCard } from "@/components/cards/ModificationCard";
+import { rotaDeCompartilharMod } from "@/utils/compartilharMod";
 import { EmptyState } from "@/components/ui/States";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { PrimaryButton } from "@/components/ui/Button";
@@ -359,6 +360,11 @@ export default function CarDetailsScreen() {
                             router.push(
                               `/add-modification?carId=${resolvedCar.id}&modId=${m.id}`
                             )
+                        : undefined
+                    }
+                    onShare={
+                      isOwner
+                        ? () => router.push(rotaDeCompartilharMod(resolvedCar.id, m) as never)
                         : undefined
                     }
                   />
