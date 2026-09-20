@@ -129,8 +129,12 @@ export default function EditorDeArteScreen() {
   const [comArroba, setComArroba] = useState(true);
   const [pronta, setPronta] = useState(false);
 
+  // As mods chegam depois do carro. Preencher antes disso escolhia os três
+  // números sem elas — e a pessoa via a arte sem a contagem de mods.
+  const faltaCarregar = ehCarro && mods === undefined;
+
   useEffect(() => {
-    if (!base || pronta) return;
+    if (!base || pronta || faltaCarregar) return;
     setFoto(base.foto);
     setTitulo(base.titulo);
     setSubtitulo(base.subtitulo ?? "");
@@ -141,7 +145,7 @@ export default function EditorDeArteScreen() {
         .map((o) => o.chave)
     );
     setPronta(true);
-  }, [base, opcoesDeDestaque, pronta]);
+  }, [base, opcoesDeDestaque, pronta, faltaCarregar]);
 
   const arteAtual: ArteDeStory | null = useMemo(() => {
     if (!base) return null;

@@ -52,7 +52,8 @@ export function destaquesDoCarro(car: Car, modsCount: number): OpcaoDeDestaque[]
     opcoes.push({ chave: "investido", rotulo: "Investido", valor: reais(car.amountInvested) });
   if (modsCount > 0) opcoes.push({ chave: "mods", rotulo: "Mods", valor: String(modsCount) });
   if (car.eventsCount) opcoes.push({ chave: "roles", rotulo: "Rolês", valor: String(car.eventsCount) });
-  opcoes.push({ chave: "tempo", rotulo: "No projeto", valor: `${diasDeProjeto(car.createdAt)} dias` });
+  const dias = diasDeProjeto(car.createdAt);
+  opcoes.push({ chave: "tempo", rotulo: "No projeto", valor: `${dias} ${dias === 1 ? "dia" : "dias"}` });
   if (car.torque != null) opcoes.push({ chave: "torque", rotulo: "Torque", valor: `${car.torque} kgfm` });
   if (car.mileage != null)
     opcoes.push({ chave: "km", rotulo: "Km", valor: car.mileage.toLocaleString("pt-BR") });
