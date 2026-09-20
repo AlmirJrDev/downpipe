@@ -5,14 +5,20 @@
  * de conteúdo — o que vale a pena aparecer no Stories — e não pixel.
  */
 import { carTitle } from "@/utils/car";
-import { linkPublico } from "@/utils/linkPublico";
+import { basePublica } from "@/utils/linkPublico";
 import { postThumbnail } from "@/utils/post";
 import type { ArteDeStory, DestaqueDaArte } from "@/utils/arteDeStory";
 import type { Car, Post } from "@/types";
 
-/** Só o domínio + caminho: "https://" ocupando espaço na arte não ajuda. */
-function linkCurto(url: string): string {
-  return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+/**
+ * O endereço impresso na arte: só o site.
+ *
+ * O link cheio de cada carro/post termina num uuid — ninguém digita isso
+ * olhando um story, e ele não fica clicável ali. O que leva a pessoa até lá
+ * é o @ logo acima; o site diz de onde veio.
+ */
+function siteCurto(): string {
+  return `${basePublica()}/app`.replace(/^https?:[/][/]/, "");
 }
 
 const reais = (valor: number) => `R$ ${valor.toLocaleString("pt-BR")}`;
@@ -40,7 +46,7 @@ export function arteDoCarro(car: Car, modsCount: number): ArteDeStory {
     // O @ do carro na frente do pessoal: nesses perfis é ele que a pessoa
     // divulga, e é pra ele que o story manda o pessoal.
     arroba: car.instagram ?? car.owner?.username ?? null,
-    link: linkCurto(linkPublico.carro(car.id)),
+    link: siteCurto(),
     nome: `downpipe-${carTitle(car).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
   };
 }
@@ -59,7 +65,7 @@ export function arteDoPost(post: Post, instagramDoAutor?: string | null): ArteDe
         ? [{ rotulo: "Investido", valor: reais(post.cost) }]
         : [],
     arroba: instagramDoAutor ?? post.author?.username ?? null,
-    link: linkCurto(linkPublico.post(post.id)),
+    link: siteCurto(),
     nome: `downpipe-${post.id.slice(0, 8)}`,
   };
 }

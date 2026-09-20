@@ -223,9 +223,16 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
     ctx.fillText(`@${arte.arroba}`, M, A - 150);
   }
   espacar(ctx, "3px");
-  ctx.font = `400 30px ${FONT_STACK}`;
   ctx.fillStyle = colors.muted;
-  ctx.fillText(arte.link.toUpperCase(), M, A - 92);
+  const endereco = arte.link.toUpperCase();
+  // Encolhe até caber: texto de canvas não quebra nem corta sozinho — ele
+  // simplesmente vaza pra fora da imagem.
+  let corpo = 32;
+  do {
+    corpo -= 2;
+    ctx.font = `400 ${corpo}px ${FONT_STACK}`;
+  } while (ctx.measureText(endereco).width > L - M * 2 && corpo > 18);
+  ctx.fillText(endereco, M, A - 92);
   espacar(ctx, "0px");
 
   return canvas;
@@ -235,7 +242,11 @@ function paraBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Não foi possível gerar a imagem."))),
-      "image/png"
+      // JPEG, não PNG: a arte é uma foto, e em PNG ela sai com quase 3 MB —
+      // peso que atrapalha o compartilhamento pelo celular sem ganho nenhum
+      // de qualidade visível.
+      "image/jpeg",
+      0.92
     );
   });
 }
@@ -249,7 +260,7 @@ export async function compartilharArteDeStory(
   arte: ArteDeStory
 ): Promise<"compartilhado" | "baixado"> {
   const blob = await paraBlob(await desenhar(arte));
-  const arquivo = new File([blob], `${arte.nome}.png`, { type: "image/png" });
+  const arquivo = new File([blob], `${arte.nome}.jpg`, { type: "image/jpeg" });
 
   if (navigator.canShare?.({ files: [arquivo] })) {
     try {
