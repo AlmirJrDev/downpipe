@@ -29,6 +29,10 @@ export interface ArteDeStory {
 
 export const arteDeStoryDisponivel = false;
 
+export async function gerarArteDeStory(_arte: ArteDeStory): Promise<Blob> {
+  throw new Error("A arte pro story só existe na versão web por enquanto.");
+}
+
 export async function compartilharArteDeStory(_arte: ArteDeStory): Promise<"compartilhado" | "baixado"> {
   throw new Error("A arte pro story só existe na versão web por enquanto.");
 }

@@ -185,6 +185,7 @@ export default function RootLayout() {
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-chat/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="post/[id]" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="arte/[tipo]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen
                     name="add-event"
                     options={{ presentation: "modal", animation: "slide_from_bottom" }}

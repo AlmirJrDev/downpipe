@@ -79,6 +79,13 @@ function quebrar(
   return linhas;
 }
 
+/** A logo do app, servida junto com o PWA. Fica em cache entre uma arte e outra. */
+let logo: Promise<HTMLImageElement | null> | null = null;
+function carregarLogo(): Promise<HTMLImageElement | null> {
+  logo ??= carregarFoto(`${window.location.origin}/app/logo-lp.png`);
+  return logo;
+}
+
 function carregarFoto(url: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -154,16 +161,23 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   ctx.fillStyle = topo;
   ctx.fillRect(0, 0, L, 260);
 
-  // Wordmark.
+  // Logo. Se ela não carregar, o nome escrito segura o lugar — a arte não
+  // pode sair sem assinatura.
   ctx.textBaseline = "alphabetic";
-  espacar(ctx, "10px");
-  ctx.font = `700 34px ${FONT_STACK}`;
-  ctx.fillStyle = colors.onSurface;
-  ctx.fillText("DOWNPIPE", M, 118);
-  const larguraDoNome = ctx.measureText("DOWNPIPE").width;
-  espacar(ctx, "0px");
-  ctx.fillStyle = colors.primary;
-  ctx.fillRect(M, 134, larguraDoNome - 10, 5);
+  const marca = await carregarLogo();
+  if (marca) {
+    const largura = 380;
+    ctx.drawImage(marca, M, 62, largura, (marca.height / marca.width) * largura);
+  } else {
+    espacar(ctx, "10px");
+    ctx.font = `700 34px ${FONT_STACK}`;
+    ctx.fillStyle = colors.onSurface;
+    ctx.fillText("DOWNPIPE", M, 118);
+    const larguraDoNome = ctx.measureText("DOWNPIPE").width;
+    espacar(ctx, "0px");
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(M, 134, larguraDoNome - 10, 5);
+  }
 
   // Selo sobre a foto.
   if (arte.selo) {
@@ -238,6 +252,11 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   return canvas;
 }
 
+/** Só a imagem, pra quem vai mostrar a prévia na tela. */
+export async function gerarArteDeStory(arte: ArteDeStory): Promise<Blob> {
+  return paraBlob(await desenhar(arte));
+}
+
 function paraBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -259,7 +278,7 @@ function paraBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 export async function compartilharArteDeStory(
   arte: ArteDeStory
 ): Promise<"compartilhado" | "baixado"> {
-  const blob = await paraBlob(await desenhar(arte));
+  const blob = await gerarArteDeStory(arte);
   const arquivo = new File([blob], `${arte.nome}.jpg`, { type: "image/jpeg" });
 
   if (navigator.canShare?.({ files: [arquivo] })) {

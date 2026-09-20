@@ -24,7 +24,6 @@ import { EmptyState } from "@/components/ui/States";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 import { useArteDeStory } from "@/hooks/useArteDeStory";
-import { arteDoCarro } from "@/utils/montarArte";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { carCatalogName, carTitle, carYear } from "@/utils/car";
 import { postThumbnail } from "@/utils/post";
@@ -284,9 +283,8 @@ export default function CarDetailsScreen() {
               {isOwner && arte.disponivel && (
                 <SecondaryButton
                   label="Arte pro Stories"
-                  loading={arte.gerando}
                   icon={<Instagram size={14} color={colors.onSurface} />}
-                  onPress={() => arte.gerar(arteDoCarro(resolvedCar, mods?.length ?? 0))}
+                  onPress={() => router.push(`/arte/carro?id=${resolvedCar.id}`)}
                 />
               )}
 

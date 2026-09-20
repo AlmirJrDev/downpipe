@@ -31,7 +31,6 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/apiService";
 import { useArteDeStory } from "@/hooks/useArteDeStory";
-import { arteDoPost } from "@/utils/montarArte";
 import { ApiError } from "@/services/api";
 import { ReportSheet } from "@/components/ReportSheet";
 import { colors } from "@/constants/theme";
@@ -143,7 +142,7 @@ function OwnerMenu({ post }: { post: Post }) {
           ? [
               {
                 text: "Arte pro Stories",
-                onPress: () => arte.gerar(arteDoPost(post, me.instagram)),
+                onPress: () => router.push(`/arte/post?id=${post.id}`),
               },
             ]
           : []),
