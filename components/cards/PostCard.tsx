@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import {
   Clock,
   Heart,
+  Instagram,
   MapPin,
   MessageCircle,
   MoreHorizontal,
@@ -391,6 +392,8 @@ function PreviaDeComentarios({ post }: { post: Post }) {
 }
 
 function EngagementBar({ post }: { post: Post }) {
+  const { data: me } = useCurrentUser();
+  const arte = useArteDeStory();
   const toggleLike = useToggleLike();
   const toggleSave = useToggleSave();
   const abrir = useFolhas((s) => s.abrir);
@@ -474,6 +477,18 @@ function EngagementBar({ post }: { post: Post }) {
               fill={saved ? colors.primary : "transparent"}
             />
           </Pressable>
+          {/* Só pro dono, e só onde a arte existe: ela leva o @ de quem
+              publicou. Pra visitante a barra fica como antes. */}
+          {arte.disponivel && !!me && post.author?.username === me.username && (
+            <Pressable
+              onPress={() => router.push(`/arte/post?id=${post.id}`)}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Arte pro Stories"
+            >
+              <Instagram size={20} color={colors.onSurface} />
+            </Pressable>
+          )}
           <Pressable onPress={handleShare} hitSlop={6}>
             <Share2 size={20} color={colors.onSurface} />
           </Pressable>
