@@ -26,6 +26,9 @@ const LINHA_DO_SUBTITULO = 54;
 const BLOCO_DE_DESTAQUES = 194;
 const RESPIRO_ANTES_DO_RODAPE = 60;
 const RODAPE = 200;
+/** Diâmetro do avatar e o respiro abaixo dele. */
+const AVATAR = 132;
+const BLOCO_DO_AVATAR = AVATAR + 32;
 /** No estilo moldura, onde a foto começa — abaixo da logo. */
 const TOPO_DA_MOLDURA = 200;
 
@@ -129,9 +132,11 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   ctx.font = `400 38px ${FONT_STACK}`;
   const linhasDoSubtitulo = arte.subtitulo ? quebrar(ctx, arte.subtitulo, L - M * 2, 1) : [];
   const destaques = (arte.destaques ?? []).slice(0, 3);
+  const avatar = arte.avatar ? await carregarFoto(arte.avatar) : null;
 
   const alturaDoTexto =
     RESPIRO_APOS_A_FOTO +
+    (avatar ? BLOCO_DO_AVATAR : 0) +
     linhasDoTitulo.length * LINHA_DO_TITULO +
     linhasDoSubtitulo.length * LINHA_DO_SUBTITULO +
     (destaques.length > 0 ? BLOCO_DE_DESTAQUES : 0) +
@@ -233,6 +238,24 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   // Bloco de texto. Na capa ele fica ancorado na base, e não colado na
   // foto — que ali termina junto com a imagem inteira.
   let y = inicioDoTexto + RESPIRO_APOS_A_FOTO;
+
+  // Avatar redondo abrindo o bloco: numa arte de perfil é o rosto que
+  // identifica, não a foto de fundo.
+  if (avatar) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(M + AVATAR / 2, y + AVATAR / 2, AVATAR / 2, 0, Math.PI * 2);
+    ctx.clip();
+    desenharCobrindo(ctx, avatar, M, y, AVATAR, AVATAR);
+    ctx.restore();
+    // Anel vermelho, o mesmo que o app usa em volta da foto no perfil.
+    ctx.strokeStyle = colors.primaryContainer;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(M + AVATAR / 2, y + AVATAR / 2, AVATAR / 2 - 3, 0, Math.PI * 2);
+    ctx.stroke();
+    y += BLOCO_DO_AVATAR;
+  }
 
   ctx.font = `700 76px ${FONT_STACK}`;
   ctx.fillStyle = colors.onSurface;

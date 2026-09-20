@@ -12,10 +12,11 @@ import type { AlertButton } from "react-native";
 import { Share } from "@/utils/share";
 import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
-import { LogOut, MoreVertical, Share2 } from "lucide-react-native";
+import { Instagram, LogOut, MoreVertical, Share2 } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { InstagramLink } from "@/components/ui/InstagramLink";
+import { useArteDeStory } from "@/hooks/useArteDeStory";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatCard } from "@/components/ui/Chips";
 import { PostGrid } from "@/components/PostGrid";
@@ -37,6 +38,7 @@ const SCREEN_PAD = spacing.marginMobile;
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const { data: me, isLoading: meLoading, isError: meError } = useCurrentUser();
+  const arte = useArteDeStory();
 
   // Quantas denúncias esperam resposta. Só quem modera pergunta: pros
   // outros a rota responde 404, e o menu nem mostra a linha.
@@ -247,6 +249,18 @@ export default function ProfileScreen() {
                 onPress={shareProfile}
               />
             </View>
+            {/* Compartilhar manda o link; isto aqui manda a imagem pronta
+                pro Stories. São dois usos diferentes, por isso os dois. */}
+            {arte.disponivel && (
+              <Pressable
+                onPress={() => router.push(`/arte/perfil?id=${me.username}`)}
+                className="border border-outline items-center justify-center px-4 active:bg-white/5"
+                accessibilityRole="button"
+                accessibilityLabel="Arte pro Stories"
+              >
+                <Instagram size={16} color={colors.onSurface} />
+              </Pressable>
+            )}
           </View>
 
           <View className="flex-row border-t border-b border-border mt-6 py-1">

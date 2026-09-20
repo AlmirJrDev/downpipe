@@ -35,10 +35,13 @@ import { gerarArteDeStory } from "@/utils/arteDeStory";
 import {
   MAXIMO_DE_DESTAQUES,
   arteDoCarro,
+  arteDoPerfil,
   arteDoPost,
   destaquesDoCarro,
+  destaquesDoPerfil,
   destaquesDoPost,
   fotosDoCarro,
+  fotosDoPerfil,
   fotosDoPost,
   selosSugeridos,
   type OpcaoDeDestaque,
@@ -94,8 +97,11 @@ function Chip({
 }
 
 export default function EditorDeArteScreen() {
+  // No perfil o "id" é o @ da pessoa — é como o resto do app referencia
+  // perfil, e o endereço fica legível.
   const { tipo, id } = useLocalSearchParams<{ tipo: string; id: string }>();
   const ehCarro = tipo === "carro";
+  const ehPerfil = tipo === "perfil";
   const { data: me } = useCurrentUser();
   const arte = useArteDeStory();
 
@@ -105,25 +111,48 @@ export default function EditorDeArteScreen() {
   const { data: post, isPending: postPendente } = useQuery({
     queryKey: ["post", id],
     queryFn: () => apiService.getPostById(id),
-    enabled: !ehCarro && !!id,
+    enabled: !ehCarro && !ehPerfil && !!id,
+  });
+
+  // Perfil: a pessoa, mais os carros e as fotos dela, que viram o fundo.
+  const { data: pessoa, isPending: perfilPendente } = useQuery({
+    queryKey: ["user", id],
+    queryFn: () => apiService.getUserByUsername(id),
+    enabled: ehPerfil && !!id,
+  });
+  const { data: carrosDaPessoa } = useQuery({
+    queryKey: ["cars-by-username", id],
+    queryFn: () => apiService.getCarsByUsername(id, 1, 20),
+    enabled: ehPerfil && !!id,
+  });
+  const { data: postsDaPessoa } = useQuery({
+    queryKey: ["posts-by-username", id],
+    queryFn: () => apiService.getPostsByUsername(id, 1, 20),
+    enabled: ehPerfil && !!id,
   });
 
   // A base é a arte automática — o editor começa pronto pra postar, e mexer
   // nele é opcional.
   const base: ArteDeStory | null = useMemo(() => {
     if (ehCarro) return car ? arteDoCarro(car, mods?.length ?? 0) : null;
+    if (ehPerfil)
+      return pessoa
+        ? arteDoPerfil(pessoa, carrosDaPessoa?.data ?? [], postsDaPessoa?.data ?? [])
+        : null;
     return post ? arteDoPost(post, me?.instagram) : null;
-  }, [ehCarro, car, mods, post, me]);
+  }, [ehCarro, ehPerfil, car, mods, pessoa, carrosDaPessoa, postsDaPessoa, post, me]);
 
   const opcoesDeDestaque: OpcaoDeDestaque[] = useMemo(() => {
     if (ehCarro) return car ? destaquesDoCarro(car, mods?.length ?? 0) : [];
+    if (ehPerfil) return pessoa ? destaquesDoPerfil(pessoa) : [];
     return post ? destaquesDoPost(post) : [];
-  }, [ehCarro, car, mods, post]);
+  }, [ehCarro, ehPerfil, car, mods, pessoa, post]);
 
   const fotos = useMemo(() => {
     if (ehCarro) return car ? fotosDoCarro(car, postsDoCarro?.data ?? []) : [];
+    if (ehPerfil) return fotosDoPerfil(carrosDaPessoa?.data ?? [], postsDaPessoa?.data ?? []);
     return post ? fotosDoPost(post) : [];
-  }, [ehCarro, car, postsDoCarro, post]);
+  }, [ehCarro, ehPerfil, car, postsDoCarro, carrosDaPessoa, postsDaPessoa, post]);
 
   const [foto, setFoto] = useState<string | null>(null);
   /** Foto escolhida da galeria, que não está em foto nenhuma do app. */
@@ -138,7 +167,11 @@ export default function EditorDeArteScreen() {
 
   // As mods chegam depois do carro. Preencher antes disso escolhia os três
   // números sem elas — e a pessoa via a arte sem a contagem de mods.
-  const faltaCarregar = ehCarro && mods === undefined;
+  // As listas que alimentam a arte chegam depois: preencher antes delas
+  // escolheria foto e números incompletos.
+  const faltaCarregar =
+    (ehCarro && mods === undefined) ||
+    (ehPerfil && (carrosDaPessoa === undefined || postsDaPessoa === undefined));
 
   useEffect(() => {
     if (!base || pronta || faltaCarregar) return;
@@ -216,7 +249,8 @@ export default function EditorDeArteScreen() {
           : [...atuais, chave]
     );
 
-  const voltar = () => voltarOuIrPara(ehCarro ? `/car/${id}` : `/post/${id}`);
+  const voltar = () =>
+    voltarOuIrPara(ehCarro ? `/car/${id}` : ehPerfil ? "/(tabs)/profile" : `/post/${id}`);
 
   const cabecalho = (
     <AppHeader
@@ -229,11 +263,13 @@ export default function EditorDeArteScreen() {
     />
   );
 
-  const carregando = ehCarro ? carroPendente : postPendente;
-  const conteudo = ehCarro ? car : post;
+  const carregando = ehCarro ? carroPendente : ehPerfil ? perfilPendente : postPendente;
+  const conteudo = ehCarro ? car : ehPerfil ? pessoa : post;
   const souDono = ehCarro
     ? !!me && !!car?.owner && car.owner.username === me.username
-    : !!me && !!post?.author && post.author.username === me.username;
+    : ehPerfil
+      ? !!me && me.username === id
+      : !!me && !!post?.author && post.author.username === me.username;
 
   if (carregando) {
     return (

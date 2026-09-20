@@ -22,6 +22,8 @@ export interface ArteDeStory {
   /** Etiqueta pequena sobre a foto, ex.: "PROJETO EM BUILD". */
   selo?: string | null;
   destaques?: DestaqueDaArte[];
+  /** Foto redonda acima do título — o rosto de quem é, na arte de perfil. */
+  avatar?: string | null;
   /** @ do Instagram (do carro ou da pessoa), sem o "@". */
   arroba?: string | null;
   /** Link que vai impresso no rodapé da arte. */

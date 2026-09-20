@@ -8,10 +8,10 @@
  * escolhidos.
  */
 import { carTitle } from "@/utils/car";
-import { basePublica } from "@/utils/linkPublico";
+import { basePublica, linkPublico } from "@/utils/linkPublico";
 import { postThumbnail } from "@/utils/post";
 import type { ArteDeStory, DestaqueDaArte } from "@/utils/arteDeStory";
-import type { Car, Post } from "@/types";
+import type { Car, Post, User } from "@/types";
 
 /** Um número que a pessoa pode ligar ou desligar na arte. */
 export interface OpcaoDeDestaque extends DestaqueDaArte {
@@ -89,6 +89,50 @@ export function fotosDoPost(post: Post): string[] {
   return [...new Set(fotos)];
 }
 
+/** O que dá pra mostrar de uma pessoa. */
+export function destaquesDoPerfil(user: User): OpcaoDeDestaque[] {
+  const opcoes: OpcaoDeDestaque[] = [];
+  if (user.carsCount > 0) opcoes.push({ chave: "carros", rotulo: "Carros", valor: String(user.carsCount) });
+  if (user.followersCount > 0)
+    opcoes.push({ chave: "seguidores", rotulo: "Seguidores", valor: String(user.followersCount) });
+  if (user.eventsAttendedCount)
+    opcoes.push({ chave: "roles", rotulo: "Rolês", valor: String(user.eventsAttendedCount) });
+  if (user.projectsCount > 0)
+    opcoes.push({ chave: "projetos", rotulo: "Projetos", valor: String(user.projectsCount) });
+  if (user.gearheadSince)
+    opcoes.push({ chave: "desde", rotulo: "Na estrada desde", valor: String(user.gearheadSince) });
+  return opcoes;
+}
+
+/** As fotos que servem de fundo no perfil: os carros e as publicações. */
+export function fotosDoPerfil(carros: Car[], posts: Post[]): string[] {
+  const fotos = [...carros.map((c) => c.photoUrl), ...posts.map(postThumbnail)].filter(
+    (url): url is string => !!url
+  );
+  return [...new Set(fotos)];
+}
+
+/**
+ * A arte de um perfil.
+ *
+ * Aqui o link completo entra em vez do site: /app/user/<@> é curto e
+ * digitável, e é justamente o endereço que interessa quando a arte é um
+ * convite pra seguir a pessoa.
+ */
+export function arteDoPerfil(user: User, carros: Car[], posts: Post[]): ArteDeStory {
+  return {
+    foto: fotosDoPerfil(carros, posts)[0] ?? null,
+    avatar: user.avatarUrl,
+    titulo: user.displayName || `@${user.username}`,
+    subtitulo: user.bio ?? null,
+    selo: user.isOrganizer ? "Organiza rolês" : null,
+    destaques: destaquesDoPerfil(user).slice(0, MAXIMO_DE_DESTAQUES),
+    arroba: user.instagram ?? user.username,
+    link: linkPublico.perfil(user.username).replace(/^https?:[/][/]/, ""),
+    nome: `downpipe-${user.username}`,
+  };
+}
+
 export function arteDoCarro(car: Car, modsCount: number): ArteDeStory {
   return {
     foto: car.photoUrl,
@@ -123,6 +167,6 @@ export function arteDoPost(post: Post, instagramDoAutor?: string | null): ArteDe
 
 /** Os selos oferecidos no editor, sempre com o do próprio conteúdo na frente. */
 export function selosSugeridos(atual: string | null): string[] {
-  const padrao = ["Projeto em build", "Projeto pronto", "Antes e depois", "Novidade na garagem"];
+  const padrao = ["Projeto em build", "Projeto pronto", "Antes e depois", "Novidade na garagem", "Organiza rolês", "Me acha no Downpipe"];
   return atual ? [atual, ...padrao.filter((s) => s !== atual)] : padrao;
 }
