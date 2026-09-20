@@ -62,6 +62,7 @@ interface RawProfile {
   bio: string | null;
   avatarUrl: string | null;
   gearheadSince: number | null;
+  instagram?: string | null;
   followersCount?: number;
   followingCount?: number;
   carsCount?: number;
@@ -79,6 +80,7 @@ function toUser(raw: RawProfile): User {
     avatarUrl: raw.avatarUrl,
     bio: raw.bio,
     gearheadSince: raw.gearheadSince,
+    instagram: raw.instagram ?? null,
     carsCount: raw.carsCount ?? 0,
     projectsCount: raw.projectsCount ?? 0,
     followersCount: raw.followersCount ?? 0,
@@ -105,6 +107,7 @@ async function updateMyProfile(patch: {
   bio?: string | null;
   avatarUrl?: string | null;
   gearheadSince?: number | null;
+  instagram?: string | null;
   isOrganizer?: boolean;
 }): Promise<User> {
   const raw = await api.patch<RawProfile>("/profile/me", patch);
@@ -160,6 +163,7 @@ export interface CreateCarInput {
   description?: string | null;
   status?: ProjectStatus;
   category?: Category | null;
+  instagram?: string | null;
 }
 
 async function getExploreCars(

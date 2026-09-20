@@ -17,6 +17,7 @@ import { colors, statusMeta } from "@/constants/theme";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
+import { soOArroba } from "@/utils/instagram";
 import { CategoryChip } from "@/components/ui/Chips";
 import { categoryLabel } from "@/utils/labels";
 import { EmptyState } from "@/components/ui/States";
@@ -47,6 +48,7 @@ export default function EditCarScreen() {
   const [power, setPower] = useState("");
   const [mileage, setMileage] = useState("");
   const [description, setDescription] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [category, setCategory] = useState<Category | null>(null);
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export default function EditCarScreen() {
     setPower(car.power != null ? String(car.power) : "");
     setMileage(car.mileage != null ? String(car.mileage) : "");
     setDescription(car.description ?? "");
+    setInstagram(car.instagram ?? "");
     setCategory(car.category);
     setStatus(car.status);
     setHydrated(true);
@@ -82,6 +85,7 @@ export default function EditCarScreen() {
           description: description.trim() || null,
           category,
           status,
+          instagram: instagram.trim() || null,
         },
       },
       {
@@ -220,6 +224,14 @@ export default function EditCarScreen() {
           value={description}
           onChangeText={setDescription}
           multiline
+        />
+        <FormField
+          label="Instagram do carro"
+          placeholder="ex: meucarro"
+          hint="Opcional. O @ do perfil do carro — pode colar o link."
+          value={instagram}
+          onChangeText={(t) => setInstagram(soOArroba(t))}
+          autoCapitalize="none"
         />
 
         <Text

@@ -30,6 +30,8 @@ import * as Haptics from "expo-haptics";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/apiService";
+import { useArteDeStory } from "@/hooks/useArteDeStory";
+import { arteDoPost } from "@/utils/montarArte";
 import { ApiError } from "@/services/api";
 import { ReportSheet } from "@/components/ReportSheet";
 import { colors } from "@/constants/theme";
@@ -80,6 +82,7 @@ function carLabel(car: Post["car"]): string | null {
  */
 function OwnerMenu({ post }: { post: Post }) {
   const { data: me } = useCurrentUser();
+  const arte = useArteDeStory();
   const deletePost = useDeletePost();
   const queryClient = useQueryClient();
   const [denunciando, setDenunciando] = useState(false);
@@ -135,6 +138,15 @@ function OwnerMenu({ post }: { post: Post }) {
 
     if (souDono) {
       Alert.alert("Publicação", undefined, [
+        // Só pro dono: a arte carrega o @ de quem publicou.
+        ...(arte.disponivel
+          ? [
+              {
+                text: "Arte pro Stories",
+                onPress: () => arte.gerar(arteDoPost(post, me.instagram)),
+              },
+            ]
+          : []),
         { text: "Editar", onPress: () => router.push(`/edit-post/${post.id}`) },
         { text: "Excluir", style: "destructive", onPress: confirmDelete },
         { text: "Cancelar", style: "cancel" },

@@ -29,6 +29,8 @@ export interface User {
   avatarUrl: string | null;
   bio?: string | null;
   gearheadSince: number | null;
+  /** @ do Instagram, guardado puro (sem "@" e sem URL). */
+  instagram?: string | null;
   carsCount: number;
   projectsCount: number;
   followersCount: number;
@@ -100,6 +102,8 @@ export interface Car {
   projectProgress: number; // 0-100, derivado
   amountInvested: number; // BRL, derivado
   category: Category | null;
+  /** Instagram do carro — muita gente mantém um perfil só do build. */
+  instagram?: string | null;
   /** Em quantos rolês distintos o carro já apareceu. Só vem no detalhe —
    * na listagem seria uma consulta por card. */
   eventsCount?: number;

@@ -17,6 +17,7 @@ import { colors, typography } from "@/constants/theme";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { soOArroba } from "@/utils/instagram";
 import { FormField } from "@/components/ui/FormField";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { apiService } from "@/services/apiService";
@@ -42,6 +43,7 @@ export default function EditProfileScreen() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [gearheadSince, setGearheadSince] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +55,7 @@ export default function EditProfileScreen() {
     setDisplayName(me.displayName);
     setBio(me.bio ?? "");
     setGearheadSince(me.gearheadSince ? String(me.gearheadSince) : "");
+    setInstagram(me.instagram ?? "");
     setIsOrganizer(!!me.isOrganizer);
     setHydrated(true);
   }, [me, hydrated]);
@@ -69,6 +72,7 @@ export default function EditProfileScreen() {
         displayName: displayName.trim(),
         bio: bio.trim() || null,
         gearheadSince: gearheadSince.trim() ? Number(gearheadSince) : null,
+        instagram: instagram.trim() || null,
         isOrganizer,
       });
       // Se tiver foto nova, o retorno do upload já é o perfil completo mais
@@ -154,6 +158,14 @@ export default function EditProfileScreen() {
           value={bio}
           onChangeText={setBio}
           multiline
+        />
+        <FormField
+          label="Instagram"
+          placeholder="ex: meucarro"
+          hint="O @ do perfil. Pode colar o link que a gente limpa."
+          value={instagram}
+          onChangeText={(t) => setInstagram(soOArroba(t))}
+          autoCapitalize="none"
         />
         <FormField
           label="Gearhead desde"

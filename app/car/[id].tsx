@@ -12,16 +12,19 @@ import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Pencil, Share2, Wrench } from "lucide-react-native";
+import { ArrowLeft, Instagram, Pencil, Share2, Wrench } from "lucide-react-native";
 import { useCarById, useCarPosts } from "@/stores/garageStore";
 import { useModsByCar } from "@/stores/projectStore";
 import { ImageGallery } from "@/components/ImageGallery";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { InstagramLink } from "@/components/ui/InstagramLink";
 import { ModificationCard } from "@/components/cards/ModificationCard";
 import { rotaDeCompartilharMod } from "@/utils/compartilharMod";
 import { EmptyState } from "@/components/ui/States";
 import { voltarOuIrPara } from "@/utils/navigation";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { useArteDeStory } from "@/hooks/useArteDeStory";
+import { arteDoCarro } from "@/utils/montarArte";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { carCatalogName, carTitle, carYear } from "@/utils/car";
 import { postThumbnail } from "@/utils/post";
@@ -60,6 +63,7 @@ export default function CarDetailsScreen() {
 
   const { data: resolvedCar, isLoading } = useCarById(id);
   const { data: mods } = useModsByCar(id);
+  const arte = useArteDeStory();
   const { data: carPostsPage } = useCarPosts(id);
   const carPosts = carPostsPage?.data ?? [];
   // Grade de 3 colunas dentro do padding de 20 da tela.
@@ -190,6 +194,14 @@ export default function CarDetailsScreen() {
             </Text>
           )}
 
+          {/* O Instagram do build vem antes do dono: nesses carros é ele o
+              perfil que a pessoa divulga. */}
+          {resolvedCar.instagram && (
+            <View className="mt-3">
+              <InstagramLink handle={resolvedCar.instagram} size={14} />
+            </View>
+          )}
+
           {resolvedCar.owner && (
             <Pressable
               onPress={() => router.push(`/user/${resolvedCar.owner!.username}`)}
@@ -265,6 +277,18 @@ export default function CarDetailsScreen() {
                 label="Ver projeto completo"
                 onPress={() => router.push(`/project/${resolvedCar.id}`)}
               />
+
+              {/* Arte pronta pro Stories: é o que essa galera posta todo dia,
+                  e o print da tela do app sai feio e sem dizer de onde veio.
+                  Só pro dono — a arte leva o @ dele. */}
+              {isOwner && arte.disponivel && (
+                <SecondaryButton
+                  label="Arte pro Stories"
+                  loading={arte.gerando}
+                  icon={<Instagram size={14} color={colors.onSurface} />}
+                  onPress={() => arte.gerar(arteDoCarro(resolvedCar, mods?.length ?? 0))}
+                />
+              )}
 
               {/* Fotos deste carro, inclusive as tiradas por outras pessoas.
                   O crédito é o que faz valer a pena o fotógrafo postar aqui

@@ -11,6 +11,7 @@ import { voltarOuIrPara } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
+import { InstagramLink } from "@/components/ui/InstagramLink";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatCard } from "@/components/ui/Chips";
 import { PostGrid } from "@/components/PostGrid";
@@ -164,6 +165,11 @@ export default function UserProfileScreen() {
             <Text className="text-on-surface-variant mt-2" style={{ fontSize: 14 }}>
               {user.bio}
             </Text>
+          )}
+          {user.instagram && (
+            <View className="mt-2">
+              <InstagramLink handle={user.instagram} size={14} />
+            </View>
           )}
 
           {!isMe && (

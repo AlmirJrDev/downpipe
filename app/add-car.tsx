@@ -23,6 +23,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { CategoryChip } from "@/components/ui/Chips";
 import { categoryLabel } from "@/utils/labels";
 import { FormField } from "@/components/ui/FormField";
+import { soOArroba } from "@/utils/instagram";
 import { apiService } from "@/services/apiService";
 import { useAddCar, useUploadCarPhoto } from "@/stores/garageStore";
 import { suggestCarName } from "@/utils/car";
@@ -78,6 +79,7 @@ export default function AddCarScreen() {
   const [mileage, setMileage] = useState("");
   const [power, setPower] = useState("");
   const [description, setDescription] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [category, setCategory] = useState<Category | null>(null);
 
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -167,6 +169,7 @@ export default function AddCarScreen() {
         mileage: mileage.trim() ? Number(mileage) : null,
         description: description.trim() || null,
         category,
+        instagram: instagram.trim() || null,
       },
       {
         onSuccess: (newCar) => {
@@ -396,6 +399,14 @@ export default function AddCarScreen() {
             value={description}
             onChangeText={setDescription}
             multiline
+          />
+          <FormField
+            label="Instagram do carro"
+            placeholder="ex: meucarro"
+            hint="Opcional. O @ do perfil do carro — pode colar o link."
+            value={instagram}
+            onChangeText={(t) => setInstagram(soOArroba(t))}
+            autoCapitalize="none"
           />
 
           <Text
