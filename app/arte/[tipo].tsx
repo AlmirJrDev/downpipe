@@ -45,7 +45,13 @@ import {
 } from "@/utils/montarArte";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { colors } from "@/constants/theme";
-import type { ArteDeStory } from "@/utils/arteDeStory";
+import type { ArteDeStory, EstiloDaArte } from "@/utils/arteDeStory";
+
+const FORMATOS: { chave: EstiloDaArte; rotulo: string }[] = [
+  { chave: "classico", rotulo: "Clássico" },
+  { chave: "capa", rotulo: "Foto inteira" },
+  { chave: "moldura", rotulo: "Moldura" },
+];
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -127,6 +133,7 @@ export default function EditorDeArteScreen() {
   const [selo, setSelo] = useState<string | null>(null);
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
   const [comArroba, setComArroba] = useState(true);
+  const [estilo, setEstilo] = useState<EstiloDaArte>("classico");
   const [pronta, setPronta] = useState(false);
 
   // As mods chegam depois do carro. Preencher antes disso escolhia os três
@@ -160,8 +167,9 @@ export default function EditorDeArteScreen() {
         .map((chave) => opcoesDeDestaque.find((o) => o.chave === chave))
         .filter((o): o is OpcaoDeDestaque => !!o),
       arroba: comArroba ? base.arroba : null,
+      estilo,
     };
-  }, [base, foto, titulo, subtitulo, selo, escolhidos, comArroba, opcoesDeDestaque]);
+  }, [base, foto, titulo, subtitulo, selo, escolhidos, comArroba, estilo, opcoesDeDestaque]);
 
   // Prévia: a imagem de verdade, gerada de novo a cada mexida. O respiro de
   // 200ms evita redesenhar a cada tecla digitada no título.
@@ -286,6 +294,19 @@ export default function EditorDeArteScreen() {
             )}
           </View>
         </View>
+
+        <Secao titulo="FORMATO">
+          <View className="flex-row flex-wrap">
+            {FORMATOS.map((f) => (
+              <Chip
+                key={f.chave}
+                label={f.rotulo}
+                ativo={estilo === f.chave}
+                onPress={() => setEstilo(f.chave)}
+              />
+            ))}
+          </View>
+        </Secao>
 
         {fotos.length + (fotoDeFora ? 1 : 0) > 1 && (
           <Secao titulo="FOTO">

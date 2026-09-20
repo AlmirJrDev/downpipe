@@ -11,6 +11,9 @@ export interface DestaqueDaArte {
   valor: string;
 }
 
+/** Os três formatos que a arte pode ter. */
+export type EstiloDaArte = "classico" | "capa" | "moldura";
+
 export interface ArteDeStory {
   /** Foto principal. Sem ela a arte sai só com o fundo e o texto. */
   foto: string | null;
@@ -23,6 +26,8 @@ export interface ArteDeStory {
   arroba?: string | null;
   /** Link que vai impresso no rodapé da arte. */
   link: string;
+  /** Formato da arte. Sem isto, o clássico. */
+  estilo?: EstiloDaArte;
   /** Nome do arquivo gerado, sem extensão. */
   nome: string;
 }

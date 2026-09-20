@@ -7,6 +7,7 @@ import { api, ApiError, imageFormData, type PaginatedResult } from "./api";
 import { anexarImagem } from "./anexarImagem";
 import type {
   AppNotification,
+  Denuncia,
   Car,
   Comment,
   CommentPreview,
@@ -63,6 +64,7 @@ interface RawProfile {
   avatarUrl: string | null;
   gearheadSince: number | null;
   instagram?: string | null;
+  isAdmin?: boolean;
   followersCount?: number;
   followingCount?: number;
   carsCount?: number;
@@ -81,6 +83,7 @@ function toUser(raw: RawProfile): User {
     bio: raw.bio,
     gearheadSince: raw.gearheadSince,
     instagram: raw.instagram ?? null,
+    isAdmin: raw.isAdmin ?? false,
     carsCount: raw.carsCount ?? 0,
     projectsCount: raw.projectsCount ?? 0,
     followersCount: raw.followersCount ?? 0,
@@ -917,7 +920,36 @@ async function getFollowing(
   return api.getPaginated<FollowProfile>(`/profiles/${userId}/following${qs({ page, limit })}`);
 }
 
+/**
+ * Moderação. Tudo aqui responde 404 pra quem não está na tabela de
+ * moderadores — inclusive a listagem, que nem admite existir.
+ */
+async function getFilaDeDenuncias(status: "open" | "reviewed" = "open"): Promise<Denuncia[]> {
+  return api.get<Denuncia[]>(`/admin/reports?status=${status}`);
+}
+
+async function contarDenunciasAbertas(): Promise<number> {
+  const r = await api.get<{ open: number }>("/admin/reports/count");
+  return r.open;
+}
+
+async function revisarDenuncia(id: string): Promise<void> {
+  await api.post(`/admin/reports/${id}/review`, {});
+}
+
+async function apagarConteudoDenunciado(
+  tipo: "post" | "comentario" | "mensagem",
+  id: string
+): Promise<void> {
+  await api.delete(`/admin/targets/${tipo}/${id}`);
+}
+
 export const apiService = {
+  getFilaDeDenuncias,
+  contarDenunciasAbertas,
+  revisarDenuncia,
+  apagarConteudoDenunciado,
+
   getCurrentUser,
   getUserByUsername,
   updateMyProfile,

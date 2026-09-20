@@ -37,6 +37,15 @@ const SCREEN_PAD = spacing.marginMobile;
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const { data: me, isLoading: meLoading, isError: meError } = useCurrentUser();
+
+  // Quantas denúncias esperam resposta. Só quem modera pergunta: pros
+  // outros a rota responde 404, e o menu nem mostra a linha.
+  const { data: pendentes } = useQuery({
+    queryKey: ['denuncias-abertas'],
+    queryFn: () => apiService.contarDenunciasAbertas(),
+    enabled: !!me?.isAdmin,
+    staleTime: 60_000,
+  });
   const { data: myCars } = useMyGarage();
   const logout = useAuthStore((s) => s.logout);
   const [followSheet, setFollowSheet] = useState<FollowTab | null>(null);
@@ -78,6 +87,14 @@ export default function ProfileScreen() {
     })();
 
     const opcoes: AlertButton[] = [
+      ...(me?.isAdmin
+        ? [
+            {
+              text: pendentes ? `Moderação (${pendentes})` : "Moderação",
+              onPress: () => router.push("/moderacao"),
+            },
+          ]
+        : []),
       { text: "Publicações salvas", onPress: () => router.push("/saved") },
       { text: "Pessoas bloqueadas", onPress: () => router.push("/bloqueados") },
       ...(itemNotificacoes ? [itemNotificacoes] : []),

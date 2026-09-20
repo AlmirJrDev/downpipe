@@ -13,6 +13,7 @@ import { FONT_STACK, colors } from "@/constants/theme";
 import type { ArteDeStory, DestaqueDaArte } from "@/utils/arteDeStory";
 
 export type { ArteDeStory, DestaqueDaArte };
+export type { EstiloDaArte } from "@/utils/arteDeStory";
 
 const L = 1080;
 const A = 1920;
@@ -25,6 +26,8 @@ const LINHA_DO_SUBTITULO = 54;
 const BLOCO_DE_DESTAQUES = 194;
 const RESPIRO_ANTES_DO_RODAPE = 60;
 const RODAPE = 200;
+/** No estilo moldura, onde a foto começa — abaixo da logo. */
+const TOPO_DA_MOLDURA = 200;
 
 export const arteDeStoryDisponivel = true;
 
@@ -134,25 +137,55 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
     (destaques.length > 0 ? BLOCO_DE_DESTAQUES : 0) +
     RESPIRO_ANTES_DO_RODAPE +
     RODAPE;
-  // Limites pra foto nunca virar uma tarja nem engolir o texto.
-  const alturaDaFoto = Math.round(
-    Math.min(Math.max(A - alturaDoTexto, A * 0.52), A * 0.72)
-  );
   const img = arte.foto ? await carregarFoto(arte.foto) : null;
+  const estilo = arte.estilo ?? "classico";
+
+  /**
+   * Onde o texto começa, que é o que muda entre os estilos:
+   *
+   * - clássico: a foto ocupa o topo e o texto vive no preto embaixo dela.
+   * - capa: a foto toma a tela inteira e o texto vem por cima, com um
+   *   degradê forte segurando a leitura — é o que mais parece um story.
+   * - moldura: a foto fica num quadro com margem, no estilo revista.
+   */
+  const alturaDaFoto =
+    estilo === "capa"
+      ? A
+      : estilo === "moldura"
+        ? Math.round(Math.min(A - alturaDoTexto - TOPO_DA_MOLDURA, L * 1.25))
+        : Math.round(Math.min(Math.max(A - alturaDoTexto, A * 0.52), A * 0.72));
+
+  const topoDaFoto = estilo === "moldura" ? TOPO_DA_MOLDURA : 0;
+  const larguraDaFoto = estilo === "moldura" ? L - M * 2 : L;
+  const esquerdaDaFoto = estilo === "moldura" ? M : 0;
+
   if (img) {
-    desenharCobrindo(ctx, img, 0, 0, L, alturaDaFoto);
+    desenharCobrindo(ctx, img, esquerdaDaFoto, topoDaFoto, larguraDaFoto, alturaDaFoto);
   } else {
     ctx.fillStyle = colors.surfaceContainer;
-    ctx.fillRect(0, 0, L, alturaDaFoto);
+    ctx.fillRect(esquerdaDaFoto, topoDaFoto, larguraDaFoto, alturaDaFoto);
   }
 
+  const fimDaFoto = topoDaFoto + alturaDaFoto;
+
   // Degradê: o texto branco some em foto clara, e o corte reto da foto
-  // deixava a arte com cara de colagem.
-  const degrade = ctx.createLinearGradient(0, alturaDaFoto - 420, 0, alturaDaFoto);
-  degrade.addColorStop(0, "rgba(10,10,10,0)");
-  degrade.addColorStop(1, colors.surfaceLowest);
-  ctx.fillStyle = degrade;
-  ctx.fillRect(0, alturaDaFoto - 420, L, 420);
+  // deixava a arte com cara de colagem. Na capa ele é o único fundo que o
+  // texto tem, então sobe bem mais alto.
+  if (estilo !== "moldura") {
+    const alturaDoDegrade = estilo === "capa" ? alturaDoTexto + 420 : 420;
+    const degrade = ctx.createLinearGradient(0, fimDaFoto - alturaDoDegrade, 0, fimDaFoto);
+    degrade.addColorStop(0, "rgba(10,10,10,0)");
+    degrade.addColorStop(estilo === "capa" ? 0.55 : 1, estilo === "capa" ? "rgba(10,10,10,0.82)" : colors.surfaceLowest);
+    if (estilo === "capa") degrade.addColorStop(1, "rgba(10,10,10,0.95)");
+    ctx.fillStyle = degrade;
+    ctx.fillRect(0, fimDaFoto - alturaDoDegrade, L, alturaDoDegrade);
+  }
+
+  // Na moldura, um fio vermelho embaixo da foto amarra o quadro ao texto.
+  if (estilo === "moldura") {
+    ctx.fillStyle = colors.primary;
+    ctx.fillRect(M, fimDaFoto, 120, 6);
+  }
 
   // Topo escurecido pro wordmark aparecer sobre foto clara.
   const topo = ctx.createLinearGradient(0, 0, 0, 260);
@@ -179,7 +212,11 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
     ctx.fillRect(M, 134, larguraDoNome - 10, 5);
   }
 
-  // Selo sobre a foto.
+  // Onde o texto começa — o selo se apoia nisso, não no fim da foto: na
+  // capa a foto vai até a base da imagem, e o selo caía em cima do rodapé.
+  const inicioDoTexto = estilo === "capa" ? A - alturaDoTexto : fimDaFoto;
+
+  // Selo, logo acima do bloco de texto.
   if (arte.selo) {
     espacar(ctx, "6px");
     ctx.font = `700 26px ${FONT_STACK}`;
@@ -187,14 +224,15 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
     const larguraDoSelo = ctx.measureText(texto).width;
     ctx.fillStyle = colors.primaryContainer;
     // Colado no fim da foto: no meio dela o selo fica boiando.
-    ctx.fillRect(M, alturaDaFoto - 190, larguraDoSelo + 56, 70);
+    ctx.fillRect(M, inicioDoTexto - 110, larguraDoSelo + 56, 70);
     ctx.fillStyle = colors.onPrimaryContainer;
-    ctx.fillText(texto, M + 28, alturaDaFoto - 143);
+    ctx.fillText(texto, M + 28, inicioDoTexto - 63);
     espacar(ctx, "0px");
   }
 
-  // Bloco de texto.
-  let y = alturaDaFoto + RESPIRO_APOS_A_FOTO;
+  // Bloco de texto. Na capa ele fica ancorado na base, e não colado na
+  // foto — que ali termina junto com a imagem inteira.
+  let y = inicioDoTexto + RESPIRO_APOS_A_FOTO;
 
   ctx.font = `700 76px ${FONT_STACK}`;
   ctx.fillStyle = colors.onSurface;

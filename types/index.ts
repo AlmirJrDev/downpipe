@@ -38,6 +38,8 @@ export interface User {
   isFollowing?: boolean | null;
   /** Marca no perfil que já existe — não é um segundo tipo de conta. */
   isOrganizer?: boolean;
+  /** Só vem no próprio perfil: abre a fila de denúncias. */
+  isAdmin?: boolean;
   /** Rolês em que a pessoa já esteve — só os que já aconteceram. */
   eventsAttendedCount?: number;
 }
@@ -343,3 +345,24 @@ export type AddAction =
   | "atualizacao"
   | "evolucao"
   | "evento";
+
+/** Uma denúncia na fila de quem modera. */
+export interface Denuncia {
+  id: string;
+  reason: string;
+  reasonLabel: string;
+  details: string | null;
+  status: "open" | "reviewed";
+  createdAt: string;
+  /** @ de quem denunciou; null se a conta já saiu. */
+  reporter: string | null;
+  target: {
+    tipo: "post" | "comentario" | "mensagem" | "perfil";
+    id: string;
+    rotulo: string;
+    /** Caminho no app, já com /app na frente. */
+    url: string;
+    /** O texto denunciado, quando o alvo é comentário ou mensagem. */
+    texto: string | null;
+  };
+}
