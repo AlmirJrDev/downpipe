@@ -8,26 +8,28 @@ Tamanho: **P** = dá pra fazer numa sentada · **M** = alguns dias · **G** = se
 
 ---
 
-## Em andamento
+## Prontas (26/09/2026)
 
-### 1. Lembrete de rolê por push — P
-Hoje o push só sai quando **acontece** alguma coisa: mensagem no chat, mudança
-de horário, cancelamento. Ninguém é lembrado na véspera nem no dia. Falta só um
-agendador que varra os rolês que começam nas próximas horas e avise quem
-confirmou. É o que faz a pessoa aparecer no encontro — e rolê cheio é o que
-segura o app.
+### 1. Lembrete de rolê por push ✅
+Um agendador dentro do próprio backend (`event-reminders.service.ts`) varre a
+cada 15 minutos os rolês que começam nas próximas 20 horas e avisa quem
+confirmou, uma vez por rolê (`events.reminder_sent_at`). Rolê onde só o
+organizador confirmou não vira push.
 
-### 2. Galeria de fotos no post — P/M
-O backend já guarda várias mídias por publicação (`post_media`, com `position`),
-mas o app mostra só a primeira. Quem vai num rolê tira 20 fotos e hoje tem que
-escolher uma ou publicar cinco vezes. É fechar uma lacuna que já está paga do
-lado do servidor.
+### 2. Galeria de fotos no post ✅
+Até seis fotos por publicação: tira de miniaturas na hora de compor e carrossel
+com contador e bolinhas no card. No navegador o gesto precisou liberar o eixo
+horizontal (`touchAction`), senão o deslizar nunca chegava no carrossel.
 
-### 4. Manutenção com lembrete — M
-Não existe nada disso: modificação é melhoria, não manutenção. Registrar óleo,
-correia, pneu, com quilometragem e intervalo, e avisar quando vencer ("faltam
-800 km pra troca"). Casa com a ideia de garagem e é a única feature da lista que
-a pessoa usa mesmo sem estar a fim de rede social.
+### 4. Manutenção com lembrete ✅
+Aba nova na página do carro, só pro dono. Cada item guarda o que foi feito,
+quando, em qual quilometragem e de quanto em quanto tempo/km se repete; o
+vencimento tem duas contas e vale a que chegar primeiro. O mesmo agendador do
+item 1 avisa quando vence.
+
+Fica pra depois, se fizer falta: aviso de "tá chegando" (hoje o push só sai
+quando já venceu), e somar o custo de manutenção num total separado do
+investido no projeto.
 
 ---
 
