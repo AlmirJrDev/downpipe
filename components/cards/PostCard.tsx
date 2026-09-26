@@ -391,9 +391,13 @@ function Carrossel({ post, fotos, altura }: { post: Post; fotos: string[]; altur
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(e) =>
-          setIndice(Math.round(e.nativeEvent.contentOffset.x / Math.max(1, largura)))
-        }
+        // onScroll, e não onMomentumScrollEnd: na web o fim da inércia não
+        // chega, e o contador ficava parado no 1/3 enquanto a foto mudava.
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          const atual = Math.round(e.nativeEvent.contentOffset.x / Math.max(1, largura));
+          setIndice((anterior) => (anterior === atual ? anterior : atual));
+        }}
       >
         {fotos.map((url, i) => (
           <FotoTocavel key={url} post={post} fotos={abertas} inicial={i} horizontal>
