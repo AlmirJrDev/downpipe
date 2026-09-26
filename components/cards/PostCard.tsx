@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { Share } from "@/utils/share";
@@ -34,7 +36,7 @@ import { apiService } from "@/services/apiService";
 import { useArteDeStory } from "@/hooks/useArteDeStory";
 import { ApiError } from "@/services/api";
 import { ReportSheet } from "@/components/ReportSheet";
-import { colors } from "@/constants/theme";
+import { colors, spacing } from "@/constants/theme";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
@@ -283,12 +285,15 @@ function FotoTocavel({
   post,
   fotos,
   inicial = 0,
+  horizontal = false,
   children,
 }: {
   post: Post;
   /** O que a tela cheia mostra. No antes e depois, as duas. */
   fotos: FotoAberta[];
   inicial?: number;
+  /** Dentro do carrossel: o dedo também precisa poder arrastar pro lado. */
+  horizontal?: boolean;
   children: React.ReactNode;
 }) {
   const toggleLike = useToggleLike();
@@ -340,7 +345,11 @@ function FotoTocavel({
       // numa foto — que é quase a tela inteira. "pan-y" devolve a rolagem
       // vertical ao navegador e, de quebra, desliga o zoom da página no
       // toque duplo, que brigaria com o curtir.
-      touchAction="pan-y"
+      // No carrossel, "manipulation" (pan-x + pan-y): sem o eixo horizontal
+      // liberado, o navegador nunca vê o deslizar entre as fotos. O zoom de
+      // toque duplo que esse valor também libera não acontece aqui — o
+      // viewport do app é travado em maximum-scale=1.
+      touchAction={horizontal ? "manipulation" : "pan-y"}
     >
       <View>
         {children}
@@ -357,6 +366,78 @@ function FotoTocavel({
       </View>
     </GestureDetector>
   );
+}
+
+/**
+ * Publicação com mais de uma foto.
+ *
+ * O backend sempre guardou várias mídias por publicação; o app mostrava só a
+ * primeira, e quem voltava de um rolê com vinte fotos tinha que escolher uma
+ * ou publicar cinco vezes. Aqui elas viram um carrossel — com contador no
+ * canto e bolinhas embaixo, que é como todo mundo já sabe que funciona.
+ */
+function Carrossel({ post, fotos, altura }: { post: Post; fotos: string[]; altura: number }) {
+  // Antes do primeiro layout, a largura da janela menos a margem do feed é
+  // um palpite bom o suficiente pra foto não nascer com zero de largura.
+  const janela = useWindowDimensions().width;
+  const [largura, setLargura] = useState(Math.max(1, janela - spacing.marginMobile * 2));
+  const [indice, setIndice] = useState(0);
+
+  const abertas: FotoAberta[] = fotos.map((url, i) => ({ url, rotulo: String(i + 1) }));
+
+  return (
+    <View onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) =>
+          setIndice(Math.round(e.nativeEvent.contentOffset.x / Math.max(1, largura)))
+        }
+      >
+        {fotos.map((url, i) => (
+          <FotoTocavel key={url} post={post} fotos={abertas} inicial={i} horizontal>
+            <Image
+              source={{ uri: url }}
+              recyclingKey={`${post.id}-${i}`}
+              style={{ width: largura, height: altura }}
+              contentFit="cover"
+              transition={200}
+            />
+          </FotoTocavel>
+        ))}
+      </ScrollView>
+
+      <View className="absolute top-3 right-3 px-2 py-0.5" style={{ backgroundColor: colors.overlayMedium }}>
+        <Text className="text-on-surface" style={{ fontSize: 11, fontWeight: "600" }}>
+          {indice + 1}/{fotos.length}
+        </Text>
+      </View>
+
+      <View className="absolute bottom-3 left-0 right-0 flex-row justify-center" style={{ gap: 5 }}>
+        {fotos.map((url, i) => (
+          <View
+            key={url}
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: i === indice ? colors.onSurface : colors.overlayMedium,
+            }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** As fotos de uma publicação normal, na ordem em que foram enviadas. */
+function fotosDoPost(post: Post): string[] {
+  const doServidor = (post.media ?? [])
+    .slice()
+    .sort((a, b) => a.position - b.position)
+    .map((m) => m.mediaUrl);
+  return doServidor.length > 0 ? doServidor : post.imageUrl ? [post.imageUrl] : [];
 }
 
 /**
@@ -536,22 +617,27 @@ function PostHeader({ post }: { post: Post }) {
 
 function NormalPost({ post }: { post: Post }) {
   const author = post.author;
+  const fotos = fotosDoPost(post);
   return (
     <View className="mb-6 border border-border bg-card">
       <PostHeader post={post} />
-      {post.imageUrl && (
-        <FotoTocavel post={post} fotos={[{ url: post.imageUrl }]}>
-          <Image
-            source={{ uri: post.imageUrl }}
-            // A FlatList reaproveita a linha ao rolar. Sem isto, o card novo
-            // mostra por um instante a foto do post anterior, que já estava
-            // carregada, e depois troca.
-            recyclingKey={post.id}
-            style={{ width: "100%", height: 420 }}
-            contentFit="cover"
-            transition={200}
-          />
-        </FotoTocavel>
+      {fotos.length > 1 ? (
+        <Carrossel post={post} fotos={fotos} altura={420} />
+      ) : (
+        fotos[0] && (
+          <FotoTocavel post={post} fotos={[{ url: fotos[0] }]}>
+            <Image
+              source={{ uri: fotos[0] }}
+              // A FlatList reaproveita a linha ao rolar. Sem isto, o card novo
+              // mostra por um instante a foto do post anterior, que já estava
+              // carregada, e depois troca.
+              recyclingKey={post.id}
+              style={{ width: "100%", height: 420 }}
+              contentFit="cover"
+              transition={200}
+            />
+          </FotoTocavel>
+        )
       )}
       <EngagementBar post={post} />
       <View className="px-4 pb-4 pt-1" style={{ gap: 8 }}>

@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { ArrowLeft, Camera, Eye, Send } from "lucide-react-native";
+import { ArrowLeft, Camera, Eye, Plus, Send, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ImageCropper } from "@/components/ImageCropper";
 import { CarTagSheet } from "@/components/CarTagSheet";
@@ -28,11 +28,16 @@ import type { Car, CarEvent } from "@/types";
 // Mesma proporcao em que a foto aparece nesta tela.
 const POST_ASPECT = 4 / 5;
 
+/** Teto de fotos por publicação: passa disso e ninguém desliza até o fim. */
+const MAXIMO_DE_FOTOS = 6;
+
 export default function AddPostScreen() {
   const { data: myCars } = useMyGarage();
   const createPost = useCreatePost();
 
-  const [photoUri, setPhotoUri] = useState<string | undefined>();
+  // Várias fotos por publicação: quem vai num rolê tira vinte, e antes
+  // tinha que escolher uma ou publicar cinco vezes seguidas.
+  const [fotos, setFotos] = useState<string[]>([]);
   // Foto escolhida aguardando recorte (abre o ImageCropper).
   const [pendingUri, setPendingUri] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -70,14 +75,17 @@ export default function AddPostScreen() {
   }, [proximos, passados]);
 
   const pickPhoto = async () => {
+    if (fotos.length >= MAXIMO_DE_FOTOS) return;
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
     if (!result.canceled && result.assets[0]) setPendingUri(result.assets[0].uri);
   };
 
-  const isValid = !!photoUri && caption.trim().length > 0;
+  const tirarFoto = (uri: string) => setFotos((atuais) => atuais.filter((f) => f !== uri));
+
+  const isValid = fotos.length > 0 && caption.trim().length > 0;
 
   const submit = () => {
-    if (!isValid || !photoUri) return;
+    if (!isValid) return;
     setError(null);
     createPost.mutate(
       {
@@ -86,7 +94,7 @@ export default function AddPostScreen() {
         eventId: selectedEventId ?? null,
         type: "normal",
         caption: caption.trim(),
-        localImageUris: [photoUri],
+        localImageUris: fotos,
       },
       {
         onSuccess: () => router.replace("/(tabs)"),
@@ -112,11 +120,11 @@ export default function AddPostScreen() {
       <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         <Pressable
           onPress={pickPhoto}
-          className="border border-dashed border-outline-variant items-center justify-center mb-5"
+          className="border border-dashed border-outline-variant items-center justify-center mb-3"
           style={{ aspectRatio: POST_ASPECT, overflow: "hidden" }}
         >
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+          {fotos[0] ? (
+            <Image source={{ uri: fotos[0] }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
           ) : (
             <>
               <Camera size={28} color={colors.onSurface} />
@@ -127,7 +135,39 @@ export default function AddPostScreen() {
           )}
         </Pressable>
 
-        {photoUri && (
+        {/* A ordem da tira é a ordem em que elas vão aparecer no card; a
+            primeira é a capa, que é o que o feed mostra parado. */}
+        {fotos.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            {fotos.map((uri, i) => (
+              <View key={uri} className="mr-2">
+                <Image source={{ uri }} style={{ width: 64, height: 64 }} contentFit="cover" />
+                <Pressable
+                  onPress={() => tirarFoto(uri)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Tirar a foto ${i + 1}`}
+                  className="absolute top-0 right-0 bg-surface/80 p-1"
+                >
+                  <X size={13} color={colors.onSurface} />
+                </Pressable>
+              </View>
+            ))}
+            {fotos.length < MAXIMO_DE_FOTOS && (
+              <Pressable
+                onPress={pickPhoto}
+                className="border border-dashed border-outline items-center justify-center"
+                style={{ width: 64, height: 64 }}
+                accessibilityRole="button"
+                accessibilityLabel="Adicionar outra foto"
+              >
+                <Plus size={20} color={colors.onSurfaceVariant} />
+              </Pressable>
+            )}
+          </ScrollView>
+        )}
+
+        {fotos.length > 0 && (
           <View className="flex-row items-start gap-2 mb-5 -mt-2">
             <Eye size={13} color={colors.muted} style={{ marginTop: 2 }} />
             <Text className="text-muted flex-1" style={{ fontSize: 11.5, lineHeight: 16 }}>
@@ -275,7 +315,7 @@ export default function AddPostScreen() {
         aspect={POST_ASPECT}
         onCancel={() => setPendingUri(null)}
         onDone={(cropped) => {
-          setPhotoUri(cropped);
+          setFotos((atuais) => [...atuais, cropped].slice(0, MAXIMO_DE_FOTOS));
           setPendingUri(null);
         }}
       />
