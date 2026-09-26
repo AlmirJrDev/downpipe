@@ -28,6 +28,7 @@ import { useArteDeStory } from "@/hooks/useArteDeStory";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { carCatalogName, carTitle, carYear } from "@/utils/car";
 import { postThumbnail } from "@/utils/post";
+import { formatarData } from "@/utils/datas";
 import { colors } from "@/constants/theme";
 
 // A aba "Manutenção" já existiu prometendo o que não havia (nem tabela, nem
@@ -90,7 +91,7 @@ export default function CarDetailsScreen() {
     );
   }
 
-  const formatDate = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
+  const formatDate = formatarData;
 
   const historyEntries = [
     ...(mods ?? [])

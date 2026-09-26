@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Megaphone, Pencil } from "lucide-react-native";
+import { dataLocal } from "@/utils/datas";
 import { colors } from "@/constants/theme";
 import { modIconComponent } from "@/constants/modIcons";
 import { categoryLabel } from "@/utils/labels";
@@ -12,7 +13,8 @@ const MONTHS_PT = [
 
 function monthLabel(date: string | null): string {
   if (!date) return "—";
-  const parsed = new Date(date);
+  // dataLocal, e não new Date: "2026-09-01" lido como UTC vira agosto aqui.
+  const parsed = dataLocal(date);
   if (Number.isNaN(parsed.getTime())) return "—";
   return MONTHS_PT[parsed.getMonth()];
 }
