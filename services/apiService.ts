@@ -11,6 +11,7 @@ import type {
   Car,
   Comment,
   CommentPreview,
+  Maintenance,
   Modification,
   ModificationCategory,
   Category,
@@ -944,7 +945,42 @@ async function apagarConteudoDenunciado(
   await api.delete(`/admin/targets/${tipo}/${id}`);
 }
 
+export interface MaintenanceInput {
+  kind: string;
+  doneAt: string;
+  odometer?: number | null;
+  intervalKm?: number | null;
+  intervalMonths?: number | null;
+  cost?: number | null;
+  notes?: string | null;
+}
+
+/** Manutenção: tudo aqui exige ser o dono do carro — o backend recusa o resto. */
+async function getMaintenances(carId: string): Promise<Maintenance[]> {
+  return api.get<Maintenance[]>(`/cars/${carId}/maintenances`);
+}
+
+async function createMaintenance(carId: string, input: MaintenanceInput): Promise<Maintenance> {
+  return api.post<Maintenance>(`/cars/${carId}/maintenances`, input);
+}
+
+async function updateMaintenance(
+  id: string,
+  patch: Partial<MaintenanceInput>
+): Promise<Maintenance> {
+  return api.patch<Maintenance>(`/maintenances/${id}`, patch);
+}
+
+async function deleteMaintenance(id: string): Promise<void> {
+  await api.delete(`/maintenances/${id}`);
+}
+
 export const apiService = {
+  getMaintenances,
+  createMaintenance,
+  updateMaintenance,
+  deleteMaintenance,
+
   getFilaDeDenuncias,
   contarDenunciasAbertas,
   revisarDenuncia,

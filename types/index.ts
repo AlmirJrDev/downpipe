@@ -366,3 +366,35 @@ export interface Denuncia {
     texto: string | null;
   };
 }
+
+/** Quando uma manutenção vence — calculado pelo backend. */
+export interface ProximaManutencao {
+  emData: string | null;
+  emKm: number | null;
+  /** Negativo quando já passou. Null se o carro não tem quilometragem. */
+  faltamKm: number | null;
+  faltamDias: number | null;
+  vencida: boolean;
+  perto: boolean;
+  /** Linha pronta: "faltam 800 km", "venceu há 3 dias". */
+  resumo: string | null;
+}
+
+/**
+ * Manutenção do carro: o que o carro cobra sozinho (óleo, correia, pneu),
+ * diferente da modificação, que é melhoria. Só o dono vê.
+ */
+export interface Maintenance {
+  id: string;
+  carId: string;
+  kind: string;
+  doneAt: string;
+  odometer: number | null;
+  intervalKm: number | null;
+  intervalMonths: number | null;
+  cost: number | null;
+  notes: string | null;
+  proxima: ProximaManutencao;
+  createdAt: string;
+  updatedAt: string;
+}

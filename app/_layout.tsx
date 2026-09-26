@@ -200,6 +200,10 @@ export default function RootLayout() {
                     options={{ presentation: "modal", animation: "slide_from_bottom" }}
                   />
                   <Stack.Screen
+                    name="add-manutencao"
+                    options={{ presentation: "modal", animation: "slide_from_bottom" }}
+                  />
+                  <Stack.Screen
                     name="add-modification"
                     options={{ presentation: "modal", animation: "slide_from_bottom" }}
                   />

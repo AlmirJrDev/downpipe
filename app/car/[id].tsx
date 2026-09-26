@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Instagram, Pencil, Share2, Wrench } from "lucide-react-native";
 import { useCarById, useCarPosts } from "@/stores/garageStore";
 import { useModsByCar } from "@/stores/projectStore";
+import { useManutencoes } from "@/stores/manutencaoStore";
 import { ImageGallery } from "@/components/ImageGallery";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { InstagramLink } from "@/components/ui/InstagramLink";
@@ -29,13 +30,15 @@ import { carCatalogName, carTitle, carYear } from "@/utils/car";
 import { postThumbnail } from "@/utils/post";
 import { colors } from "@/constants/theme";
 
-// "Manutenção" existia como aba, prometia "registre trocas de óleo, revisões
-// e reparos" e não tinha nada atrás — nem tabela, nem endpoint. Removida em
-// vez de fingir: quando existir o domínio de manutenção, a aba volta.
-type TabKey = "overview" | "mods" | "history";
-const TABS: { key: TabKey; label: string }[] = [
+// A aba "Manutenção" já existiu prometendo o que não havia (nem tabela, nem
+// endpoint) e foi removida. Voltou agora que existe de verdade — e só pra
+// quem é dono: manutenção é diário de bordo, não vitrine. O backend recusa a
+// lista de carro alheio de qualquer jeito.
+type TabKey = "overview" | "mods" | "manutencao" | "history";
+const TABS: { key: TabKey; label: string; soDono?: boolean }[] = [
   { key: "overview", label: "Visão geral" },
   { key: "mods", label: "Mods" },
+  { key: "manutencao", label: "Manutenção", soDono: true },
   { key: "history", label: "Histórico" },
 ];
 
@@ -70,6 +73,10 @@ export default function CarDetailsScreen() {
   const carThumb = (width - 40 - 6) / 3;
   const { data: me } = useCurrentUser();
   const isOwner = !!me && !!resolvedCar && me.id === resolvedCar.ownerId;
+  const { data: manutencoes, isPending: manutencoesPendentes } = useManutencoes(
+    // Carro de outra pessoa nem pergunta: a rota é só do dono.
+    isOwner ? id : ""
+  );
 
   if (!resolvedCar) {
     return (
@@ -228,7 +235,7 @@ export default function CarDetailsScreen() {
           </View>
 
           <View className="flex-row border-b border-border mb-4">
-            {TABS.map((t) => (
+            {TABS.filter((t) => !t.soDono || isOwner).map((t) => (
               <Pressable key={t.key} onPress={() => setTab(t.key)} className="mr-6 pb-3">
                 <Text
                   style={{
@@ -399,6 +406,99 @@ export default function CarDetailsScreen() {
               as modificações registradas tinham sumido — elas estavam na aba
               "Mods". Agora é uma linha do tempo de verdade: modificações da
               mais recente pra mais antiga, terminando na entrada na garagem. */}
+          {tab === "manutencao" && (
+            <View className="mb-8">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
+                  Manutenção
+                </Text>
+                <Pressable
+                  onPress={() => router.push(`/add-manutencao?carId=${resolvedCar.id}`)}
+                  hitSlop={6}
+                  className="active:opacity-60"
+                >
+                  <Text className="text-primary" style={{ fontSize: 13, fontWeight: "600" }}>
+                    + Registrar
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* Só o dono chega aqui, e é dele a informação — por isso a
+                  quilometragem e a nota da oficina aparecem sem cerimônia. */}
+              {manutencoesPendentes ? (
+                <View className="py-8 items-center">
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              ) : !manutencoes || manutencoes.length === 0 ? (
+                <EmptyState
+                  icon={<Wrench size={28} color={colors.outline} />}
+                  title="Nada registrado ainda"
+                  description="Anote a última troca de óleo com o intervalo, e o app avisa quando vencer."
+                  actionLabel="+ Registrar manutenção"
+                  onAction={() => router.push(`/add-manutencao?carId=${resolvedCar.id}`)}
+                />
+              ) : (
+                manutencoes.map((m) => (
+                  <Pressable
+                    key={m.id}
+                    onPress={() => router.push(`/add-manutencao?carId=${resolvedCar.id}&id=${m.id}`)}
+                    className="border-b border-border py-4 active:opacity-60"
+                  >
+                    <View className="flex-row items-start justify-between gap-3">
+                      <View className="flex-1">
+                        <Text className="text-on-surface" style={{ fontSize: 16, fontWeight: "500" }}>
+                          {m.kind}
+                        </Text>
+                        <Text className="text-on-surface-variant mt-0.5" style={{ fontSize: 12 }}>
+                          {formatDate(m.doneAt)}
+                          {m.odometer != null ? ` · ${m.odometer.toLocaleString("pt-BR")} km` : ""}
+                        </Text>
+                        {m.notes ? (
+                          <Text className="text-muted mt-1" style={{ fontSize: 13 }} numberOfLines={2}>
+                            {m.notes}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <View className="items-end">
+                        {m.cost != null && (
+                          <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
+                            R$ {m.cost.toLocaleString("pt-BR")}
+                          </Text>
+                        )}
+                        {m.proxima.resumo && (
+                          <View
+                            className="mt-1 px-2 py-0.5"
+                            style={{
+                              backgroundColor: m.proxima.vencida
+                                ? colors.primaryContainer
+                                : m.proxima.perto
+                                  ? colors.surfaceHigh
+                                  : "transparent",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 11,
+                                fontWeight: "600",
+                                color: m.proxima.vencida
+                                  ? colors.onPrimaryContainer
+                                  : m.proxima.perto
+                                    ? colors.onSurface
+                                    : colors.muted,
+                              }}
+                            >
+                              {m.proxima.resumo}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                ))
+              )}
+            </View>
+          )}
+
           {tab === "history" && (
             <View className="mb-8">
               {historyEntries.map((entry, i) => (

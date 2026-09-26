@@ -412,13 +412,21 @@ function Carrossel({ post, fotos, altura }: { post: Post; fotos: string[]; altur
         ))}
       </ScrollView>
 
-      <View className="absolute top-3 right-3 px-2 py-0.5" style={{ backgroundColor: colors.overlayMedium }}>
+      <View
+        pointerEvents="none"
+        className="absolute top-3 right-3 px-2 py-0.5"
+        style={{ backgroundColor: colors.overlayMedium }}
+      >
         <Text className="text-on-surface" style={{ fontSize: 11, fontWeight: "600" }}>
           {indice + 1}/{fotos.length}
         </Text>
       </View>
 
-      <View className="absolute bottom-3 left-0 right-0 flex-row justify-center" style={{ gap: 5 }}>
+      <View
+        pointerEvents="none"
+        className="absolute bottom-3 left-0 right-0 flex-row justify-center"
+        style={{ gap: 5 }}
+      >
         {fotos.map((url, i) => (
           <View
             key={url}
