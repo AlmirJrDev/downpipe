@@ -104,6 +104,11 @@ export interface Car {
   projectProgress: number; // 0-100, derivado
   amountInvested: number; // BRL, derivado
   category: Category | null;
+  /**
+   * Curtidas somadas das fotos deste carro (só as com marcação aceita).
+   * Carro não tem curtida própria — isto é o que a galera curtiu das fotos.
+   */
+  photosLikes?: number;
   /** Instagram do carro — muita gente mantém um perfil só do build. */
   instagram?: string | null;
   /** Em quantos rolês distintos o carro já apareceu. Só vem no detalhe —

@@ -2,28 +2,38 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Gauge, Wallet } from "lucide-react-native";
+import { Gauge, Heart, Wallet } from "lucide-react-native";
 import { colors, statusMeta } from "@/constants/theme";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { carTitle, carYear } from "@/utils/car";
 import type { Car } from "@/types";
 
 /**
- * O número do canto: o dado mais forte que o carro tem de verdade.
+ * O número do canto do card.
  *
  * Ali ficava uma contagem de curtidas inventada a partir do id ("pra parecer
- * populado", dizia o comentário) — carro não tem curtida no Downpipe, nunca
- * teve. Número inventado em cima de foto de gente real é o tipo de coisa que
- * derruba a confiança no resto: se a curtida é fake, por que o investido não
- * seria? Potência primeiro, porque é o que essa galera compara.
+ * populado", dizia o comentário). Agora é a soma real das curtidas das fotos
+ * do carro: carro não tem curtida própria, mas as fotos dele têm, e o que a
+ * galera curte é o carro.
+ *
+ * Carro novo, ou sem foto curtida ainda, cai no dado mais forte que ele tem —
+ * potência, investido, status —, porque "0 curtidas" não convida ninguém a
+ * tocar no card.
  */
-function destaqueDoCarro(car: Car): { texto: string; icone: "cv" | "grana" | null } | null {
+function destaqueDoCarro(car: Car): { texto: string; icone: "cv" | "grana" | "curtidas" | null } | null {
+  if (car.photosLikes) return { texto: formatarCurtidas(car.photosLikes), icone: "curtidas" };
   if (car.power != null) return { texto: `${car.power} cv`, icone: "cv" };
   if (car.amountInvested > 0) {
     return { texto: `R$ ${car.amountInvested.toLocaleString("pt-BR")}`, icone: "grana" };
   }
   // Sem número preenchido, o status ainda diz algo: é um projeto vivo.
   return car.status ? { texto: statusMeta[car.status].label, icone: null } : null;
+}
+
+/** 1.200 vira "1,2K" — o card é estreito e o número exato não muda nada ali. */
+function formatarCurtidas(n: number): string {
+  if (n < 1000) return String(n);
+  return `${(n / 1000).toFixed(1).replace(".0", "").replace(".", ",")}K`;
 }
 
 export function CarCard({ car }: { car: Car }) {
@@ -77,6 +87,9 @@ export function CarCard({ car }: { car: Car }) {
           )}
           {destaque && (
             <View className="flex-row items-center gap-1">
+              {destaque.icone === "curtidas" && (
+                <Heart size={13} color={colors.primary} fill={colors.primary} />
+              )}
               {destaque.icone === "cv" && <Gauge size={13} color={colors.primary} />}
               {destaque.icone === "grana" && <Wallet size={13} color={colors.primary} />}
               <Text className="text-primary" style={{ fontSize: 13, fontWeight: "600" }}>
