@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { apiService } from "@/services/apiService";
 import { AppHeader } from "@/components/AppHeader";
 import { PostCard } from "@/components/cards/PostCard";
+import { QuemSeguir } from "@/components/QuemSeguir";
 import { GettingStarted } from "@/components/GettingStarted";
 import { FeedEvents } from "@/components/FeedEvents";
 import { FeedSkeleton } from "@/components/ui/States";
@@ -159,6 +160,7 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <>
               <GettingStarted />
+              <QuemSeguir />
               <FeedEvents />
             </>
           }

@@ -403,3 +403,15 @@ export interface Maintenance {
   createdAt: string;
   updatedAt: string;
 }
+
+/** Um perfil sugerido pra seguir (GET /profile/suggestions). */
+export interface Sugestao {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  isOrganizer: boolean;
+  carsCount: number;
+  postsCount: number;
+}

@@ -12,6 +12,7 @@ import type {
   Comment,
   CommentPreview,
   Maintenance,
+  Sugestao,
   Modification,
   ModificationCategory,
   Category,
@@ -975,7 +976,13 @@ async function deleteMaintenance(id: string): Promise<void> {
   await api.delete(`/maintenances/${id}`);
 }
 
+/** Quem seguir — a lista já vem sem quem eu sigo, bloqueei, ou eu mesmo. */
+async function getSugestoes(limit = 8): Promise<Sugestao[]> {
+  return api.get<Sugestao[]>(`/profile/suggestions?limit=${limit}`);
+}
+
 export const apiService = {
+  getSugestoes,
   getMaintenances,
   createMaintenance,
   updateMaintenance,
