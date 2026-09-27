@@ -43,9 +43,16 @@ const TABS: { key: TabKey; label: string; soDono?: boolean }[] = [
   { key: "history", label: "Histórico" },
 ];
 
+/**
+ * Um número da ficha do carro.
+ *
+ * Largura fixa de um terço, e não flex-1: com cinco números, flex-1 os
+ * espremeria todos numa linha só e "R$ 18.400" sairia cortado no celular.
+ * Assim a faixa quebra em duas linhas quando precisa.
+ */
 function StatBlock({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-1 items-center">
+    <View className="items-center" style={{ width: "33.333%" }}>
       <Text
         className="text-on-surface-variant"
         style={{ fontSize: 10, letterSpacing: 1.2 }}
@@ -222,7 +229,10 @@ export default function CarDetailsScreen() {
             </Pressable>
           )}
 
-          <View className="flex-row border-y border-border my-4 py-3">
+          <View
+            className="flex-row flex-wrap border-y border-border my-4 py-3"
+            style={{ rowGap: 14 }}
+          >
             <StatBlock label="POTÊNCIA" value={resolvedCar.power != null ? `${resolvedCar.power} cv` : "—"} />
             <StatBlock
               label="QUILOMETRAGEM"
@@ -233,6 +243,12 @@ export default function CarDetailsScreen() {
                 marcadas com evento — é o único vínculo que existe entre
                 carro e encontro. */}
             <StatBlock label="ROLÊS" value={String(resolvedCar.eventsCount ?? 0)} />
+            {/* Curtidas somadas das fotos deste carro — carro não tem curtida
+                própria. Só aparece quando existe: uma ficha que começa com
+                "0 curtidas" fala mal de um carro que ninguém viu ainda. */}
+            {!!resolvedCar.photosLikes && (
+              <StatBlock label="CURTIDAS" value={String(resolvedCar.photosLikes)} />
+            )}
           </View>
 
           <View className="flex-row border-b border-border mb-4">
