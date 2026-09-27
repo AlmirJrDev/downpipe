@@ -130,8 +130,17 @@ export default function RootLayout() {
   // na mesma instalação do app) fica no cache e pode vazar por um instante
   // pra sessão seguinte, já que a query key ("me", "my-garage", etc.) não
   // inclui o id do usuário.
+  //
+  // Só na SAÍDA de uma sessão, nunca na subida já deslogado: limpar o cache
+  // enquanto o visitante carrega o rolê que abriu pelo link descartava a
+  // resposta em voo, e a tela ficava girando pra sempre.
+  const estavaLogado = useRef(false);
   useEffect(() => {
-    if (authStatus === "signedOut") queryClient.clear();
+    if (authStatus === "signedIn") estavaLogado.current = true;
+    else if (authStatus === "signedOut" && estavaLogado.current) {
+      estavaLogado.current = false;
+      queryClient.clear();
+    }
   }, [authStatus, queryClient]);
 
   return (

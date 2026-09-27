@@ -4,9 +4,18 @@
 // donos da mesma lista de carros.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiService, type CreateCarInput } from "@/services/apiService";
+import { useAuthStore } from "@/stores/authStore";
 
 export function useMyGarage() {
-  return useQuery({ queryKey: ["my-garage"], queryFn: apiService.getMyGarage });
+  // Visitante não tem garagem, e pedir por ela devolvia 401 em telas que ele
+  // pode ver — a do rolê, por exemplo, que usa a garagem só pra oferecer
+  // "vou com qual carro?".
+  const logado = useAuthStore((s) => s.status === "signedIn");
+  return useQuery({
+    queryKey: ["my-garage"],
+    queryFn: apiService.getMyGarage,
+    enabled: logado,
+  });
 }
 
 export function useCarById(id: string) {
