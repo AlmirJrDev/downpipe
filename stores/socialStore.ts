@@ -3,6 +3,7 @@
 // virou puramente decorativo, com estado local no componente que renderiza o
 // post — não passa por aqui, não persiste entre sessões.
 import { Alert } from "@/utils/alert";
+import { pedirParaEntrar } from "@/utils/visitante";
 import { useInfiniteQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { ApiError, type PaginatedResult } from "@/services/api";
 import { apiService, type CreatePostInput } from "@/services/apiService";
@@ -126,11 +127,27 @@ function revalidarPosts(queryClient: QueryClient) {
   CHAVES_DE_POST.forEach((chave) => queryClient.invalidateQueries({ queryKey: chave }));
 }
 
+/**
+ * Ação de visitante vira convite pra entrar.
+ *
+ * Fica aqui, na mutation, e não em cada botão: é o ponto único por onde
+ * curtir, salvar, comentar e seguir passam. Botão por botão daria a mesma
+ * coisa repetida em dez lugares — e o décimo primeiro escaparia.
+ *
+ * Lança em vez de devolver: dentro do mutationFn é isso que impede o
+ * onMutate otimista de pintar um coração que o servidor nunca vai aceitar.
+ */
+function exigirConta(): void {
+  if (pedirParaEntrar()) throw new Error("PRECISA_ENTRAR");
+}
+
 export function useToggleLike() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ postId, liked }: { postId: string; liked: boolean }) =>
-      liked ? apiService.unlikePost(postId) : apiService.likePost(postId),
+    mutationFn: ({ postId, liked }: { postId: string; liked: boolean }) => {
+      exigirConta();
+      return liked ? apiService.unlikePost(postId) : apiService.likePost(postId);
+    },
     onMutate: async ({ postId, liked }) => {
       await pausarPosts(queryClient);
 
@@ -170,8 +187,10 @@ export function useToggleLike() {
 export function useToggleSave() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ postId, saved }: { postId: string; saved: boolean }) =>
-      saved ? apiService.unsavePost(postId) : apiService.savePost(postId),
+    mutationFn: ({ postId, saved }: { postId: string; saved: boolean }) => {
+      exigirConta();
+      return saved ? apiService.unsavePost(postId) : apiService.savePost(postId);
+    },
     onMutate: async ({ postId, saved }) => {
       await pausarPosts(queryClient);
 
@@ -223,8 +242,10 @@ export function usePostLikers(postId: string, enabled: boolean) {
 export function useToggleFollow(username: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, following }: { userId: string; following: boolean }) =>
-      following ? apiService.unfollowUser(userId) : apiService.followUser(userId),
+    mutationFn: ({ userId, following }: { userId: string; following: boolean }) => {
+      exigirConta();
+      return following ? apiService.unfollowUser(userId) : apiService.followUser(userId);
+    },
     onMutate: async ({ following }) => {
       await queryClient.cancelQueries({ queryKey: ["user", username] });
       const previous = queryClient.getQueryData<User>(["user", username]);
@@ -341,7 +362,10 @@ function mexerNosComentariosDoCard(
 export function useAddComment(postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (text: string) => apiService.addComment(postId, text),
+    mutationFn: (text: string) => {
+      exigirConta();
+      return apiService.addComment(postId, text);
+    },
     onSuccess: (created) => {
       // A lista vem do mais antigo pro mais novo, então o comentário novo
       // entra no fim. Escrever no cache (em vez de invalidar) é o que faz

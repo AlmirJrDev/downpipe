@@ -13,6 +13,14 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isPlaceholderUsername } from "@/utils/profile";
 import { AlertHost } from "@/components/ui/AlertHost";
 import { FolhasDoPost } from "@/components/FolhasDoPost";
+import { ConviteParaEntrar } from "@/components/ConviteParaEntrar";
+import {
+  caminhoAberto,
+  ehTelaPublica,
+  guardarDestino,
+  pegarDestino,
+  temDestino,
+} from "@/utils/visitante";
 
 // expo-router monta o NavigationContainer com o DefaultTheme, cujo
 // colors.background é rgb(242,242,242) — quase branco. Cada navegador usa esse
@@ -31,23 +39,6 @@ const navigationTheme = {
     notification: colors.primaryContainer,
   },
 };
-
-/**
- * Pra onde a pessoa estava indo quando foi mandada pro login.
- *
- * Link compartilhado é o caso: quem recebe um rolê pelo WhatsApp e ainda não
- * tem conta cai no login, cria a conta, passa pelo onboarding — e antes disto
- * terminava no feed, sem nem sinal do rolê que abriu. Guardado em memória:
- * o login não recarrega a página, então o valor atravessa até o fim.
- */
-let destinoDepoisDoLogin: string | null = null;
-
-/** O caminho aberto no navegador, sem o /app do começo. Só existe na web. */
-function caminhoAberto(): string | null {
-  if (Platform.OS !== "web" || typeof window === "undefined") return null;
-  const semBase = window.location.pathname.replace(/^\/app(?=\/|$)/, "") || "/";
-  return semBase + window.location.search;
-}
 
 // Redireciona entre (tabs), login/register e o onboarding (edit-profile
 // forçado pra quem ainda está com o @ placeholder do signup) conforme o
@@ -84,11 +75,14 @@ function AuthRedirect() {
       segments[0] === "nova-senha";
 
     if (status === "signedOut") {
-      if (!inAuthScreen) {
+      // Telas que um link compartilhado abre ficam de pé sem conta: quem
+      // recebe um rolê pelo WhatsApp vê o rolê, e o login só entra quando ela
+      // quiser confirmar presença. Ver utils/visitante.
+      if (!inAuthScreen && !ehTelaPublica(segments[0])) {
         // A home não conta como destino: é pra lá que a pessoa vai de
         // qualquer jeito depois de entrar.
         const aberto = caminhoAberto();
-        if (abriuAgora && aberto && aberto !== "/") destinoDepoisDoLogin = aberto;
+        if (abriuAgora && aberto && aberto !== "/") guardarDestino(aberto);
         router.replace("/login");
       }
       return;
@@ -105,13 +99,11 @@ function AuthRedirect() {
 
     if (needsOnboarding && !inOnboardingFlow) {
       router.replace("/welcome");
-    } else if (!needsOnboarding && destinoDepoisDoLogin) {
+    } else if (!needsOnboarding && !inOnboardingFlow && temDestino()) {
       // Entrou (ou terminou o onboarding de conta nova): segue pro link que
-      // tinha aberto. Usado uma vez só, pra nunca puxar a pessoa de volta
+      // tinha aberto. Consumido uma vez só, pra nunca puxar a pessoa de volta
       // pra ele mais tarde.
-      const destino = destinoDepoisDoLogin;
-      destinoDepoisDoLogin = null;
-      router.replace(destino as never);
+      router.replace(pegarDestino() as never);
     } else if (!needsOnboarding && inAuthScreen) {
       router.replace("/(tabs)");
     }
@@ -225,6 +217,8 @@ export default function RootLayout() {
                 {/* Comentários, curtidas e foto em tela cheia: fora de qualquer
                     lista, ou a lista de dentro não rola (ver folhasStore). */}
                 <FolhasDoPost />
+                {/* Quem chegou por um link e ainda não tem conta. */}
+                <ConviteParaEntrar />
                 <AlertHost />
               </>
             )}

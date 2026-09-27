@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { ApiError, type PaginatedResult } from "@/services/api";
 import { apiService, type CreateEventInput } from "@/services/apiService";
+import { pedirParaEntrar } from "@/utils/visitante";
 import type { CarEvent } from "@/types";
 
 interface InfiniteEvents {
@@ -133,7 +134,11 @@ export function useToggleAttendance() {
       attending: boolean;
       /** Carro que vai levar. Opcional: confirmar continua sendo um toque. */
       carId?: string | null;
-    }) => (attending ? apiService.unattendEvent(eventId) : apiService.attendEvent(eventId, carId)),
+    }) => {
+      // Visitante que toca em "vou" entra no login e volta pro rolê.
+      if (pedirParaEntrar()) throw new Error("PRECISA_ENTRAR");
+      return attending ? apiService.unattendEvent(eventId) : apiService.attendEvent(eventId, carId);
+    },
     onMutate: async ({ eventId, attending }) => {
       await queryClient.cancelQueries({ queryKey: ["events"] });
       await queryClient.cancelQueries({ queryKey: ["event", eventId] });
