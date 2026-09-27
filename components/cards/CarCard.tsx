@@ -2,20 +2,32 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Heart } from "lucide-react-native";
-import { colors } from "@/constants/theme";
+import { Gauge, Wallet } from "lucide-react-native";
+import { colors, statusMeta } from "@/constants/theme";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { carTitle, carYear } from "@/utils/car";
 import type { Car } from "@/types";
 
-function formatLikes(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}K`;
-  return `${n}`;
+/**
+ * O número do canto: o dado mais forte que o carro tem de verdade.
+ *
+ * Ali ficava uma contagem de curtidas inventada a partir do id ("pra parecer
+ * populado", dizia o comentário) — carro não tem curtida no Downpipe, nunca
+ * teve. Número inventado em cima de foto de gente real é o tipo de coisa que
+ * derruba a confiança no resto: se a curtida é fake, por que o investido não
+ * seria? Potência primeiro, porque é o que essa galera compara.
+ */
+function destaqueDoCarro(car: Car): { texto: string; icone: "cv" | "grana" | null } | null {
+  if (car.power != null) return { texto: `${car.power} cv`, icone: "cv" };
+  if (car.amountInvested > 0) {
+    return { texto: `R$ ${car.amountInvested.toLocaleString("pt-BR")}`, icone: "grana" };
+  }
+  // Sem número preenchido, o status ainda diz algo: é um projeto vivo.
+  return car.status ? { texto: statusMeta[car.status].label, icone: null } : null;
 }
 
 export function CarCard({ car }: { car: Car }) {
-  // Deterministic pseudo-like-count for explore cards so it feels populated.
-  const likes = 800 + (car.id.charCodeAt(1) || 0) * 137;
+  const destaque = destaqueDoCarro(car);
   const year = carYear(car);
 
   return (
@@ -63,12 +75,15 @@ export function CarCard({ car }: { car: Car }) {
               {year ?? "—"}
             </Text>
           )}
-          <View className="flex-row items-center gap-1">
-            <Heart size={13} color={colors.primary} fill={colors.primary} />
-            <Text className="text-primary" style={{ fontSize: 13, fontWeight: "600" }}>
-              {formatLikes(likes)}
-            </Text>
-          </View>
+          {destaque && (
+            <View className="flex-row items-center gap-1">
+              {destaque.icone === "cv" && <Gauge size={13} color={colors.primary} />}
+              {destaque.icone === "grana" && <Wallet size={13} color={colors.primary} />}
+              <Text className="text-primary" style={{ fontSize: 13, fontWeight: "600" }}>
+                {destaque.texto}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </Pressable>
