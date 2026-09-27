@@ -8,7 +8,7 @@ Tamanho: **P** = dá pra fazer numa sentada · **M** = alguns dias · **G** = se
 
 ---
 
-## Prontas (26/09/2026)
+## Prontas
 
 ### 1. Lembrete de rolê por push ✅
 Um agendador dentro do próprio backend (`event-reminders.service.ts`) varre a
@@ -20,6 +20,16 @@ organizador confirmou não vira push.
 Até seis fotos por publicação: tira de miniaturas na hora de compor e carrossel
 com contador e bolinhas no card. No navegador o gesto precisou liberar o eixo
 horizontal (`touchAction`), senão o deslizar nunca chegava no carrossel.
+
+### 6. Quem seguir ✅ (27/09/2026)
+Fileira no topo do feed com quem tem o que mostrar (carros, publicações), já sem
+quem a pessoa segue, bloqueou, ou ela mesma. Some quando ela já segue cinco
+contas. Conta que parou no meio do cadastro, com o @ placeholder, fica de fora.
+
+### Link compartilhado sem login ✅ (27/09/2026)
+Rolê, carro, publicação e perfil abrem sem conta; o login só entra quando a
+pessoa vai curtir, comentar, seguir ou confirmar presença, e depois de entrar
+ela volta pro mesmo conteúdo. Era o furo mais caro antes de qualquer divulgação.
 
 ### 4. Manutenção com lembrete ✅
 Aba nova na página do carro, só pro dono. Cada item guarda o que foi feito,
@@ -42,15 +52,15 @@ na página do carro e, junto com o investido, "você já colocou 27% do valor do
 carro em mods". É o tipo de número que essa galera compartilha sozinha —
 inclusive na arte de story.
 
-### 5. Rolês perto de mim — M
-O app já guarda latitude/longitude e geocodifica endereço, mas descobrir um rolê
-ainda depende de alguém mandar o link. Uma lista por proximidade (e um mapa)
-transforma o app em lugar onde se procura o que fazer no fim de semana.
+### ~~5. Rolês perto de mim~~ — já existia
+Levantei isso como pendência e estava errado: a aba ROLÊS do Explorar já tem
+"rolês perto de mim", raios de 50/150/300 km, mapa, e a distância calculada no
+servidor ("a 6 km"). Conferido em produção em 27/09/2026.
 
-### 6. Quem seguir — P/M
-O feed já cai no global quando a pessoa não segue ninguém, então o novato não vê
-tela vazia. Mas o vínculo não nasce sozinho: sugerir perfis da mesma cidade ou
-categoria logo depois do cadastro é barato e muda a retenção da primeira semana.
+O que falta ali não é código, é rolê marcado: a lista de próximos está vazia
+porque ninguém marcou nada ainda.
+
+
 
 ### 7. Perfil de oficina/loja + anúncio self-service — G
 Hoje anúncio entra por linha de comando (`npm run ads`). O caminho natural é um
