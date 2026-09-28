@@ -1058,8 +1058,12 @@ export interface CorrecoesDoRole {
   organizerInstagram?: string | null;
 }
 
-async function aprovarRole(id: string, correcoes: CorrecoesDoRole): Promise<{ eventId: string }> {
-  return api.post<{ eventId: string }>(`/admin/suggestions/${id}/approve`, correcoes);
+/** `semLocalizacao` avisa que o endereço não resolveu: sem ponto, o rolê não aparece no "perto de mim". */
+async function aprovarRole(
+  id: string,
+  correcoes: CorrecoesDoRole
+): Promise<{ eventId: string; semLocalizacao: boolean }> {
+  return api.post<{ eventId: string; semLocalizacao: boolean }>(`/admin/suggestions/${id}/approve`, correcoes);
 }
 
 /**

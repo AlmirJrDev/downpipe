@@ -246,12 +246,18 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
         kind,
         carCategories,
       }),
-    onSuccess: ({ eventId }) => {
+    onSuccess: ({ eventId, semLocalizacao }) => {
       atualizar();
-      Alert.alert("Rolê publicado", "Ele já está no calendário.", [
-        { text: "Fechar", style: "cancel" },
-        { text: "Ver o rolê", onPress: () => router.push(`/event/${eventId}`) },
-      ]);
+      Alert.alert(
+        semLocalizacao ? "Publicado, mas sem ponto no mapa" : "Rolê publicado",
+        semLocalizacao
+          ? "O endereço não resolveu, e sem ponto ele não aparece no “perto de mim”. Abra o rolê e marque o pino."
+          : "Ele já está no calendário.",
+        [
+          { text: "Fechar", style: "cancel" },
+          { text: "Ver o rolê", onPress: () => router.push(`/event/${eventId}`) },
+        ]
+      );
     },
     onError: naoDeu,
   });
