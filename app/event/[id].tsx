@@ -18,6 +18,7 @@ import { apiService } from "@/services/apiService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ArrowLeft,
+  Ban,
   CalendarDays,
   Check,
   Globe,
@@ -27,6 +28,7 @@ import {
   Navigation,
   Pencil,
   Share2,
+  Ticket,
   TriangleAlert,
   Users,
 } from "lucide-react-native";
@@ -46,10 +48,16 @@ import { useUpdateAttendanceCar } from "@/stores/eventsStore";
 import { useMyGarage } from "@/stores/garageStore";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { carTitle } from "@/utils/car";
-import { eventFullDate } from "@/utils/event";
+import { eventEndLine, eventFullDate } from "@/utils/event";
 import { openDirections } from "@/utils/maps";
 import { postThumbnail } from "@/utils/post";
 import { colors, typography } from "@/constants/theme";
+import {
+  rotuloDaAtracao,
+  rotuloDaProibicao,
+  rotuloDoTipo,
+} from "@/constants/detalhesDoRole";
+import { categoryLabel } from "@/utils/labels";
 
 /** Quantos rostos cabem na fileira antes do "+N". */
 const AVATARS_VISIVEIS = 6;
@@ -136,6 +144,7 @@ export default function EventDetailsScreen() {
     );
   }
 
+  const fimDoRole = eventEndLine(event.endsAt, event.endsAtEstimated);
   const isOrganizer = !!me && me.id === event.organizerId;
   const attending = !!event.attendingByMe;
   const aproximado = event.coordsPrecision === "city";
@@ -271,6 +280,8 @@ export default function EventDetailsScreen() {
               <CalendarDays size={15} color={colors.primary} />
               <Text className="text-on-surface flex-1" style={{ fontSize: 14 }}>
                 {eventFullDate(event.startsAt)}
+                {/* O fim vem colado na data: é a mesma decisão (dá tempo de ir?). */}
+                {fimDoRole && <Text className="text-muted"> · {fimDoRole}</Text>}
               </Text>
             </View>
 
@@ -451,6 +462,70 @@ export default function EventDetailsScreen() {
               {event.description}
             </Text>
           )}
+
+          {/* O que o rolê pede pra entrar. Vem antes de tudo porque é o que
+              a pessoa precisa saber ANTES de sair de casa. */}
+          {!!event.entryNote && (
+            <View className="flex-row items-start gap-2 mt-6 border border-outline-variant p-3">
+              <Ticket size={15} color={colors.primary} style={{ marginTop: 1 }} />
+              <Text className="text-on-surface flex-1" style={{ fontSize: 13.5, lineHeight: 19 }}>
+                {event.entryNote}
+              </Text>
+            </View>
+          )}
+
+          {(event.attractions?.length ?? 0) > 0 && (
+            <View className="mt-6">
+              <Text className="text-on-surface mb-2" style={typography.labelCaps}>
+                O que tem lá
+              </Text>
+              <View className="flex-row flex-wrap">
+                {event.attractions!.map((a) => (
+                  <View key={a} className="mr-2 mb-2 px-3 py-1.5 border border-outline-variant">
+                    <Text className="text-on-surface-variant" style={{ fontSize: 12.5 }}>
+                      {rotuloDaAtracao(a)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Proibições em vermelho: é a informação que salva o próximo rolê
+              no mesmo lugar. Discreta demais, ninguém lê. */}
+          {(event.rules?.length ?? 0) > 0 && (
+            <View className="mt-6">
+              <Text className="text-on-surface mb-2" style={typography.labelCaps}>
+                Não pode
+              </Text>
+              <View className="flex-row flex-wrap">
+                {event.rules!.map((r) => (
+                  <View
+                    key={r}
+                    className="mr-2 mb-2 px-3 py-1.5 flex-row items-center gap-1.5 border"
+                    style={{ borderColor: colors.error }}
+                  >
+                    <Ban size={12} color={colors.error} />
+                    <Text style={{ fontSize: 12.5, color: colors.error }}>
+                      {rotuloDaProibicao(r)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {(event.carCategories?.length ?? 0) > 0 && (
+            <View className="mt-6">
+              <Text className="text-on-surface mb-2" style={typography.labelCaps}>
+                Carros esperados
+              </Text>
+              <Text className="text-muted" style={{ fontSize: 13, lineHeight: 19 }}>
+                {event.carCategories!.map((c) => categoryLabel(c as never)).join(" · ")}
+              </Text>
+            </View>
+          )}
+
 
           {/* Carros confirmados: a grade que responde "de quem é esse carro?".
               Vale ser honesto — só aparece quem declarou. */}

@@ -12,7 +12,7 @@ import {
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { ArrowLeft, CalendarPlus, Camera, Globe, Link2, MapPin } from "lucide-react-native";
+import { ArrowLeft, CalendarPlus, Camera, Check, Globe, Link2, MapPin } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { ImageCropper } from "@/components/ImageCropper";
@@ -27,6 +27,9 @@ import {
 import { inputsToIso, isoToDateInput, isoToTimeInput } from "@/utils/event";
 import { ApiError } from "@/services/api";
 import { colors } from "@/constants/theme";
+import { ATRACOES, PROIBICOES, TIPOS_DE_ROLE } from "@/constants/detalhesDoRole";
+import { categoryLabel } from "@/utils/labels";
+import type { Category } from "@/types";
 import { voltarOuIrPara } from "@/utils/navigation";
 import type { EventVisibility } from "@/types";
 
@@ -38,6 +41,46 @@ const INPUT = {
   fontSize: 15,
 } as const;
 
+/** Mesmas categorias dos carros do app — é por elas que a presença é validada. */
+const CATEGORIAS_DE_CARRO: Category[] = [
+  "JDM",
+  "Euro",
+  "Muscle",
+  "Performance",
+  "Clássicos",
+  "Stance",
+  "Other",
+];
+
+/** Liga/desliga um item da lista, preservando a ordem de escolha. */
+const alternar = (lista: string[], chave: string) =>
+  lista.includes(chave) ? lista.filter((c) => c !== chave) : [...lista, chave];
+
+function ChipDoRole({
+  label,
+  ativo,
+  onPress,
+}: {
+  label: string;
+  ativo: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`mr-2 mb-2 px-3.5 py-2 border ${
+        ativo ? "bg-primary-container border-primary-container" : "border-outline-variant"
+      }`}
+    >
+      <Text
+        style={{ fontSize: 12.5, fontWeight: "600" }}
+        className={ativo ? "text-on-primary-container" : "text-on-surface-variant"}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 export default function AddEventScreen() {
   // eventId presente = edição do evento existente.
   const { eventId } = useLocalSearchParams<{ eventId?: string }>();
@@ -58,6 +101,15 @@ export default function AddEventScreen() {
   const [address, setAddress] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<EventVisibility>("public");
+  // Detalhes que fazem a pessoa decidir se vai: até que horas, o que pede na
+  // entrada, o que tem lá, o que não pode e que carros o pessoal espera.
+  const [endTimeInput, setEndTimeInput] = useState("");
+  const [endEstimated, setEndEstimated] = useState(true);
+  const [entryNote, setEntryNote] = useState("");
+  const [attractions, setAttractions] = useState<string[]>([]);
+  const [rules, setRules] = useState<string[]>([]);
+  const [kind, setKind] = useState<string | null>(null);
+  const [carCategories, setCarCategories] = useState<Category[]>([]);
   const [localPhoto, setLocalPhoto] = useState<string | null>(null);
   const [cropping, setCropping] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -80,6 +132,13 @@ export default function AddEventScreen() {
     setAddress(existing.address);
     setDescription(existing.description ?? "");
     setVisibility(existing.visibility);
+    setEndTimeInput(existing.endsAt ? isoToTimeInput(existing.endsAt) : "");
+    setEndEstimated(existing.endsAtEstimated ?? true);
+    setEntryNote(existing.entryNote ?? "");
+    setAttractions(existing.attractions ?? []);
+    setRules(existing.rules ?? []);
+    setKind(existing.kind ?? null);
+    setCarCategories((existing.carCategories ?? []) as Category[]);
     if (existing.latitude != null && existing.longitude != null) {
       setCoords({ latitude: existing.latitude, longitude: existing.longitude });
     }
@@ -92,6 +151,19 @@ export default function AddEventScreen() {
   };
 
   const startsAtIso = inputsToIso(dateInput, timeInput);
+  /**
+   * O fim usa a data do começo: rolê que vira a noite é o caso raro, e pedir
+   * uma segunda data só pra isso atrapalharia todo mundo. Quando a hora do
+   * fim é menor que a do começo, entende-se que passou da meia-noite.
+   */
+  const endsAtIso = (() => {
+    if (!endTimeInput.trim() || !startsAtIso) return null;
+    const fim = inputsToIso(dateInput, endTimeInput);
+    if (!fim) return null;
+    return Date.parse(fim) > Date.parse(startsAtIso)
+      ? fim
+      : new Date(Date.parse(fim) + 86_400_000).toISOString();
+  })();
   const dateTouched = !!dateInput.trim() || !!timeInput.trim();
   const dateInvalid = dateTouched && startsAtIso === null;
   const isValid = !!name.trim() && !!location.trim() && !!city.trim() && startsAtIso !== null;
@@ -115,6 +187,13 @@ export default function AddEventScreen() {
       // texto; sem ele, cai na geocodificação.
       latitude: coords?.latitude ?? null,
       longitude: coords?.longitude ?? null,
+      endsAt: endsAtIso,
+      endsAtEstimated: endsAtIso ? endEstimated : false,
+      entryNote: entryNote.trim() || null,
+      attractions,
+      rules,
+      kind,
+      carCategories,
     };
 
     if (isEditing && eventId) {
@@ -321,6 +400,133 @@ export default function AddEventScreen() {
           )}
         </Pressable>
 
+        <Text className="text-on-surface-variant mb-2" style={LABEL}>
+          ATÉ QUE HORAS (OPCIONAL)
+        </Text>
+        <View className="flex-row items-center gap-3 mb-2">
+          <View style={{ width: 120 }}>
+            <TextInput
+              value={endTimeInput}
+              onChangeText={setEndTimeInput}
+              placeholder="22:00"
+              placeholderTextColor={colors.inputPlaceholder}
+              keyboardType="numbers-and-punctuation"
+              style={{
+                backgroundColor: colors.inputSurface,
+                color: colors.onInputSurface,
+                padding: 14,
+                fontSize: 15,
+              }}
+            />
+          </View>
+          {/* A maioria não sabe a hora exata; prometer hora cheia que não
+              se cumpre é pior do que assumir o palpite. */}
+          {!!endTimeInput.trim() && (
+            <Pressable
+              onPress={() => setEndEstimated((v) => !v)
+              }
+              className="flex-1 flex-row items-center gap-2 active:opacity-70"
+            >
+              <View
+                className="items-center justify-center"
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderWidth: 1,
+                  borderColor: endEstimated ? colors.primaryContainer : colors.outline,
+                  backgroundColor: endEstimated ? colors.primaryContainer : "transparent",
+                }}
+              >
+                {endEstimated && <Check size={13} color={colors.onPrimaryContainer} />}
+              </View>
+              <Text className="text-on-surface-variant flex-1" style={{ fontSize: 12.5 }}>
+                É por volta disso, não hora marcada
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        <Text className="text-on-surface-variant mb-2" style={LABEL}>
+          TIPO DE ROLÊ
+        </Text>
+        <View className="flex-row flex-wrap mb-5">
+          {TIPOS_DE_ROLE.map((t) => (
+            <ChipDoRole
+              key={t.chave}
+              label={t.rotulo}
+              ativo={kind === t.chave}
+              onPress={() => setKind(kind === t.chave ? null : t.chave)}
+            />
+          ))}
+        </View>
+
+        <Text className="text-on-surface-variant mb-2" style={LABEL}>
+          ENTRADA (OPCIONAL)
+        </Text>
+        <TextInput
+          value={entryNote}
+          onChangeText={setEntryNote}
+          placeholder="Ex: 1 kg de alimento não perecível"
+          placeholderTextColor={colors.inputPlaceholder}
+          maxLength={120}
+          className="mb-5"
+          style={{
+            backgroundColor: colors.inputSurface,
+            color: colors.onInputSurface,
+            padding: 14,
+            fontSize: 15,
+          }}
+        />
+
+        <Text className="text-on-surface-variant mb-2" style={LABEL}>
+          O QUE TEM NO ROLÊ
+        </Text>
+        <View className="flex-row flex-wrap mb-5">
+          {ATRACOES.map((a) => (
+            <ChipDoRole
+              key={a.chave}
+              label={a.rotulo}
+              ativo={attractions.includes(a.chave)}
+              onPress={() => setAttractions(alternar(attractions, a.chave))}
+            />
+          ))}
+        </View>
+
+        <Text className="text-on-surface-variant mb-2" style={LABEL}>
+          O QUE NÃO PODE
+        </Text>
+        <Text className="text-muted mb-2" style={{ fontSize: 12, lineHeight: 16 }}>
+          A maioria dos encontros é em posto ou estacionamento emprestado — é
+          borrachão e acelerada que fazem o dono do lugar cancelar o próximo.
+        </Text>
+        <View className="flex-row flex-wrap mb-5">
+          {PROIBICOES.map((r) => (
+            <ChipDoRole
+              key={r.chave}
+              label={r.rotulo}
+              ativo={rules.includes(r.chave)}
+              onPress={() => setRules(alternar(rules, r.chave))}
+            />
+          ))}
+        </View>
+
+        <Text className="text-on-surface-variant mb-2" style={LABEL}>
+          CARROS ESPERADOS
+        </Text>
+        <Text className="text-muted mb-2" style={{ fontSize: 12, lineHeight: 16 }}>
+          Deixe vazio para qualquer carro. Marcando, só quem tem carro dessas
+          categorias consegue confirmar levando ele.
+        </Text>
+        <View className="flex-row flex-wrap mb-5">
+          {CATEGORIAS_DE_CARRO.map((c) => (
+            <ChipDoRole
+              key={c}
+              label={categoryLabel(c)}
+              ativo={carCategories.includes(c)}
+              onPress={() => setCarCategories(alternar(carCategories, c) as Category[])}
+            />
+          ))}
+        </View>
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
           QUEM PODE VER
         </Text>

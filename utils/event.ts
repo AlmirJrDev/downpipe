@@ -26,6 +26,20 @@ export function eventFullDate(iso: string): string {
   return `${dia} · ${hora}`;
 }
 
+/**
+ * A linha do fim: "até 22:00" ou "até por volta das 22:00".
+ *
+ * O palpite fica explícito porque quase todo organizador chuta esse horário —
+ * e quem lê "até 22:00" e sai 21:50 encontrando o posto vazio não volta.
+ */
+export function eventEndLine(iso: string | null | undefined, estimado?: boolean): string | null {
+  if (!iso) return null;
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return null;
+  const hora = data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return estimado ? `até por volta das ${hora}` : `até ${hora}`;
+}
+
 export function isoToDateInput(iso: string | null | undefined): string {
   if (!iso) return "";
   const date = new Date(iso);

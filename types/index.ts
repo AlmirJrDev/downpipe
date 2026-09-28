@@ -312,6 +312,20 @@ export interface CarEvent {
    * sobre o texto do endereço.
    */
   coordsPrecision: "exact" | "city" | "pinned" | null;
+  /**
+   * Fim previsto. Quase sempre é palpite — `endsAtEstimated` faz a tela
+   * escrever "até por volta das 22h" em vez de prometer hora certa.
+   */
+  endsAt?: string | null;
+  endsAtEstimated?: boolean;
+  /** O que o rolê pede na entrada: "1 kg de alimento", "R$ 10 por carro". */
+  entryNote?: string | null;
+  /** Chaves de constants/detalhesDoRole — o que tem lá e o que não pode. */
+  attractions?: string[];
+  rules?: string[];
+  kind?: string | null;
+  /** Vazio = qualquer carro. Cheio, só essas categorias confirmam com carro. */
+  carCategories?: string[];
   organizer: (AuthorRef & { isOrganizer: boolean }) | null;
   attendeesCount: number;
   /** Só vem quando a busca teve um centro (mapa ou filtro por raio). */
