@@ -159,7 +159,7 @@ export default function SugerirRoleScreen() {
 
         <FormField
           label="Onde você viu"
-          placeholder="Ex: story do @encontrodesumare"
+          placeholder="Ex: story do @perfil_do_role"
           hint="É o que nos deixa conferir antes de publicar — e dar o crédito certo."
           value={sourceNote}
           onChangeText={setSourceNote}

@@ -1040,6 +1040,15 @@ export interface CorrecoesDoRole {
   endsAtEstimated?: boolean;
   location: string;
   city: string;
+  /** Rua e número do pino, quando quem revisa marcou o ponto no mapa. */
+  address?: string | null;
+  /**
+   * Com o ponto marcado o servidor usa ele e nem tenta adivinhar pelo texto.
+   * Sem ele, o rolê ainda entra no "perto de mim" — só que pela
+   * geocodificação, que às vezes erra por quilômetros.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
   entryNote?: string | null;
   attractions?: string[];
   rules?: string[];
@@ -1053,6 +1062,14 @@ async function aprovarRole(id: string, correcoes: CorrecoesDoRole): Promise<{ ev
   return api.post<{ eventId: string }>(`/admin/suggestions/${id}/approve`, correcoes);
 }
 
+/**
+ * Puxa a arte do post que serviu de fonte e guarda no nosso Storage.
+ * As URLs do Instagram expiram em dias — por isso a cópia.
+ */
+async function puxarFotoDoRole(id: string): Promise<{ photoUrl: string }> {
+  return api.post<{ photoUrl: string }>(`/admin/suggestions/${id}/photo`, {});
+}
+
 async function descartarRole(id: string): Promise<void> {
   await api.post(`/admin/suggestions/${id}/reject`, {});
 }
@@ -1063,6 +1080,7 @@ export const apiService = {
   contarRolesNaFila,
   aprovarRole,
   descartarRole,
+  puxarFotoDoRole,
   getSugestoes,
   getMaintenances,
   createMaintenance,

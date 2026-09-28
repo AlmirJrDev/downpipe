@@ -694,16 +694,19 @@ export default function EventDetailsScreen() {
               <View className="mt-1.5">
                 <InstagramLink handle={event.organizerInstagram} size={15} />
               </View>
-              {event.organizer && (
+              {/* Crédito só pra quem avisou de verdade. Quem aprovou na fila
+                  não aparece: aprovar não é ter avisado, e assinar embaixo do
+                  rolê dos outros é o que a gente está justamente evitando. */}
+              {!!event.tippedBy && (
                 <Pressable
-                  onPress={() => router.push(`/user/${event.organizer!.username}`)}
+                  onPress={() => router.push(`/user/${event.tippedBy}`)}
                   className="mt-2"
                   hitSlop={6}
                 >
                   <Text className="text-muted" style={{ fontSize: 12 }}>
-                    trazido pro app por{" "}
+                    quem avisou:{" "}
                     <Text className="text-on-surface-variant" style={{ fontWeight: "600" }}>
-                      @{event.organizer.username}
+                      @{event.tippedBy}
                     </Text>
                   </Text>
                 </Pressable>

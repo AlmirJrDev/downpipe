@@ -334,6 +334,11 @@ export interface CarEvent {
    * quem publicou aqui dentro pode ser só quem trouxe a informação.
    */
   organizerInstagram?: string | null;
+  /**
+   * @ de quem avisou deste rolê pela fila. Null quando ele foi garimpado
+   * por nós — e aí a tela não credita ninguém.
+   */
+  tippedBy?: string | null;
   organizer: (AuthorRef & { isOrganizer: boolean }) | null;
   attendeesCount: number;
   /** Só vem quando a busca teve um centro (mapa ou filtro por raio). */
@@ -424,6 +429,8 @@ export interface RoleNaFila {
   sourceNote: string | null;
   /** @ do perfil que organiza o rolê, quando dá pra saber pela fonte. */
   organizerInstagram: string | null;
+  /** A arte do post, já copiada pro nosso Storage. */
+  photoUrl: string | null;
   /** @ de quem avisou; null quando a origem não é um usuário. */
   suggestedBy: string | null;
   status: "pending" | "approved" | "rejected";

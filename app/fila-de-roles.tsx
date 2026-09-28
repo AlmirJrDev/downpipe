@@ -22,9 +22,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, ExternalLink } from "lucide-react-native";
+import { ArrowLeft, Check, ExternalLink, Image as ImageIcon, MapPin } from "lucide-react-native";
+import { LocationPicker } from "@/components/LocationPicker";
 import { Alert } from "@/utils/alert";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/ui/States";
@@ -176,6 +178,14 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
   const [city, setCity] = useState(role.city ?? "");
   const [entryNote, setEntryNote] = useState(role.entryNote ?? "");
   const [organizerInstagram, setOrganizerInstagram] = useState(role.organizerInstagram ?? "");
+  const [foto, setFoto] = useState<string | null>(role.photoUrl);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
+    role.latitude != null && role.longitude != null
+      ? { latitude: role.latitude, longitude: role.longitude }
+      : null
+  );
+  const [address, setAddress] = useState<string | null>(role.address);
+  const [mapaAberto, setMapaAberto] = useState(false);
   const [kind, setKind] = useState<string | null>(role.kind);
   const [attractions, setAttractions] = useState<string[]>(role.attractions ?? []);
   const [rules, setRules] = useState<string[]>(role.rules ?? []);
@@ -226,6 +236,9 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
         endsAtEstimated: endsAtIso ? endEstimated : false,
         location: location.trim(),
         city: city.trim(),
+        address,
+        latitude: coords?.latitude ?? null,
+        longitude: coords?.longitude ?? null,
         entryNote: entryNote.trim() || null,
         organizerInstagram: organizerInstagram.trim() || null,
         attractions,
@@ -239,6 +252,21 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
         { text: "Fechar", style: "cancel" },
         { text: "Ver o rolê", onPress: () => router.push(`/event/${eventId}`) },
       ]);
+    },
+    onError: naoDeu,
+  });
+
+  /**
+   * A arte do post vira a foto do rolê.
+   *
+   * Fica no botão, não automático: é quem revisa que olha o flyer e vê se
+   * ele é mesmo desta edição — post reaproveitado do ano passado acontece.
+   */
+  const puxarFoto = useMutation({
+    mutationFn: () => apiService.puxarFotoDoRole(role.id),
+    onSuccess: ({ photoUrl }) => {
+      setFoto(photoUrl);
+      setErro(null);
     },
     onError: naoDeu,
   });
@@ -319,6 +347,53 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
         </>
       ) : (
         <View className="mt-5 border-t border-border pt-5">
+          <Text className="text-on-surface-variant mb-2" style={LABEL}>
+            FOTO DO ROLÊ
+          </Text>
+          {foto ? (
+            <View className="mb-2">
+              <Image
+                source={{ uri: foto }}
+                style={{ width: "100%", height: 160 }}
+                contentFit="cover"
+              />
+            </View>
+          ) : null}
+          {role.sourceUrl ? (
+            <Pressable
+              onPress={() => puxarFoto.mutate()}
+              disabled={puxarFoto.isPending}
+              className={`flex-row items-center justify-center gap-2 border border-outline py-3 mb-2 active:opacity-70 ${
+                puxarFoto.isPending ? "opacity-40" : ""
+              }`}
+            >
+              {puxarFoto.isPending ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <>
+                  <ImageIcon size={15} color={colors.onSurface} />
+                  <Text className="text-on-surface" style={{ fontSize: 12.5, fontWeight: "600" }}>
+                    {foto ? "Puxar de novo" : "Puxar a arte do post"}
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          ) : (
+            <Text className="text-muted mb-2" style={{ fontSize: 12 }}>
+              Sem link de fonte não dá pra puxar a arte. Dá pra subir uma foto
+              editando o rolê depois de publicar.
+            </Text>
+          )}
+          {/* O que vem é a prévia que o Instagram publica pra quem não está
+              logado: um quadrado recortado do meio. Flyer em pé perde as
+              beiradas, e às vezes é bem ali que está a data. */}
+          <Text className="text-muted mb-5" style={{ fontSize: 12, lineHeight: 16 }}>
+            Vem o recorte quadrado que o Instagram publica — arte em pé perde as
+            beiradas. Se cortar algo que importa, publique e troque a foto
+            editando o rolê. A arte é de quem organiza: entra com o crédito e o
+            link da fonte, e sai na hora se o autor pedir.
+          </Text>
+
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
             NOME DO ROLÊ
           </Text>
@@ -415,6 +490,43 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           />
 
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
+            PONTO NO MAPA
+          </Text>
+          {/* Sem pino o servidor geocodifica o texto, e o rolê já entra no
+              "perto de mim" — só que por palpite, que às vezes erra por
+              quilômetros. Endereço vindo de flyer é o caso onde mais erra. */}
+          <Pressable
+            onPress={() => setMapaAberto(true)}
+            className="flex-row items-center gap-3 border border-outline p-4 mb-5 active:bg-white/5"
+          >
+            <MapPin size={18} color={coords ? colors.primary : colors.onSurfaceVariant} />
+            <View className="flex-1">
+              <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
+                {coords ? "Ponto marcado" : "Marcar no mapa"}
+              </Text>
+              <Text className="text-muted" style={{ fontSize: 12, marginTop: 2 }} numberOfLines={1}>
+                {coords
+                  ? address ?? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+                  : "Sem isso a distância é estimada pelo endereço escrito."}
+              </Text>
+            </View>
+            {coords && (
+              <Pressable
+                onPress={() => {
+                  setCoords(null);
+                  setAddress(null);
+                }}
+                hitSlop={10}
+                className="px-2"
+              >
+                <Text className="text-muted" style={{ fontSize: 12 }}>
+                  limpar
+                </Text>
+              </Pressable>
+            )}
+          </Pressable>
+
+          <Text className="text-on-surface-variant mb-2" style={LABEL}>
             QUEM ORGANIZA (@ DO INSTAGRAM)
           </Text>
           {/* O rolê é de quem divulgou. Você entra como organizador no app
@@ -423,7 +535,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           <TextInput
             value={organizerInstagram}
             onChangeText={setOrganizerInstagram}
-            placeholder="amante_dos_baixos"
+            placeholder="perfil_do_role"
             placeholderTextColor={colors.inputPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
@@ -552,6 +664,20 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
               ocupado={salvando}
             />
           </View>
+
+          <LocationPicker
+            visible={mapaAberto}
+            initial={coords}
+            onCancel={() => setMapaAberto(false)}
+            onDone={(ponto, endereco) => {
+              setCoords(ponto);
+              setAddress(endereco?.location ?? null);
+              // Cidade só preenche se estiver vazia: pode ter sido corrigida
+              // à mão aqui em cima, e sobrescrever apagaria essa escolha.
+              if (endereco?.city && !city.trim()) setCity(endereco.city);
+              setMapaAberto(false);
+            }}
+          />
         </View>
       )}
     </View>

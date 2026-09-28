@@ -146,7 +146,7 @@ export default function EditProfileScreen() {
 
         <FormField
           label="@ (username)"
-          placeholder="ex: downpide"
+          placeholder="ex: seu_perfil"
           value={username}
           onChangeText={(t) => setUsername(t.toLowerCase().replace(/[^a-z0-9_.]/g, ""))}
           autoCapitalize="none"
