@@ -11,6 +11,9 @@ export interface DestaqueDaArte {
   valor: string;
 }
 
+/** Onde a arte vai ser postada — é isso que decide a proporção. */
+export type TamanhoDaArte = "story" | "feed" | "quadrado";
+
 /** Os três formatos que a arte pode ter. */
 export type EstiloDaArte = "classico" | "capa" | "moldura";
 
@@ -28,6 +31,8 @@ export interface ArteDeStory {
   arroba?: string | null;
   /** Link que vai impresso no rodapé da arte. */
   link: string;
+  /** Proporção: 9:16 do story, 4:5 do feed ou 1:1. Sem isto, story. */
+  tamanho?: TamanhoDaArte;
   /** Formato da arte. Sem isto, o clássico. */
   estilo?: EstiloDaArte;
   /** Nome do arquivo gerado, sem extensão. */

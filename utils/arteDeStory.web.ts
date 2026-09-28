@@ -1,5 +1,5 @@
 /**
- * Arte 9:16 pro Stories, desenhada no canvas do navegador.
+ * Arte pronta pra postar, desenhada no canvas do navegador.
  *
  * Postar o print da tela do app no Stories fica feio e não diz de onde veio.
  * Aqui sai uma imagem 1080x1920 na identidade do app — foto grande, os
@@ -10,13 +10,25 @@
  * o app inteiro e renderizam pior do que este canvas.
  */
 import { FONT_STACK, colors } from "@/constants/theme";
-import type { ArteDeStory, DestaqueDaArte } from "@/utils/arteDeStory";
+import type { ArteDeStory, DestaqueDaArte, TamanhoDaArte } from "@/utils/arteDeStory";
 
 export type { ArteDeStory, DestaqueDaArte };
-export type { EstiloDaArte } from "@/utils/arteDeStory";
+export type { EstiloDaArte, TamanhoDaArte } from "@/utils/arteDeStory";
 
-const L = 1080;
-const A = 1920;
+/**
+ * As medidas abaixo foram desenhadas pro 9:16 (1080x1920). Numa arte mais
+ * baixa — o 4:5 do feed, o quadrado — o mesmo bloco de texto comeria metade
+ * da imagem, então tudo que é vertical (entrelinha, corpo da fonte, rodapé)
+ * encolhe junto com a altura. A margem lateral fica fora dessa conta: a
+ * largura é 1080 nos três.
+ */
+const LARGURA = 1080;
+const ALTURAS: Record<TamanhoDaArte, number> = {
+  story: 1920,
+  feed: 1350,
+  quadrado: 1080,
+};
+
 /** Margem lateral. Instagram corta as beiradas em telas estreitas. */
 const M = 88;
 /** Alturas do bloco de baixo, usadas pra medir antes de desenhar. */
@@ -31,7 +43,6 @@ const AVATAR = 132;
 const BLOCO_DO_AVATAR = AVATAR + 32;
 /** No estilo moldura, onde a foto começa — abaixo da logo. */
 const TOPO_DA_MOLDURA = 200;
-
 export const arteDeStoryDisponivel = true;
 
 /** A foto cobrindo o retângulo, cortando o excedente (igual ao contentFit cover). */
@@ -115,6 +126,16 @@ function espacar(ctx: CanvasRenderingContext2D, valor: string) {
 }
 
 async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
+  const L = LARGURA;
+  const A = ALTURAS[arte.tamanho ?? "story"];
+
+  /**
+   * O quanto encolher o que é vertical. Piso em 0,72: abaixo disso o título
+   * fica miúdo demais pra parar o dedo de quem passa rolando o feed.
+   */
+  const k = Math.max(0.72, A / ALTURAS.story);
+  const px = (n: number) => Math.round(n * k);
+
   const canvas = document.createElement("canvas");
   canvas.width = L;
   canvas.height = A;
@@ -127,21 +148,21 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   // Mede o texto primeiro e dá o resto pra foto. Altura fixa dava os dois
   // defeitos: com pouco texto sobrava um vão preto, e com muito o @ do
   // rodapé encostava nos números.
-  ctx.font = `700 76px ${FONT_STACK}`;
+  ctx.font = `700 ${px(76)}px ${FONT_STACK}`;
   const linhasDoTitulo = quebrar(ctx, arte.titulo, L - M * 2, 2);
-  ctx.font = `400 38px ${FONT_STACK}`;
+  ctx.font = `400 ${px(38)}px ${FONT_STACK}`;
   const linhasDoSubtitulo = arte.subtitulo ? quebrar(ctx, arte.subtitulo, L - M * 2, 1) : [];
   const destaques = (arte.destaques ?? []).slice(0, 3);
   const avatar = arte.avatar ? await carregarFoto(arte.avatar) : null;
 
   const alturaDoTexto =
-    RESPIRO_APOS_A_FOTO +
-    (avatar ? BLOCO_DO_AVATAR : 0) +
-    linhasDoTitulo.length * LINHA_DO_TITULO +
-    linhasDoSubtitulo.length * LINHA_DO_SUBTITULO +
-    (destaques.length > 0 ? BLOCO_DE_DESTAQUES : 0) +
-    RESPIRO_ANTES_DO_RODAPE +
-    RODAPE;
+    px(RESPIRO_APOS_A_FOTO) +
+    (avatar ? px(BLOCO_DO_AVATAR) : 0) +
+    linhasDoTitulo.length * px(LINHA_DO_TITULO) +
+    linhasDoSubtitulo.length * px(LINHA_DO_SUBTITULO) +
+    (destaques.length > 0 ? px(BLOCO_DE_DESTAQUES) : 0) +
+    px(RESPIRO_ANTES_DO_RODAPE) +
+    px(RODAPE);
   const img = arte.foto ? await carregarFoto(arte.foto) : null;
   const estilo = arte.estilo ?? "classico";
 
@@ -150,17 +171,17 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
    *
    * - clássico: a foto ocupa o topo e o texto vive no preto embaixo dela.
    * - capa: a foto toma a tela inteira e o texto vem por cima, com um
-   *   degradê forte segurando a leitura — é o que mais parece um story.
+   *   degradê forte segurando a leitura.
    * - moldura: a foto fica num quadro com margem, no estilo revista.
    */
   const alturaDaFoto =
     estilo === "capa"
       ? A
       : estilo === "moldura"
-        ? Math.round(Math.min(A - alturaDoTexto - TOPO_DA_MOLDURA, L * 1.25))
-        : Math.round(Math.min(Math.max(A - alturaDoTexto, A * 0.52), A * 0.72));
+        ? Math.round(Math.min(A - alturaDoTexto - px(TOPO_DA_MOLDURA), L * 1.25))
+        : Math.round(Math.min(Math.max(A - alturaDoTexto, A * 0.45), A * 0.72));
 
-  const topoDaFoto = estilo === "moldura" ? TOPO_DA_MOLDURA : 0;
+  const topoDaFoto = estilo === "moldura" ? px(TOPO_DA_MOLDURA) : 0;
   const larguraDaFoto = estilo === "moldura" ? L - M * 2 : L;
   const esquerdaDaFoto = estilo === "moldura" ? M : 0;
 
@@ -177,10 +198,13 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   // deixava a arte com cara de colagem. Na capa ele é o único fundo que o
   // texto tem, então sobe bem mais alto.
   if (estilo !== "moldura") {
-    const alturaDoDegrade = estilo === "capa" ? alturaDoTexto + 420 : 420;
+    const alturaDoDegrade = estilo === "capa" ? alturaDoTexto + px(420) : px(420);
     const degrade = ctx.createLinearGradient(0, fimDaFoto - alturaDoDegrade, 0, fimDaFoto);
     degrade.addColorStop(0, "rgba(10,10,10,0)");
-    degrade.addColorStop(estilo === "capa" ? 0.55 : 1, estilo === "capa" ? "rgba(10,10,10,0.82)" : colors.surfaceLowest);
+    degrade.addColorStop(
+      estilo === "capa" ? 0.55 : 1,
+      estilo === "capa" ? "rgba(10,10,10,0.82)" : colors.surfaceLowest
+    );
     if (estilo === "capa") degrade.addColorStop(1, "rgba(10,10,10,0.95)");
     ctx.fillStyle = degrade;
     ctx.fillRect(0, fimDaFoto - alturaDoDegrade, L, alturaDoDegrade);
@@ -193,28 +217,28 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   }
 
   // Topo escurecido pro wordmark aparecer sobre foto clara.
-  const topo = ctx.createLinearGradient(0, 0, 0, 260);
+  const topo = ctx.createLinearGradient(0, 0, 0, px(260));
   topo.addColorStop(0, "rgba(10,10,10,0.75)");
   topo.addColorStop(1, "rgba(10,10,10,0)");
   ctx.fillStyle = topo;
-  ctx.fillRect(0, 0, L, 260);
+  ctx.fillRect(0, 0, L, px(260));
 
   // Logo. Se ela não carregar, o nome escrito segura o lugar — a arte não
   // pode sair sem assinatura.
   ctx.textBaseline = "alphabetic";
   const marca = await carregarLogo();
   if (marca) {
-    const largura = 380;
-    ctx.drawImage(marca, M, 62, largura, (marca.height / marca.width) * largura);
+    const largura = px(380);
+    ctx.drawImage(marca, M, px(62), largura, (marca.height / marca.width) * largura);
   } else {
     espacar(ctx, "10px");
-    ctx.font = `700 34px ${FONT_STACK}`;
+    ctx.font = `700 ${px(34)}px ${FONT_STACK}`;
     ctx.fillStyle = colors.onSurface;
-    ctx.fillText("DOWNPIPE", M, 118);
+    ctx.fillText("DOWNPIPE", M, px(118));
     const larguraDoNome = ctx.measureText("DOWNPIPE").width;
     espacar(ctx, "0px");
     ctx.fillStyle = colors.primary;
-    ctx.fillRect(M, 134, larguraDoNome - 10, 5);
+    ctx.fillRect(M, px(134), larguraDoNome - 10, px(5));
   }
 
   // Onde o texto começa — o selo se apoia nisso, não no fim da foto: na
@@ -224,90 +248,90 @@ async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
   // Selo, logo acima do bloco de texto.
   if (arte.selo) {
     espacar(ctx, "6px");
-    ctx.font = `700 26px ${FONT_STACK}`;
+    ctx.font = `700 ${px(26)}px ${FONT_STACK}`;
     const texto = arte.selo.toUpperCase();
     const larguraDoSelo = ctx.measureText(texto).width;
     ctx.fillStyle = colors.primaryContainer;
-    // Colado no fim da foto: no meio dela o selo fica boiando.
-    ctx.fillRect(M, inicioDoTexto - 110, larguraDoSelo + 56, 70);
+    ctx.fillRect(M, inicioDoTexto - px(110), larguraDoSelo + px(56), px(70));
     ctx.fillStyle = colors.onPrimaryContainer;
-    ctx.fillText(texto, M + 28, inicioDoTexto - 63);
+    ctx.fillText(texto, M + px(28), inicioDoTexto - px(63));
     espacar(ctx, "0px");
   }
 
   // Bloco de texto. Na capa ele fica ancorado na base, e não colado na
   // foto — que ali termina junto com a imagem inteira.
-  let y = inicioDoTexto + RESPIRO_APOS_A_FOTO;
+  let y = inicioDoTexto + px(RESPIRO_APOS_A_FOTO);
 
   // Avatar redondo abrindo o bloco: numa arte de perfil é o rosto que
   // identifica, não a foto de fundo.
   if (avatar) {
+    const d = px(AVATAR);
     ctx.save();
     ctx.beginPath();
-    ctx.arc(M + AVATAR / 2, y + AVATAR / 2, AVATAR / 2, 0, Math.PI * 2);
+    ctx.arc(M + d / 2, y + d / 2, d / 2, 0, Math.PI * 2);
     ctx.clip();
-    desenharCobrindo(ctx, avatar, M, y, AVATAR, AVATAR);
+    desenharCobrindo(ctx, avatar, M, y, d, d);
     ctx.restore();
     // Anel vermelho, o mesmo que o app usa em volta da foto no perfil.
     ctx.strokeStyle = colors.primaryContainer;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = px(6);
     ctx.beginPath();
-    ctx.arc(M + AVATAR / 2, y + AVATAR / 2, AVATAR / 2 - 3, 0, Math.PI * 2);
+    ctx.arc(M + d / 2, y + d / 2, d / 2 - px(3), 0, Math.PI * 2);
     ctx.stroke();
-    y += BLOCO_DO_AVATAR;
+    y += px(BLOCO_DO_AVATAR);
   }
 
-  ctx.font = `700 76px ${FONT_STACK}`;
+  ctx.font = `700 ${px(76)}px ${FONT_STACK}`;
   ctx.fillStyle = colors.onSurface;
   for (const linha of linhasDoTitulo) {
-    ctx.fillText(linha, M, y + 62);
-    y += LINHA_DO_TITULO;
+    ctx.fillText(linha, M, y + px(62));
+    y += px(LINHA_DO_TITULO);
   }
 
-  ctx.font = `400 38px ${FONT_STACK}`;
+  ctx.font = `400 ${px(38)}px ${FONT_STACK}`;
   ctx.fillStyle = colors.onSurfaceVariant;
   for (const linha of linhasDoSubtitulo) {
-    ctx.fillText(linha, M, y + 46);
-    y += LINHA_DO_SUBTITULO;
+    ctx.fillText(linha, M, y + px(46));
+    y += px(LINHA_DO_SUBTITULO);
   }
 
   if (destaques.length > 0) {
-    y += 46;
+    y += px(46);
     ctx.fillStyle = colors.primary;
-    ctx.fillRect(M, y, 96, 6);
-    y += 58;
+    ctx.fillRect(M, y, px(96), px(6));
+    y += px(58);
 
     const coluna = (L - M * 2) / destaques.length;
     destaques.forEach((destaque, i) => {
       const x = M + coluna * i;
       espacar(ctx, "4px");
-      ctx.font = `700 24px ${FONT_STACK}`;
+      ctx.font = `700 ${px(24)}px ${FONT_STACK}`;
       ctx.fillStyle = colors.muted;
-      ctx.fillText(destaque.rotulo.toUpperCase(), x, y + 24);
+      ctx.fillText(destaque.rotulo.toUpperCase(), x, y + px(24));
       espacar(ctx, "0px");
-      ctx.font = `700 52px ${FONT_STACK}`;
+      ctx.font = `700 ${px(52)}px ${FONT_STACK}`;
       ctx.fillStyle = colors.onSurface;
-      ctx.fillText(destaque.valor, x, y + 90);
+      ctx.fillText(destaque.valor, x, y + px(90));
     });
   }
 
   // Rodapé: quem é e onde ver o resto.
   if (arte.arroba) {
-    ctx.font = `600 40px ${FONT_STACK}`;
+    ctx.font = `600 ${px(40)}px ${FONT_STACK}`;
     ctx.fillStyle = colors.onSurface;
-    ctx.fillText(`@${arte.arroba}`, M, A - 150);
+    ctx.fillText(`@${arte.arroba}`, M, A - px(150));
   }
   espacar(ctx, "3px");
   ctx.fillStyle = colors.muted;
   const endereco = arte.link.toUpperCase();
   // Encolhe até caber: texto de canvas não quebra nem corta sozinho — ele
   // simplesmente vaza pra fora da imagem.
-  let corpo = 32;
+  let corpo = px(32);
   do {
     corpo -= 2;
     ctx.font = `400 ${corpo}px ${FONT_STACK}`;
-  } while (ctx.measureText(endereco).width > L - M * 2 && corpo > 18);
-  ctx.fillText(endereco, M, A - 92);
+  } while (ctx.measureText(endereco).width > L - M * 2 && corpo > px(18));
+  ctx.fillText(endereco, M, A - px(92));
   espacar(ctx, "0px");
 
   return canvas;

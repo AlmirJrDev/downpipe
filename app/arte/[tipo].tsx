@@ -48,7 +48,18 @@ import {
 } from "@/utils/montarArte";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { colors } from "@/constants/theme";
-import type { ArteDeStory, EstiloDaArte } from "@/utils/arteDeStory";
+import type { ArteDeStory, EstiloDaArte, TamanhoDaArte } from "@/utils/arteDeStory";
+
+/**
+ * Onde a arte vai ser postada. Story é o padrão porque é de onde a ideia
+ * nasceu; feed e quadrado existem pro perfil do Downpipe no Instagram e pra
+ * quem quer postar o carro no próprio.
+ */
+const TAMANHOS: { chave: TamanhoDaArte; rotulo: string; proporcao: number }[] = [
+  { chave: "story", rotulo: "Story 9:16", proporcao: 16 / 9 },
+  { chave: "feed", rotulo: "Feed 4:5", proporcao: 5 / 4 },
+  { chave: "quadrado", rotulo: "Quadrado", proporcao: 1 },
+];
 
 const FORMATOS: { chave: EstiloDaArte; rotulo: string }[] = [
   { chave: "classico", rotulo: "Clássico" },
@@ -163,6 +174,7 @@ export default function EditorDeArteScreen() {
   const [escolhidos, setEscolhidos] = useState<string[]>([]);
   const [comArroba, setComArroba] = useState(true);
   const [estilo, setEstilo] = useState<EstiloDaArte>("classico");
+  const [tamanho, setTamanho] = useState<TamanhoDaArte>("story");
   const [pronta, setPronta] = useState(false);
 
   // As mods chegam depois do carro. Preencher antes disso escolhia os três
@@ -201,8 +213,9 @@ export default function EditorDeArteScreen() {
         .filter((o): o is OpcaoDeDestaque => !!o),
       arroba: comArroba ? base.arroba : null,
       estilo,
+      tamanho,
     };
-  }, [base, foto, titulo, subtitulo, selo, escolhidos, comArroba, estilo, opcoesDeDestaque]);
+  }, [base, foto, titulo, subtitulo, selo, escolhidos, comArroba, estilo, tamanho, opcoesDeDestaque]);
 
   // Prévia: a imagem de verdade, gerada de novo a cada mexida. O respiro de
   // 200ms evita redesenhar a cada tecla digitada no título.
@@ -315,7 +328,15 @@ export default function EditorDeArteScreen() {
         <View className="items-center mb-6">
           <View
             className="bg-surface-container"
-            style={{ width: 236, height: 420, overflow: "hidden" }}
+            style={{
+              width: 236,
+              // A prévia acompanha a proporção escolhida: mostrar sempre um
+              // retângulo de story mentiria sobre o que vai sair no feed.
+              height: Math.round(
+                236 * (TAMANHOS.find((t) => t.chave === tamanho)?.proporcao ?? 16 / 9)
+              ),
+              overflow: "hidden",
+            }}
           >
             {previa ? (
               <Image
@@ -330,6 +351,19 @@ export default function EditorDeArteScreen() {
             )}
           </View>
         </View>
+
+        <Secao titulo="ONDE VAI POSTAR">
+          <View className="flex-row flex-wrap">
+            {TAMANHOS.map((t) => (
+              <Chip
+                key={t.chave}
+                label={t.rotulo}
+                ativo={tamanho === t.chave}
+                onPress={() => setTamanho(t.chave)}
+              />
+            ))}
+          </View>
+        </Secao>
 
         <Secao titulo="FORMATO">
           <View className="flex-row flex-wrap">
