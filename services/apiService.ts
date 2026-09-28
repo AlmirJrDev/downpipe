@@ -995,7 +995,23 @@ async function getSugestoes(limit = 8): Promise<Sugestao[]> {
   return api.get<Sugestao[]>(`/profile/suggestions?limit=${limit}`);
 }
 
+/** Sugestão de rolê: cai numa fila, não publica nada. */
+export interface SugestaoDeRole {
+  name: string;
+  city?: string | null;
+  location?: string | null;
+  startsAt?: string | null;
+  description?: string | null;
+  sourceNote?: string | null;
+  sourceUrl?: string | null;
+}
+
+async function sugerirRole(input: SugestaoDeRole): Promise<{ message: string }> {
+  return api.post<{ message: string }>("/events/suggestions", input);
+}
+
 export const apiService = {
+  sugerirRole,
   getSugestoes,
   getMaintenances,
   createMaintenance,

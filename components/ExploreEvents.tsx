@@ -13,7 +13,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pedirLocalizacao } from "@/utils/localizacao";
-import { CalendarPlus, Crosshair, List, Map as MapIcon } from "lucide-react-native";
+import { CalendarPlus, Crosshair, List, Map as MapIcon, Megaphone } from "lucide-react-native";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { CategoryChip } from "@/components/ui/Chips";
 import { EventCard } from "@/components/cards/EventCard";
@@ -198,18 +198,35 @@ export function ExploreEvents({
         </Text>
       )}
 
-      <Pressable
-        onPress={() => router.push("/add-event")}
-        className="flex-row items-center justify-center gap-2 border border-outline py-3.5 mb-5 active:bg-white/5"
-      >
-        <CalendarPlus size={15} color={colors.onSurface} />
-        <Text
-          className="text-on-surface"
-          style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
+      <View className="flex-row gap-2 mb-5">
+        <Pressable
+          onPress={() => router.push("/add-event")}
+          className="flex-1 flex-row items-center justify-center gap-2 border border-outline py-3.5 active:bg-white/5"
         >
-          CRIAR EVENTO
-        </Text>
-      </Pressable>
+          <CalendarPlus size={15} color={colors.onSurface} />
+          <Text
+            className="text-on-surface"
+            style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
+          >
+            CRIAR ROLÊ
+          </Text>
+        </Pressable>
+
+        {/* A maioria dos encontros não é de quem usa o app — é da cena. Avisar
+            de um rolê alheio é o jeito de eles entrarem aqui. */}
+        <Pressable
+          onPress={() => router.push("/sugerir-role")}
+          className="flex-1 flex-row items-center justify-center gap-2 border border-outline py-3.5 active:bg-white/5"
+        >
+          <Megaphone size={15} color={colors.onSurface} />
+          <Text
+            className="text-on-surface"
+            style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
+          >
+            VI UM ROLÊ
+          </Text>
+        </Pressable>
+      </View>
 
       {isLoading && (
         <View className="py-8 items-center">

@@ -326,6 +326,9 @@ export interface CarEvent {
   kind?: string | null;
   /** Vazio = qualquer carro. Cheio, só essas categorias confirmam com carro. */
   carCategories?: string[];
+  /** De onde veio a informação, quando o rolê foi trazido de fora do app. */
+  sourceUrl?: string | null;
+  sourceNote?: string | null;
   organizer: (AuthorRef & { isOrganizer: boolean }) | null;
   attendeesCount: number;
   /** Só vem quando a busca teve um centro (mapa ou filtro por raio). */

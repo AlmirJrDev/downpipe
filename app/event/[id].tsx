@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -19,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   ArrowLeft,
   Ban,
+  Info,
   CalendarDays,
   Check,
   Globe,
@@ -461,6 +463,27 @@ export default function EventDetailsScreen() {
             <Text className="text-on-surface mt-6" style={{ fontSize: 14, lineHeight: 22 }}>
               {event.description}
             </Text>
+          )}
+
+          {/* De onde veio a informação, quando o rolê não é de quem publicou
+              no app. É o que permite conferir antes de viajar até lá — e o
+              crédito de quem organiza de verdade. */}
+          {!!event.sourceNote && (
+            <View className="flex-row items-start gap-2 mt-6 border border-outline-variant p-3">
+              <Info size={15} color={colors.onSurfaceVariant} style={{ marginTop: 1 }} />
+              <View className="flex-1">
+                <Text className="text-on-surface-variant" style={{ fontSize: 12.5, lineHeight: 18 }}>
+                  {event.sourceNote}
+                </Text>
+                {!!event.sourceUrl && (
+                  <Pressable onPress={() => Linking.openURL(event.sourceUrl!)} hitSlop={6}>
+                    <Text className="text-primary mt-1" style={{ fontSize: 12.5, fontWeight: "600" }}>
+                      Ver a fonte
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
           )}
 
           {/* O que o rolê pede pra entrar. Vem antes de tudo porque é o que
