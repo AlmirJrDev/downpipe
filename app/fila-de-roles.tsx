@@ -24,9 +24,19 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, ExternalLink, Image as ImageIcon, MapPin } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Camera,
+  Check,
+  ExternalLink,
+  Image as ImageIcon,
+  MapPin,
+} from "lucide-react-native";
 import { LocationPicker } from "@/components/LocationPicker";
+import { ImageCropper } from "@/components/ImageCropper";
+import { useUploadEventPhoto } from "@/stores/eventsStore";
 import { Alert } from "@/utils/alert";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/ui/States";
@@ -179,6 +189,10 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
   const [entryNote, setEntryNote] = useState(role.entryNote ?? "");
   const [organizerInstagram, setOrganizerInstagram] = useState(role.organizerInstagram ?? "");
   const [foto, setFoto] = useState<string | null>(role.photoUrl);
+  // Arte escolhida à mão, pra quando o recorte do Instagram cortar o que
+  // importa. Sobe depois de publicar, porque o upload é por id do rolê.
+  const [fotoLocal, setFotoLocal] = useState<string | null>(null);
+  const [recortando, setRecortando] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
     role.latitude != null && role.longitude != null
       ? { latitude: role.latitude, longitude: role.longitude }
@@ -226,6 +240,11 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
   const naoDeu = (err: unknown) =>
     setErro(err instanceof ApiError ? err.message : "Não deu pra salvar. Tente de novo.");
 
+  const escolherFoto = async () => {
+    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+    if (!r.canceled && r.assets[0]) setRecortando(r.assets[0].uri);
+  };
+
   const publicar = useMutation({
     mutationFn: () =>
       apiService.aprovarRole(role.id, {
@@ -246,7 +265,21 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
         kind,
         carCategories,
       }),
-    onSuccess: ({ eventId, semLocalizacao }) => {
+    onSuccess: async ({ eventId, semLocalizacao }) => {
+      // A arte escolhida à mão só pode subir agora: o upload é por id, e o
+      // id só existe depois de publicar. Falha aqui não desfaz o rolê — ele
+      // já está no calendário, o que falta é só a foto.
+      if (fotoLocal) {
+        try {
+          await subirFoto.mutateAsync({ id: eventId, localUri: fotoLocal });
+        } catch (err) {
+          setErro(
+            `O rolê foi publicado, mas a foto não subiu: ${
+              err instanceof ApiError ? err.message : "tente pela tela do rolê."
+            }`
+          );
+        }
+      }
       atualizar();
       Alert.alert(
         semLocalizacao ? "Publicado, mas sem ponto no mapa" : "Rolê publicado",
@@ -277,6 +310,8 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
     onError: naoDeu,
   });
 
+  const subirFoto = useUploadEventPhoto();
+
   const descartar = useMutation({
     mutationFn: () => apiService.descartarRole(role.id),
     onSuccess: atualizar,
@@ -289,7 +324,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
       { text: "Descartar", style: "destructive", onPress: () => descartar.mutate() },
     ]);
 
-  const salvando = publicar.isPending || descartar.isPending;
+  const salvando = publicar.isPending || descartar.isPending || subirFoto.isPending;
 
   return (
     <View className="border border-border p-4 mb-3">
@@ -356,15 +391,30 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
             FOTO DO ROLÊ
           </Text>
-          {foto ? (
+          {fotoLocal ?? foto ? (
             <View className="mb-2">
               <Image
-                source={{ uri: foto }}
+                source={{ uri: (fotoLocal ?? foto) as string }}
                 style={{ width: "100%", height: 160 }}
                 contentFit="cover"
               />
+              {fotoLocal ? (
+                <Text className="text-muted mt-1" style={{ fontSize: 11 }}>
+                  Arte escolhida por você — sobe quando o rolê for publicado.
+                </Text>
+              ) : null}
             </View>
           ) : null}
+
+          <Pressable
+            onPress={escolherFoto}
+            className="flex-row items-center justify-center gap-2 border border-outline py-3 mb-2 active:opacity-70"
+          >
+            <Camera size={15} color={colors.onSurface} />
+            <Text className="text-on-surface" style={{ fontSize: 12.5, fontWeight: "600" }}>
+              {fotoLocal ? "Trocar a arte" : "Escolher do celular"}
+            </Text>
+          </Pressable>
           {role.sourceUrl ? (
             <Pressable
               onPress={() => puxarFoto.mutate()}
@@ -394,10 +444,11 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
               logado: um quadrado recortado do meio. Flyer em pé perde as
               beiradas, e às vezes é bem ali que está a data. */}
           <Text className="text-muted mb-5" style={{ fontSize: 12, lineHeight: 16 }}>
-            Vem o recorte quadrado que o Instagram publica — arte em pé perde as
-            beiradas. Se cortar algo que importa, publique e troque a foto
-            editando o rolê. A arte é de quem organiza: entra com o crédito e o
-            link da fonte, e sai na hora se o autor pedir.
+            O botão traz o recorte quadrado que o Instagram publica pra quem não
+            está logado — a arte inteira ele não entrega. Quando o corte comer o
+            que importa, salve a imagem do post e escolha do celular. A arte é de
+            quem organiza: entra com o crédito e o link da fonte, e sai na hora se
+            o autor pedir.
           </Text>
 
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
@@ -657,7 +708,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
                 setErro(null);
                 publicar.mutate();
               }}
-              ocupado={publicar.isPending}
+              ocupado={publicar.isPending || subirFoto.isPending}
               desabilitado={!podePublicar}
             />
           </View>
@@ -670,6 +721,18 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
               ocupado={salvando}
             />
           </View>
+
+          {recortando && (
+            <ImageCropper
+              uri={recortando}
+              aspect={16 / 9}
+              onCancel={() => setRecortando(null)}
+              onDone={(uri) => {
+                setFotoLocal(uri);
+                setRecortando(null);
+              }}
+            />
+          )}
 
           <LocationPicker
             visible={mapaAberto}
