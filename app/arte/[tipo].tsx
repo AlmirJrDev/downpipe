@@ -267,7 +267,7 @@ export default function EditorDeArteScreen() {
 
   const cabecalho = (
     <AppHeader
-      title="Arte pro Stories"
+      title="Arte pra postar"
       left={
         <Pressable hitSlop={8} onPress={voltar} accessibilityRole="button" accessibilityLabel="Voltar">
           <ArrowLeft size={22} color={colors.onSurface} />

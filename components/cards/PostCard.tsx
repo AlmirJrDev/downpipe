@@ -144,7 +144,7 @@ function OwnerMenu({ post }: { post: Post }) {
         ...(arte.disponivel
           ? [
               {
-                text: "Arte pro Stories",
+                text: "Arte pra postar",
                 onPress: () => router.push(`/arte/post?id=${post.id}`),
               },
             ]

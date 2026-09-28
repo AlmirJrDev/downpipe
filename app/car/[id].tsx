@@ -306,7 +306,7 @@ export default function CarDetailsScreen() {
                   Só pro dono — a arte leva o @ dele. */}
               {isOwner && arte.disponivel && (
                 <SecondaryButton
-                  label="Arte pro Stories"
+                  label="Arte pra postar"
                   icon={<Instagram size={14} color={colors.onSurface} />}
                   onPress={() => router.push(`/arte/carro?id=${resolvedCar.id}`)}
                 />

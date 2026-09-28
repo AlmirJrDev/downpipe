@@ -139,7 +139,7 @@ export function arteDoCarro(car: Car, modsCount: number): ArteDeStory {
     titulo: carTitle(car),
     subtitulo: car.engine,
     // O status do projeto já é a etiqueta que o app usa nos cards da garagem.
-    selo: car.status === "complete" ? "Projeto pronto" : car.status === "building" ? "Projeto em build" : null,
+    selo: car.status === "complete" ? "Projeto pronto" : car.status === "building" ? "Projeto em andamento" : null,
     destaques: destaquesDoCarro(car, modsCount).slice(0, MAXIMO_DE_DESTAQUES),
     // O @ do carro na frente do pessoal: nesses perfis é ele que a pessoa
     // divulga, e é pra ele que o story manda o pessoal.
@@ -167,6 +167,6 @@ export function arteDoPost(post: Post, instagramDoAutor?: string | null): ArteDe
 
 /** Os selos oferecidos no editor, sempre com o do próprio conteúdo na frente. */
 export function selosSugeridos(atual: string | null): string[] {
-  const padrao = ["Projeto em build", "Projeto pronto", "Antes e depois", "Novidade na garagem", "Organiza rolês", "Me acha no Downpipe"];
+  const padrao = ["Projeto em andamento", "Projeto pronto", "Antes e depois", "Novidade na garagem", "Organiza rolês", "Me acha no Downpipe"];
   return atual ? [atual, ...padrao.filter((s) => s !== atual)] : padrao;
 }
