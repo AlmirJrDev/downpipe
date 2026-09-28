@@ -329,6 +329,11 @@ export interface CarEvent {
   /** De onde veio a informação, quando o rolê foi trazido de fora do app. */
   sourceUrl?: string | null;
   sourceNote?: string | null;
+  /**
+   * O @ de quem organiza, quando o rolê veio de fora. A tela credita ele:
+   * quem publicou aqui dentro pode ser só quem trouxe a informação.
+   */
+  organizerInstagram?: string | null;
   organizer: (AuthorRef & { isOrganizer: boolean }) | null;
   attendeesCount: number;
   /** Só vem quando a busca teve um centro (mapa ou filtro por raio). */
@@ -379,7 +384,7 @@ export interface Denuncia {
   /** @ de quem denunciou; null se a conta já saiu. */
   reporter: string | null;
   target: {
-    tipo: "post" | "comentario" | "mensagem" | "perfil";
+    tipo: "post" | "comentario" | "mensagem" | "perfil" | "evento";
     id: string;
     rotulo: string;
     /** Caminho no app, já com /app na frente. */
@@ -387,6 +392,44 @@ export interface Denuncia {
     /** O texto denunciado, quando o alvo é comentário ou mensagem. */
     texto: string | null;
   };
+}
+
+/**
+ * Um rolê esperando conferência antes de virar evento no app.
+ *
+ * Quase tudo é anulável: o que vem de um story ou de um cartaz chega pela
+ * metade, e é justamente na hora de aprovar que o buraco se tapa.
+ */
+export interface RoleNaFila {
+  id: string;
+  name: string;
+  description: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  endsAtEstimated: boolean;
+  location: string | null;
+  city: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  entryNote: string | null;
+  /** Chaves de constants/detalhesDoRole. */
+  attractions: string[];
+  rules: string[];
+  kind: string | null;
+  carCategories: string[];
+  /** De onde veio: garimpo na web, aviso de quem usa o app, ou digitado à mão. */
+  source: "web" | "usuario" | "manual";
+  sourceUrl: string | null;
+  sourceNote: string | null;
+  /** @ do perfil que organiza o rolê, quando dá pra saber pela fonte. */
+  organizerInstagram: string | null;
+  /** @ de quem avisou; null quando a origem não é um usuário. */
+  suggestedBy: string | null;
+  status: "pending" | "approved" | "rejected";
+  /** O rolê que nasceu daqui, depois de aprovado. */
+  eventId: string | null;
+  createdAt: string;
 }
 
 /** Quando uma manutenção vence — calculado pelo backend. */

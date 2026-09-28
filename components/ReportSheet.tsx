@@ -18,7 +18,8 @@ type Alvo =
   | { postId: string }
   | { commentId: string }
   | { profileId: string }
-  | { messageId: string };
+  | { messageId: string }
+  | { eventId: string };
 
 const MOTIVOS: { valor: MotivoDenuncia; rotulo: string }[] = [
   { valor: "conteudo_improprio", rotulo: "Conteúdo impróprio" },
@@ -26,6 +27,22 @@ const MOTIVOS: { valor: MotivoDenuncia; rotulo: string }[] = [
   { valor: "assedio", rotulo: "Assédio ou ofensa" },
   { valor: "carro_nao_e_meu", rotulo: "Usaram foto do meu carro sem permissão" },
   { valor: "informacao_falsa", rotulo: "Informação falsa" },
+  { valor: "outro", rotulo: "Outro motivo" },
+];
+
+/**
+ * Rolê tem outra lista.
+ *
+ * Denunciar um encontro quase nunca é sobre conteúdo — é sobre ele não
+ * existir, ter mudado de data ou de lugar. "Assédio" e "foto do meu carro"
+ * não querem dizer nada aqui, e lista com opção que não serve faz a pessoa
+ * escolher "outro" e escrever o que a gente já podia ter perguntado.
+ */
+const MOTIVOS_DE_ROLE: { valor: MotivoDenuncia; rotulo: string }[] = [
+  { valor: "role_nao_aconteceu", rotulo: "Fui lá e o rolê não existia" },
+  { valor: "informacao_falsa", rotulo: "Data, horário ou lugar errado" },
+  { valor: "conteudo_improprio", rotulo: "Conteúdo impróprio" },
+  { valor: "spam", rotulo: "Spam ou propaganda" },
   { valor: "outro", rotulo: "Outro motivo" },
 ];
 
@@ -38,6 +55,8 @@ export function ReportSheet({
   visible: boolean;
   onClose: () => void;
 }) {
+  const ehRole = "eventId" in alvo;
+  const motivos = ehRole ? MOTIVOS_DE_ROLE : MOTIVOS;
   const [motivo, setMotivo] = useState<MotivoDenuncia | null>(null);
   const [detalhe, setDetalhe] = useState("");
   const [enviado, setEnviado] = useState(false);
@@ -75,8 +94,9 @@ export function ReportSheet({
             className="text-on-surface-variant text-center mt-2 px-6"
             style={{ fontSize: 13, lineHeight: 19 }}
           >
-            Vamos analisar. Se quiser não ver mais essa pessoa enquanto isso, dá para
-            bloquear pelo perfil dela.
+            {ehRole
+              ? "Vamos conferir com a fonte. Se o rolê não existir mesmo, ele sai do ar e quem confirmou é avisado."
+              : "Vamos analisar. Se quiser não ver mais essa pessoa enquanto isso, dá para bloquear pelo perfil dela."}
           </Text>
           <Pressable onPress={fechar} className="mt-6 px-8 py-3 border border-outline">
             <Text className="text-on-surface" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.2 }}>
@@ -90,7 +110,7 @@ export function ReportSheet({
             O que está acontecendo aqui?
           </Text>
 
-          {MOTIVOS.map((m) => {
+          {motivos.map((m) => {
             const escolhido = motivo === m.valor;
             return (
               <Pressable

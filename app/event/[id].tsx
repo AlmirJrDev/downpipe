@@ -36,6 +36,8 @@ import {
 } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { InstagramLink } from "@/components/ui/InstagramLink";
+import { ReportSheet } from "@/components/ReportSheet";
 import { EmptyState } from "@/components/ui/States";
 import { AttendeesSheet } from "@/components/AttendeesSheet";
 import { EventMap } from "@/components/EventMap";
@@ -74,6 +76,7 @@ export default function EventDetailsScreen() {
   const toggleAttendance = useToggleAttendance();
   const deleteEvent = useDeleteEvent();
   const [attendeesOpen, setAttendeesOpen] = useState(false);
+  const [denunciaAberta, setDenunciaAberta] = useState(false);
 
   const { data: postsData } = useEventPosts(id);
   const eventPosts = useMemo(() => postsData?.pages.flatMap((p) => p.data) ?? [], [postsData]);
@@ -679,18 +682,65 @@ export default function EventDetailsScreen() {
             />
           </View>
 
-          {event.organizer && (
+          {/* Quem organiza de verdade, quando o rolê veio de fora: o perfil
+              que divulgou. Quem publicou aqui dentro aparece embaixo, como
+              quem trouxe — dizer "organizado por" o nome errado manda a
+              pessoa perguntar "vai ter mesmo?" pra quem não sabe responder. */}
+          {event.organizerInstagram ? (
+            <View className="mt-7">
+              <Text className="text-muted" style={{ fontSize: 12 }}>
+                organizado por
+              </Text>
+              <View className="mt-1.5">
+                <InstagramLink handle={event.organizerInstagram} size={15} />
+              </View>
+              {event.organizer && (
+                <Pressable
+                  onPress={() => router.push(`/user/${event.organizer!.username}`)}
+                  className="mt-2"
+                  hitSlop={6}
+                >
+                  <Text className="text-muted" style={{ fontSize: 12 }}>
+                    trazido pro app por{" "}
+                    <Text className="text-on-surface-variant" style={{ fontWeight: "600" }}>
+                      @{event.organizer.username}
+                    </Text>
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          ) : (
+            event.organizer && (
+              <Pressable
+                onPress={() => router.push(`/user/${event.organizer!.username}`)}
+                className="flex-row items-center gap-2 mt-7"
+                hitSlop={6}
+              >
+                <UserAvatar uri={event.organizer.avatarUrl ?? ""} size={30} />
+                <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
+                  organizado por{" "}
+                  <Text className="text-on-surface" style={{ fontWeight: "600" }}>
+                    @{event.organizer.username}
+                  </Text>
+                </Text>
+              </Pressable>
+            )
+          )}
+
+          {/* O aviso de rolê fantasma.
+              Informação de segunda mão envelhece: encontro cancelado, data
+              que mudou no story e não no post, cartaz do ano passado. Quem
+              foi até lá e não achou nada é a única fonte que sabe disso — sem
+              um botão, o aviso não chega e o próximo também viaja à toa. */}
+          {!!me && !isOrganizer && (
             <Pressable
-              onPress={() => router.push(`/user/${event.organizer!.username}`)}
-              className="flex-row items-center gap-2 mt-7"
+              onPress={() => setDenunciaAberta(true)}
+              className="flex-row items-center justify-center gap-2 py-4 mt-6 active:opacity-60"
               hitSlop={6}
             >
-              <UserAvatar uri={event.organizer.avatarUrl ?? ""} size={30} />
-              <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
-                organizado por{" "}
-                <Text className="text-on-surface" style={{ fontWeight: "600" }}>
-                  @{event.organizer.username}
-                </Text>
+              <TriangleAlert size={14} color={colors.muted} />
+              <Text className="text-muted" style={{ fontSize: 13 }}>
+                Esse rolê não existe ou está errado?
               </Text>
             </Pressable>
           )}
@@ -725,6 +775,12 @@ export default function EventDetailsScreen() {
         eventId={event.id}
         visible={attendeesOpen}
         onClose={() => setAttendeesOpen(false)}
+      />
+
+      <ReportSheet
+        alvo={{ eventId: event.id }}
+        visible={denunciaAberta}
+        onClose={() => setDenunciaAberta(false)}
       />
     </View>
   );

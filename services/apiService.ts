@@ -8,6 +8,7 @@ import { anexarImagem } from "./anexarImagem";
 import type {
   AppNotification,
   Denuncia,
+  RoleNaFila,
   Car,
   Comment,
   CommentPreview,
@@ -798,6 +799,8 @@ export type MotivoDenuncia =
   | "assedio"
   | "carro_nao_e_meu"
   | "informacao_falsa"
+  /** Só existe pra rolê: a pessoa foi e não tinha nada lá. */
+  | "role_nao_aconteceu"
   | "outro";
 
 export interface UsuarioBloqueado {
@@ -813,6 +816,7 @@ async function denunciar(alvo: {
   commentId?: string;
   profileId?: string;
   messageId?: string;
+  eventId?: string;
   reason: MotivoDenuncia;
   details?: string;
 }): Promise<{ message: string }> {
@@ -954,7 +958,7 @@ async function revisarDenuncia(id: string): Promise<void> {
 }
 
 async function apagarConteudoDenunciado(
-  tipo: "post" | "comentario" | "mensagem",
+  tipo: "post" | "comentario" | "mensagem" | "evento",
   id: string
 ): Promise<void> {
   await api.delete(`/admin/targets/${tipo}/${id}`);
@@ -1010,8 +1014,55 @@ async function sugerirRole(input: SugestaoDeRole): Promise<{ message: string }> 
   return api.post<{ message: string }>("/events/suggestions", input);
 }
 
+/**
+ * A fila de rolês — mesma regra da moderação: 404 pra quem não publica.
+ */
+async function getFilaDeRoles(
+  status: "pending" | "approved" | "rejected" = "pending"
+): Promise<RoleNaFila[]> {
+  return api.get<RoleNaFila[]>(`/admin/suggestions?status=${status}`);
+}
+
+async function contarRolesNaFila(): Promise<number> {
+  const r = await api.get<{ pending: number }>("/admin/suggestions/count");
+  return r.pending;
+}
+
+/**
+ * O que se manda ao publicar. Data, lugar e cidade não são opcionais aqui:
+ * sugestão vive sem eles, rolê não. O resto só viaja quando foi corrigido.
+ */
+export interface CorrecoesDoRole {
+  name?: string;
+  description?: string | null;
+  startsAt: string;
+  endsAt?: string | null;
+  endsAtEstimated?: boolean;
+  location: string;
+  city: string;
+  entryNote?: string | null;
+  attractions?: string[];
+  rules?: string[];
+  kind?: string | null;
+  carCategories?: string[];
+  /** O @ de quem organiza — vai pro rolê publicado como crédito. */
+  organizerInstagram?: string | null;
+}
+
+async function aprovarRole(id: string, correcoes: CorrecoesDoRole): Promise<{ eventId: string }> {
+  return api.post<{ eventId: string }>(`/admin/suggestions/${id}/approve`, correcoes);
+}
+
+async function descartarRole(id: string): Promise<void> {
+  await api.post(`/admin/suggestions/${id}/reject`, {});
+}
+
 export const apiService = {
   sugerirRole,
+  getFilaDeRoles,
+  contarRolesNaFila,
+  aprovarRole,
+  descartarRole,
   getSugestoes,
   getMaintenances,
   createMaintenance,

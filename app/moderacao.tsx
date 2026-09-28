@@ -30,6 +30,7 @@ const TIPO: Record<Denuncia["target"]["tipo"], string> = {
   comentario: "Comentário",
   mensagem: "Mensagem de chat",
   perfil: "Perfil",
+  evento: "Rolê",
 };
 
 function Botao({
@@ -92,7 +93,7 @@ export default function ModeracaoScreen() {
   });
 
   const apagar = useMutation({
-    mutationFn: (alvo: { tipo: "post" | "comentario" | "mensagem"; id: string }) =>
+    mutationFn: (alvo: { tipo: "post" | "comentario" | "mensagem" | "evento"; id: string }) =>
       apiService.apagarConteudoDenunciado(alvo.tipo, alvo.id),
     onSuccess: atualizar,
     onError: naoDeu,
@@ -105,7 +106,9 @@ export default function ModeracaoScreen() {
       `Apagar ${TIPO[tipo].toLowerCase()}?`,
       tipo === "mensagem"
         ? "Ela some do chat pra todo mundo."
-        : "Não dá pra desfazer. As denúncias desse conteúdo saem da fila junto.",
+        : tipo === "evento"
+          ? "O rolê sai do calendário e quem confirmou presença é avisado. Não dá pra desfazer."
+          : "Não dá pra desfazer. As denúncias desse conteúdo saem da fila junto.",
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Apagar", style: "destructive", onPress: () => apagar.mutate({ tipo, id }) },

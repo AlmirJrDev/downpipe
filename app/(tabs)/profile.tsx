@@ -48,6 +48,14 @@ export default function ProfileScreen() {
     enabled: !!me?.isAdmin,
     staleTime: 60_000,
   });
+  // Quantos rolês garimpados esperam conferência. Mesmo trato da moderação:
+  // 404 pros outros, e a linha some do menu.
+  const { data: rolesNaFila } = useQuery({
+    queryKey: ['roles-na-fila-count'],
+    queryFn: () => apiService.contarRolesNaFila(),
+    enabled: !!me?.isAdmin,
+    staleTime: 60_000,
+  });
   const { data: myCars } = useMyGarage();
   const logout = useAuthStore((s) => s.logout);
   const [followSheet, setFollowSheet] = useState<FollowTab | null>(null);
@@ -94,6 +102,10 @@ export default function ProfileScreen() {
             {
               text: pendentes ? `Moderação (${pendentes})` : "Moderação",
               onPress: () => router.push("/moderacao"),
+            },
+            {
+              text: rolesNaFila ? `Rolês na fila (${rolesNaFila})` : "Rolês na fila",
+              onPress: () => router.push("/fila-de-roles"),
             },
           ]
         : []),
