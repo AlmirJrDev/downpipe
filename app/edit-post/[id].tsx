@@ -222,7 +222,7 @@ export default function EditPostScreen() {
         <TextInput
           value={caption}
           onChangeText={setCaption}
-          placeholder="Escreva algo sobre o build..."
+          placeholder="Escreva algo sobre o carro..."
           placeholderTextColor={colors.inputPlaceholder}
           multiline
           maxLength={2000}

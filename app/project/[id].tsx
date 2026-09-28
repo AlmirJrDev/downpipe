@@ -116,14 +116,14 @@ export default function ProjectDetailsScreen() {
         {isOwner ? (
           <EmptyState
             title="Sem projeto ainda"
-            description="Crie o projeto pra definir meta de potência, orçamento e acompanhar as etapas do build."
+            description="Crie o projeto pra definir meta de potência, orçamento e acompanhar as etapas."
             actionLabel="+ Criar projeto"
             onAction={() => router.push(`/edit-project/${carId}`)}
           />
         ) : (
           <EmptyState
             title="Sem projeto ainda"
-            description="O dono deste carro ainda não abriu um projeto de build."
+            description="O dono deste carro ainda não abriu um projeto."
           />
         )}
       </View>

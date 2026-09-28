@@ -159,7 +159,7 @@ export default function UserProfileScreen() {
             {user.displayName}
           </Text>
           <Text className="text-on-surface-variant mt-1" style={typography.bodyMd}>
-            @{user.username} · Gearhead desde {user.gearheadSince ?? "—"}
+            @{user.username} · Na estrada desde {user.gearheadSince ?? "—"}
           </Text>
           {user.bio && (
             <Text className="text-on-surface-variant mt-2" style={{ fontSize: 14 }}>

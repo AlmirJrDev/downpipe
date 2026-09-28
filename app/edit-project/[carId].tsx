@@ -157,7 +157,7 @@ export default function EditProjectScreen() {
         <Text className="text-on-surface-variant mb-6" style={typography.bodyMd}>
           {isEditing
             ? `Metas e orçamento do projeto de ${carTitle(car)}.`
-            : `Defina as metas do build de ${carTitle(car)}. Depois você registra as etapas na timeline.`}
+            : `Defina as metas do projeto do ${carTitle(car)}. Depois você registra as etapas.`}
         </Text>
 
         <FormField

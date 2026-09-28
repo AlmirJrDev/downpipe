@@ -513,7 +513,7 @@ function EngagementBar({ post }: { post: Post }) {
     const autor = post.author ? `@${post.author.username}` : "alguém";
     const carro = post.car ? carLabel(post.car) : null;
     const linhas = [
-      post.title ? post.title : `Build de ${autor} no Downpipe`,
+      post.title ? post.title : `O projeto de ${autor} no Downpipe`,
       carro,
       post.caption,
     ].filter(Boolean);
@@ -712,7 +712,7 @@ function ProjectUpdatePost({ post }: { post: Post }) {
               className="text-on-primary-container"
               style={{ fontSize: 9, fontWeight: "700", letterSpacing: 1 }}
             >
-              PROJETO EM BUILD
+              PROJETO EM ANDAMENTO
             </Text>
           </View>
           {/* Faixa escura: sem ela o texto branco desaparece em foto clara. */}
@@ -754,7 +754,7 @@ function ProjectUpdatePost({ post }: { post: Post }) {
             className="text-on-surface"
             style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
           >
-            VER DETALHES DO BUILD
+            VER O PROJETO
           </Text>
         </Pressable>
       </View>

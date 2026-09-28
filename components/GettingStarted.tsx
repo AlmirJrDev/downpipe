@@ -73,7 +73,7 @@ export function GettingStarted() {
     { label: "Personalizar seu perfil", done: !isPlaceholderUsername(me.username), route: "/edit-profile" },
     { label: "Adicionar seu primeiro carro", done: cars.length > 0, route: "/add-car" },
     {
-      label: "Criar o projeto do seu build",
+      label: "Criar o projeto do seu carro",
       // projectsCount vem de /profile/me. Sem carro não dá pra criar projeto,
       // então o passo aponta pra adicionar carro antes.
       done: me.projectsCount > 0,
@@ -97,7 +97,7 @@ export function GettingStarted() {
         </Text>
       </View>
       <Text className="text-on-surface-variant mb-2" style={{ fontSize: 13 }}>
-        Monte sua garagem e mostre seu build pra comunidade.
+        Monte sua garagem e mostre seu projeto pra galera.
       </Text>
       {steps.map((step, i) => (
         <StepRow key={step.label} step={step} isLast={i === steps.length - 1} />

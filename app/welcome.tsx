@@ -23,12 +23,12 @@ const SLIDES = [
   {
     icon: Users,
     title: "Compartilhe com a comunidade",
-    description: "Poste fotos do seu build, curta e comente nos projetos de outros gearheads.",
+    description: "Poste fotos do seu carro, curta e comente no projeto da galera.",
   },
   {
     icon: Sparkles,
     title: "Siga quem também vive de graxa",
-    description: "Descubra builds parecidos com o seu e acompanhe a evolução de quem você segue.",
+    description: "Descubra projetos parecidos com o seu e acompanhe a evolução de quem você segue.",
   },
 ];
 

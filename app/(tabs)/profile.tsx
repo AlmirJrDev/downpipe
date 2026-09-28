@@ -230,7 +230,7 @@ export default function ProfileScreen() {
             @{me.username}
           </Text>
           <Text className="text-on-surface-variant mt-1" style={typography.bodyMd}>
-            Gearhead desde {me.gearheadSince ?? "—"}
+            Na estrada desde {me.gearheadSince ?? "—"}
           </Text>
           {me.instagram && (
             <View className="mt-2">
@@ -346,10 +346,10 @@ export default function ProfileScreen() {
                       >
                         Estágio:{" "}
                         {car.status === "building"
-                          ? "Motor"
+                          ? "Em andamento"
                           : car.status === "planning"
-                          ? "Planejamento"
-                          : "Concluído"}
+                          ? "Planejando"
+                          : "Pronto"}
                       </Text>
                     </View>
                   </View>

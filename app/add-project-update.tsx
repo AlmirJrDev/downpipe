@@ -142,7 +142,7 @@ export default function AddProjectUpdateScreen() {
           <TextInput
             value={subtitle}
             onChangeText={setSubtitle}
-            placeholder="Ex: Update Fase 2 - Suspensão"
+            placeholder="Ex: Fase 2 - Suspensão"
             placeholderTextColor={colors.inputPlaceholder}
             className="mb-5"
             style={{ backgroundColor: colors.inputSurface, color: colors.onInputSurface, padding: 14, fontSize: 15 }}

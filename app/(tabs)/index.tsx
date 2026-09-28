@@ -167,7 +167,7 @@ export default function HomeScreen() {
           ListEmptyComponent={
             <EmptyState
               title="Feed vazio"
-              description="Siga outros gearheads ou publique o primeiro post do seu build."
+              description="Siga a galera daqui ou publique a primeira foto do seu carro."
             />
           }
           onViewableItemsChanged={adiantarProximasFotos}

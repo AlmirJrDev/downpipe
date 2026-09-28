@@ -124,7 +124,9 @@ export const statusMeta: Record<
   "planning" | "building" | "complete",
   { label: string; color: string }
 > = {
-  planning: { label: "PLANEJAMENTO", color: colors.warning },
-  building: { label: "EM BUILDING", color: colors.success },
-  complete: { label: "COMPLETO", color: colors.primary },
+  // Português de oficina, não de fórum gringo: "em building" era portunhol,
+  // e "completo" soa a formulário. É assim que se fala do carro aqui.
+  planning: { label: "PLANEJANDO", color: colors.warning },
+  building: { label: "EM ANDAMENTO", color: colors.success },
+  complete: { label: "PRONTO", color: colors.primary },
 };

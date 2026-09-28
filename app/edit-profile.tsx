@@ -168,7 +168,7 @@ export default function EditProfileScreen() {
           autoCapitalize="none"
         />
         <FormField
-          label="Gearhead desde"
+          label="Na estrada desde"
           placeholder="Ex: 2015"
           value={gearheadSince}
           onChangeText={setGearheadSince}
