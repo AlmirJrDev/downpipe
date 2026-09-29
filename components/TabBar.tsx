@@ -6,6 +6,7 @@ import { Home, Compass, Warehouse, User, SquarePlus } from "lucide-react-native"
 import { router } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { colors, spacing } from "@/constants/theme";
+import { useModoDesktop } from "@/hooks/useDesktop";
 
 const icons: Record<string, React.ComponentType<any>> = {
   index: Home,
@@ -42,6 +43,8 @@ function espacoDeBaixo(inset: number): number {
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  // No computador quem navega é o menu lateral (ver components/desktop).
+  const desktop = useModoDesktop();
 
   const renderTab = (routeName: string) => {
     const route = state.routes.find((r) => r.name === routeName);
@@ -78,6 +81,8 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
       </Pressable>
     );
   };
+
+  if (desktop) return null;
 
   return (
     <View

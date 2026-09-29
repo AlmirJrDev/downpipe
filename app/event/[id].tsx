@@ -63,6 +63,7 @@ import {
 } from "@/constants/detalhesDoRole";
 import { categoryLabel } from "@/utils/labels";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
+import { useLarguraDoConteudo } from "@/hooks/useDesktop";
 import type { ViewStyle } from "react-native";
 
 /** Quantos rostos cabem na fileira antes do "+N". */
@@ -98,8 +99,17 @@ const ESTILO_LARGO = {
 export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const larga = useLarguraAmpla();
+  const conteudo = useLarguraDoConteudo();
+  /**
+   * Onde a grade de fotos do rolê mora. No celular, a tela menos a margem.
+   * No computador, a coluna de detalhes: 6 de 11 partes do que sobra da
+   * largura de leitura depois das margens (32 de cada lado) e do vão entre
+   * as colunas (40) — ver ESTILO_LARGO.
+   */
+  const larguraDaGrade = larga
+    ? ((Math.min(conteudo, ESTILO_LARGO.moldura.maxWidth) - 64 - 40) * 6) / 11
+    : conteudo - 40;
 
   const { data: event, isPending } = useEventById(id);
   const { data: me } = useCurrentUser();
@@ -134,7 +144,7 @@ export default function EventDetailsScreen() {
   );
 
   // Grade de 3 colunas com 3px de respiro, dentro do padding de 20 da tela.
-  const thumbSize = (width - 40 - 6) / 3;
+  const thumbSize = (larguraDaGrade - 6) / 3;
 
   // Chat é de quem vai: confirmados e o organizador. Aqui em cima, antes dos
   // returns de carregamento, porque hook não pode ficar condicional.

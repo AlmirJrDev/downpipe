@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import type { AlertButton } from "react-native";
+import { useLarguraDoConteudo } from "@/hooks/useDesktop";
 import { Share } from "@/utils/share";
 import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
@@ -36,7 +37,9 @@ import { router } from "expo-router";
 const SCREEN_PAD = spacing.marginMobile;
 
 export default function ProfileScreen() {
-  const { width } = useWindowDimensions();
+  // A largura do conteúdo, não a da janela: no computador o conteúdo mora
+  // numa coluna, e a grade medida pela janela nascia larga demais.
+  const width = useLarguraDoConteudo();
   const { data: me, isLoading: meLoading, isError: meError } = useCurrentUser();
   const arte = useArteDeStory();
 

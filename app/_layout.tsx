@@ -14,6 +14,7 @@ import { isPlaceholderUsername } from "@/utils/profile";
 import { AlertHost } from "@/components/ui/AlertHost";
 import { FolhasDoPost } from "@/components/FolhasDoPost";
 import { ConviteParaEntrar } from "@/components/ConviteParaEntrar";
+import { MolduraDesktop } from "@/components/desktop/MolduraDesktop";
 import {
   boasVindasSeguradas,
   caminhoAberto,
@@ -167,6 +168,10 @@ export default function RootLayout() {
             ) : (
               <>
                 <AuthRedirect />
+                {/* No computador, menu lateral + coluna central em volta de
+                    todas as telas (ver components/desktop). No celular não
+                    muda nada. */}
+                <MolduraDesktop>
                 <Stack
                   screenOptions={{
                     headerShown: false,
@@ -227,6 +232,7 @@ export default function RootLayout() {
                     options={{ presentation: "transparentModal", animation: "fade" }}
                   />
                 </Stack>
+                </MolduraDesktop>
                 {/* Diálogos do app. No celular não renderiza nada — lá o
                     Alert é do sistema. */}
                 {/* Comentários, curtidas e foto em tela cheia: fora de qualquer

@@ -7,6 +7,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useLarguraDoConteudo } from "@/hooks/useDesktop";
 import { Share } from "@/utils/share";
 import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
@@ -77,7 +78,9 @@ export default function CarDetailsScreen() {
   const { data: carPostsPage } = useCarPosts(id);
   const carPosts = carPostsPage?.data ?? [];
   // Grade de 3 colunas dentro do padding de 20 da tela.
-  const { width } = useWindowDimensions();
+  // A largura do conteúdo, não a da janela: no computador o conteúdo mora
+  // numa coluna, e a grade medida pela janela nascia larga demais.
+  const width = useLarguraDoConteudo();
   const carThumb = (width - 40 - 6) / 3;
   const { data: me } = useCurrentUser();
   const isOwner = !!me && !!resolvedCar && me.id === resolvedCar.ownerId;

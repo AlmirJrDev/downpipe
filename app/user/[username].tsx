@@ -5,6 +5,7 @@ import { Alert } from "@/utils/alert";
 import { ReportSheet } from "@/components/ReportSheet";
 import { ApiError } from "@/services/api";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { useLarguraDoConteudo } from "@/hooks/useDesktop";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { voltarOuIrPara } from "@/utils/navigation";
@@ -42,7 +43,9 @@ function BackHeader({ title, right }: { title: string; right?: React.ReactNode }
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
-  const { width } = useWindowDimensions();
+  // A largura do conteúdo, não a da janela: no computador o conteúdo mora
+  // numa coluna, e a grade medida pela janela nascia larga demais.
+  const width = useLarguraDoConteudo();
   const { data: me } = useCurrentUser();
 
   const { data: user, isLoading } = useQuery({

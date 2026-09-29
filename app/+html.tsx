@@ -120,6 +120,19 @@ const estilos = `
       background-color: #0A0A0A;
     }
   }
+
+  /* Logado no computador: o app ocupa a janela inteira, com o menu lateral
+     à esquerda e o conteúdo numa coluna central (components/desktop). Quem
+     limita a largura passa a ser a coluna, não a moldura. Vem por último pra
+     vencer a regra de cima, que tem a mesma especificidade. */
+  @media (min-width: 1024px) {
+    html[data-app="desktop"] #root {
+      max-width: none;
+      border-left: 0;
+      border-right: 0;
+      background-color: #0A0A0A;
+    }
+  }
 `;
 
 /**
@@ -133,6 +146,14 @@ const larguraDoRole = `
   if (window.innerWidth >= 1024 && /^\\/app\\/event\\//.test(window.location.pathname)) {
     document.documentElement.dataset.largura = 'ampla';
   }
+  // Quem tem sessão guardada vai cair no modo desktop assim que o app
+  // montar; abrir a moldura já aqui evita a página nascer com 460 px e
+  // pular. Se a sessão estiver vencida, o app desfaz ao descobrir.
+  try {
+    if (window.innerWidth >= 1024 && window.localStorage.getItem('gearhead_session')) {
+      document.documentElement.dataset.app = 'desktop';
+    }
+  } catch (e) {}
 `;
 
 /**
