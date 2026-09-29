@@ -7,7 +7,7 @@
  * porque é onde o polegar está, e some no instante em que ela entra.
  */
 import React from "react";
-import { Platform, Pressable, Text, View, type ViewStyle } from "react-native";
+import { Platform, Pressable, Text, View, useWindowDimensions, type ViewStyle } from "react-native";
 import { router, useSegments } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
@@ -17,6 +17,9 @@ export function ConviteParaEntrar() {
   const ehVisitante = useEhVisitante();
   const segments = useSegments();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  // Mesmo corte da moldura do app no computador (ver +html.tsx).
+  const largo = Platform.OS === "web" && width >= 860;
 
   if (!ehVisitante || !ehTelaDeConteudo(segments[0])) return null;
 
@@ -46,11 +49,27 @@ export function ConviteParaEntrar() {
         borderColor: colors.border,
       }}
     >
-      <Text className="text-on-surface-variant mb-2.5" style={{ fontSize: 12.5, lineHeight: 17 }}>
+      {/* No computador a barra atravessa a janela inteira (ela é fixa na
+          janela, não na moldura do app). Sem este miolo com largura máxima,
+          os dois botões viravam faixas de 700 px cada. */}
+      <View
+        style={{
+          width: "100%",
+          maxWidth: largo ? 980 : undefined,
+          alignSelf: "center",
+          flexDirection: largo ? "row" : "column",
+          alignItems: largo ? "center" : "stretch",
+          gap: largo ? 24 : 0,
+        }}
+      >
+      <Text
+        className={largo ? "text-on-surface-variant flex-1" : "text-on-surface-variant mb-2.5"}
+        style={{ fontSize: 12.5, lineHeight: 17 }}
+      >
         Você está de visita. Entre pra curtir, comentar, confirmar presença nos
         rolês e montar a sua garagem.
       </Text>
-      <View className="flex-row gap-2">
+      <View className="flex-row gap-2" style={largo ? { width: 360 } : undefined}>
         <Pressable
           onPress={() => entrar("/register")}
           className="flex-1 bg-primary-container items-center justify-center py-3 active:opacity-80"
@@ -73,6 +92,7 @@ export function ConviteParaEntrar() {
             JÁ TENHO CONTA
           </Text>
         </Pressable>
+      </View>
       </View>
     </View>
   );

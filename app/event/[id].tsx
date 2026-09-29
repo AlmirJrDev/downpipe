@@ -62,14 +62,44 @@ import {
   rotuloDoTipo,
 } from "@/constants/detalhesDoRole";
 import { categoryLabel } from "@/utils/labels";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
+import type { ViewStyle } from "react-native";
 
 /** Quantos rostos cabem na fileira antes do "+N". */
 const AVATARS_VISIVEIS = 6;
+
+/**
+ * O rolê no computador: duas colunas dentro de uma largura de leitura.
+ *
+ * A arte fica "sticky" — parada no topo enquanto os detalhes rolam ao lado.
+ * O tipo do RN só conhece os valores nativos de position; o react-native-web
+ * repassa "sticky" pro CSS, daí o cast.
+ */
+const ESTILO_LARGO = {
+  moldura: {
+    width: "100%",
+    maxWidth: 1120,
+    alignSelf: "center",
+    paddingHorizontal: 32,
+    paddingTop: 32,
+  },
+  colunas: { flexDirection: "row", alignItems: "flex-start", gap: 40 },
+  arte: {
+    flex: 5,
+    aspectRatio: 4 / 5,
+    position: "sticky" as ViewStyle["position"],
+    top: 32,
+    backgroundColor: colors.surfaceContainer,
+    overflow: "hidden",
+  },
+  detalhes: { flex: 6, paddingTop: 4, paddingHorizontal: 0 },
+} satisfies Record<string, ViewStyle>;
 
 export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const larga = useLarguraAmpla();
 
   const { data: event, isPending } = useEventById(id);
   const { data: me } = useCurrentUser();
@@ -198,14 +228,21 @@ export default function EventDetailsScreen() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* No computador, duas colunas: a arte inteira à esquerda, parada
+            enquanto a página rola, e os detalhes à direita. No celular a
+            arte ocupa o topo, cortada, e o resto vem embaixo. */}
+        <View style={larga ? ESTILO_LARGO.moldura : undefined}>
+        <View style={larga ? ESTILO_LARGO.colunas : undefined}>
         {/* Foto ocupando o topo inteiro, com os controles por cima: sem
             cabeçalho roubando altura, a foto é o que apresenta o rolê. */}
-        <View style={{ height: 240 }}>
+        <View style={larga ? ESTILO_LARGO.arte : { height: 240 }}>
           {event.photoUrl ? (
             <Image
               source={{ uri: event.photoUrl }}
               style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
+              // No computador cabe o flyer inteiro, e é nele que estão a
+              // data e o endereço que o organizador escolheu mostrar.
+              contentFit={larga ? "contain" : "cover"}
               transition={200}
             />
           ) : (
@@ -274,8 +311,8 @@ export default function EventDetailsScreen() {
           </View>
         </View>
 
-        <View className="px-5 pt-5">
-          <Text className="text-on-surface" style={{ fontSize: 24, fontWeight: "700" }}>
+        <View className="px-5 pt-5" style={larga ? ESTILO_LARGO.detalhes : undefined}>
+          <Text className="text-on-surface" style={{ fontSize: larga ? 32 : 24, fontWeight: "700" }}>
             {event.name}
           </Text>
 
@@ -771,6 +808,8 @@ export default function EventDetailsScreen() {
               )}
             </Pressable>
           )}
+        </View>
+          </View>
         </View>
       </ScrollView>
 

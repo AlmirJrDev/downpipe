@@ -42,6 +42,7 @@ export default function Root({ children }: PropsWithChildren) {
 
         <style dangerouslySetInnerHTML={{ __html: estilos }} />
 
+        <script dangerouslySetInnerHTML={{ __html: larguraDoRole }} />
         <script dangerouslySetInnerHTML={{ __html: capturarInstalacao }} />
         <script dangerouslySetInnerHTML={{ __html: registrarServiceWorker }} />
       </head>
@@ -105,6 +106,32 @@ const estilos = `
       position: relative;
       overflow: hidden;
     }
+  }
+
+  /* A exceção: a tela que pede largura (ver hooks/useLarguraAmpla) sai da
+     moldura. Hoje é só a página do rolê, que é onde chega quem vem do Google
+     pelo computador. 1024 é o mesmo corte do hook — abaixo disso ela
+     continua de uma coluna, e abrir a moldura só esticaria o celular. */
+  @media (min-width: 1024px) {
+    html[data-largura="ampla"] #root {
+      max-width: 1180px;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      background-color: #0A0A0A;
+    }
+  }
+`;
+
+/**
+ * Abre a moldura antes de o React montar, na página do rolê.
+ *
+ * Sem isto quem chega pelo Google via a página nascer com 460 px e pular
+ * pra largura cheia um instante depois, quando a tela monta e pede a
+ * largura. O hook confirma e mantém depois; aqui é só a primeira pintura.
+ */
+const larguraDoRole = `
+  if (window.innerWidth >= 1024 && /^\\/app\\/event\\//.test(window.location.pathname)) {
+    document.documentElement.dataset.largura = 'ampla';
   }
 `;
 
