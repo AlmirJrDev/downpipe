@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { PlatformWebView, type PlatformWebViewRef } from "@/components/ui/PlatformWebView";
 import { colors } from "@/constants/theme";
 import { estiloDoMapa } from "@/constants/mapa";
+import { eventDateLabel } from "@/utils/event";
 import type { CarEvent } from "@/types";
 
 /**
@@ -24,6 +25,11 @@ interface MapPoint {
   attendeesCount: number;
   distanceKm?: number;
   attending: boolean;
+  /** A arte do rolê. É ela que o pino mostra. */
+  photoUrl: string | null;
+  /** Dia e mês, para o pino de quem não tem arte. */
+  dia: string;
+  mes: string;
 }
 
 function buildHtml(
@@ -47,14 +53,36 @@ function buildHtml(
 <link href="https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.css" rel="stylesheet">
 <style>
   html, body, #map { margin:0; padding:0; height:100%; width:100%; background:#121212; }
+  /**
+   * O pino é a arte do rolê.
+   *
+   * Antes ele mostrava o número de confirmados, e num app novo isso é uma
+   * tela cheia de "0" — que não diz nada e ainda passa a impressão de lugar
+   * vazio. O cartaz diz na hora que rolê é aquele, e é o que a pessoa
+   * reconhece do story que viu.
+   */
   .pin {
-    min-width:26px; height:26px; border-radius:13px; cursor:pointer;
-    background:${accent}; border:2px solid #fff; color:#fff;
-    font:700 11px/22px -apple-system,system-ui,sans-serif; text-align:center;
-    padding:0 5px; box-shadow:0 2px 8px rgba(0,0,0,.5);
+    width:44px; height:44px; border-radius:22px; cursor:pointer;
+    background:#1a1a1a center/cover no-repeat;
+    border:2px solid ${accent}; box-shadow:0 2px 10px rgba(0,0,0,.6);
+    position:relative;
   }
   /* Rolê que já confirmei fica verde: dá pra ver de relance o que é meu. */
-  .pin.going { background:${going}; }
+  .pin.going { border-color:${going}; }
+  /* Sem arte, o pino vira a data — ainda é informação, ao contrário do zero. */
+  .pin .quando {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; color:#fff;
+    font:700 13px/13px -apple-system,system-ui,sans-serif; letter-spacing:.2px;
+  }
+  .pin .quando span { font-size:8px; font-weight:600; opacity:.75; margin-top:1px; }
+  /* O contador só aparece quando existe gente — zero não é notícia. */
+  .pin .conf {
+    position:absolute; right:-3px; bottom:-3px; min-width:17px; height:17px;
+    border-radius:9px; background:${accent}; border:1.5px solid #121212; color:#fff;
+    font:700 10px/14px -apple-system,system-ui,sans-serif; text-align:center; padding:0 3px;
+  }
+  .pin.going .conf { background:${going}; }
   .me { width:14px; height:14px; border-radius:7px; background:#4a9eff;
         border:2px solid #fff; box-shadow:0 0 0 6px #4a9eff33; }
   .maplibregl-popup-content {
@@ -129,7 +157,23 @@ function buildHtml(
   pontos.forEach(function (p) {
     var el = document.createElement('div');
     el.className = 'pin' + (p.attending ? ' going' : '');
-    el.textContent = p.attendeesCount;
+    el.title = p.name;
+
+    if (p.photoUrl) {
+      el.style.backgroundImage = 'url("' + p.photoUrl + '")';
+    } else {
+      var quando = document.createElement('div');
+      quando.className = 'quando';
+      quando.innerHTML = p.dia + '<span>' + p.mes + '</span>';
+      el.appendChild(quando);
+    }
+
+    if (p.attendeesCount > 0) {
+      var conf = document.createElement('div');
+      conf.className = 'conf';
+      conf.textContent = p.attendeesCount;
+      el.appendChild(conf);
+    }
 
     new maplibregl.Marker({ element: el })
       .setLngLat([p.longitude, p.latitude])
@@ -190,6 +234,9 @@ export function EventsMap({
           attendeesCount: e.attendeesCount,
           distanceKm: e.distanceKm,
           attending: !!e.attendingByMe,
+          photoUrl: e.photoUrl,
+          dia: eventDateLabel(e.startsAt).day,
+          mes: eventDateLabel(e.startsAt).month,
         })),
     [events]
   );
