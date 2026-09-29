@@ -5,7 +5,13 @@ import { Alert } from "@/utils/alert";
 import { ReportSheet } from "@/components/ReportSheet";
 import { ApiError } from "@/services/api";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
-import { useLarguraDoConteudo } from "@/hooks/useDesktop";
+import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
+import {
+  BotaoDoPerfil,
+  CabecalhoDePerfil,
+  LARGURA_DO_PERFIL,
+} from "@/components/desktop/CabecalhoDePerfil";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { voltarOuIrPara } from "@/utils/navigation";
@@ -45,7 +51,12 @@ export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   // A largura do conteúdo, não a da janela: no computador o conteúdo mora
   // numa coluna, e a grade medida pela janela nascia larga demais.
-  const width = useLarguraDoConteudo();
+  // No computador: o perfil do Instagram web, 935 px e foto ao lado dos números.
+  const largo = useLarguraAmpla();
+  // Logado, o menu lateral já leva de volta; de visita, a seta continua.
+  const desktop = useModoDesktop();
+  const semBarra = largo && desktop;
+  const width = Math.min(useLarguraDoConteudo(), largo ? LARGURA_DO_PERFIL : Infinity);
   const { data: me } = useCurrentUser();
 
   const { data: user, isLoading } = useQuery({
@@ -114,48 +125,85 @@ export default function UserProfileScreen() {
   const isMe = me?.username === user.username;
   const isFollowing = !!user.isFollowing;
 
+  const abrirMenu = () =>
+    Alert.alert(`@${user.username}`, undefined, [
+      { text: "Denunciar perfil", onPress: () => setDenunciando(true) },
+      {
+        text: "Bloquear",
+        style: "destructive",
+        onPress: () =>
+          Alert.alert(
+            `Bloquear @${user.username}?`,
+            "Vocês param de ver as publicações um do outro, e quem seguia deixa de seguir.",
+            [
+              { text: "Cancelar", style: "cancel" },
+              {
+                text: "Bloquear",
+                style: "destructive",
+                onPress: () => bloquear.mutate(user.id),
+              },
+            ]
+          ),
+      },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  const seguirOuDeixar = () => toggleFollow.mutate({ userId: user.id, following: isFollowing });
+
   return (
     <View className="flex-1 bg-surface">
+      {!semBarra && (
       <BackHeader
         title={`@${user.username}`}
         right={
           isMe ? undefined : (
-            <Pressable
-              hitSlop={8}
-              onPress={() =>
-                Alert.alert(`@${user.username}`, undefined, [
-                  { text: "Denunciar perfil", onPress: () => setDenunciando(true) },
-                  {
-                    text: "Bloquear",
-                    style: "destructive",
-                    onPress: () =>
-                      Alert.alert(
-                        `Bloquear @${user.username}?`,
-                        "Vocês param de ver as publicações um do outro, e quem seguia deixa de seguir.",
-                        [
-                          { text: "Cancelar", style: "cancel" },
-                          {
-                            text: "Bloquear",
-                            style: "destructive",
-                            onPress: () => bloquear.mutate(user.id),
-                          },
-                        ]
-                      ),
-                  },
-                  { text: "Cancelar", style: "cancel" },
-                ])
-              }
-            >
+            <Pressable hitSlop={8} onPress={abrirMenu}>
               <MoreHorizontal size={20} color={colors.onSurfaceVariant} />
             </Pressable>
           )
         }
       />
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
+        <View style={{ width: "100%", maxWidth: largo ? LARGURA_DO_PERFIL : undefined, alignSelf: "center" }}>
+        {largo ? (
+          <CabecalhoDePerfil
+            avatarUrl={user.avatarUrl ?? ""}
+            username={user.username}
+            nome={user.displayName}
+            subtitulo={`Na estrada desde ${user.gearheadSince ?? "—"}`}
+            bio={user.bio}
+            instagram={user.instagram}
+            acoes={
+              isMe ? (
+                <BotaoDoPerfil label="Editar perfil" onPress={() => router.push("/edit-profile")} />
+              ) : (
+                <BotaoDoPerfil
+                  label={isFollowing ? "Seguindo" : "Seguir"}
+                  destaque={!isFollowing}
+                  onPress={seguirOuDeixar}
+                />
+              )
+            }
+            menu={
+              isMe ? undefined : (
+                <Pressable hitSlop={8} onPress={abrirMenu} accessibilityLabel="Denunciar ou bloquear">
+                  <MoreHorizontal size={20} color={colors.onSurface} />
+                </Pressable>
+              )
+            }
+            numeros={[
+              { label: "carros", value: userCars.length },
+              { label: "projetos", value: user.projectsCount },
+              { label: "rolês", value: user.eventsAttendedCount ?? 0 },
+              { label: "seguidores", value: user.followersCount, onPress: () => setFollowSheet("followers") },
+              { label: "seguindo", value: user.followingCount, onPress: () => setFollowSheet("following") },
+            ]}
+          />
+        ) : (
         <View className="px-4 mt-2">
           <UserAvatar uri={user.avatarUrl ?? ""} size={96} ringColor={colors.primaryContainer} />
           <Text className="text-on-surface mt-4" style={typography.headlineSm}>
@@ -207,6 +255,7 @@ export default function UserProfileScreen() {
             />
           </View>
         </View>
+        )}
 
         {/* Perfil de quem não tem carro não mostra garagem vazia: nem todo
             mundo aqui tem carro — tem quem venha pelas fotos e pelos rolês —
@@ -272,6 +321,7 @@ export default function UserProfileScreen() {
         ) : (
           <PostGrid posts={userPosts} width={width} username={user.username} />
         )}
+        </View>
       </ScrollView>
 
       <ReportSheet

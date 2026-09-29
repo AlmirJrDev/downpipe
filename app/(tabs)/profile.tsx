@@ -10,6 +10,12 @@ import {
 import { Alert } from "@/utils/alert";
 import type { AlertButton } from "react-native";
 import { useLarguraDoConteudo } from "@/hooks/useDesktop";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
+import {
+  BotaoDoPerfil,
+  CabecalhoDePerfil,
+  LARGURA_DO_PERFIL,
+} from "@/components/desktop/CabecalhoDePerfil";
 import { Share } from "@/utils/share";
 import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
@@ -39,7 +45,10 @@ const SCREEN_PAD = spacing.marginMobile;
 export default function ProfileScreen() {
   // A largura do conteúdo, não a da janela: no computador o conteúdo mora
   // numa coluna, e a grade medida pela janela nascia larga demais.
-  const width = useLarguraDoConteudo();
+  // No computador o perfil abre a coluna e se desenha como o do Instagram
+  // web: 935 px, foto grande ao lado dos números, grade de 3 bem maior.
+  const largo = useLarguraAmpla();
+  const width = Math.min(useLarguraDoConteudo(), largo ? LARGURA_DO_PERFIL : Infinity);
   const { data: me, isLoading: meLoading, isError: meError } = useCurrentUser();
   const arte = useArteDeStory();
 
@@ -223,18 +232,53 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <AppHeader
-        right={
-          <Pressable hitSlop={8} onPress={abrirMenu}>
-            <MoreVertical size={20} color={colors.onSurfaceVariant} />
-          </Pressable>
-        }
-      />
+      {!largo && (
+        <AppHeader
+          right={
+            <Pressable hitSlop={8} onPress={abrirMenu}>
+              <MoreVertical size={20} color={colors.onSurfaceVariant} />
+            </Pressable>
+          }
+        />
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
+        <View style={{ width: "100%", maxWidth: largo ? LARGURA_DO_PERFIL : undefined, alignSelf: "center" }}>
+        {largo ? (
+          <CabecalhoDePerfil
+            avatarUrl={me.avatarUrl ?? ""}
+            username={me.username}
+            nome={me.displayName}
+            subtitulo={`Na estrada desde ${me.gearheadSince ?? "—"}`}
+            bio={me.bio}
+            instagram={me.instagram}
+            acoes={
+              <>
+                <BotaoDoPerfil label="Editar perfil" onPress={() => router.push("/edit-profile")} />
+                <BotaoDoPerfil
+                  label="Compartilhar"
+                  icone={<Share2 size={14} color={colors.onSurface} />}
+                  onPress={shareProfile}
+                />
+              </>
+            }
+            menu={
+              <Pressable hitSlop={8} onPress={abrirMenu} accessibilityLabel="Menu da conta">
+                <MoreVertical size={20} color={colors.onSurface} />
+              </Pressable>
+            }
+            numeros={[
+              { label: "carros", value: cars.length },
+              { label: "projetos", value: me.projectsCount },
+              { label: "rolês", value: me.eventsAttendedCount ?? 0 },
+              { label: "seguidores", value: me.followersCount, onPress: () => setFollowSheet("followers") },
+              { label: "seguindo", value: me.followingCount, onPress: () => setFollowSheet("following") },
+            ]}
+          />
+        ) : (
         <View className="px-4 mt-2">
           <UserAvatar
             uri={me.avatarUrl ?? ""}
@@ -297,6 +341,7 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
+        )}
 
         {/* Sem carro, a garagem some inteira em vez de anunciar um vazio.
             Nem todo mundo aqui tem carro — tem quem venha pelas fotos e pelos
@@ -391,6 +436,7 @@ export default function ProfileScreen() {
           // dentro do ScrollView da tela, o que a virtualização não suporta.
           <PostGrid posts={myPosts} width={width} username={me.username} />
         )}
+        </View>
       </ScrollView>
 
       <FollowListSheet

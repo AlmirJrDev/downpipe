@@ -25,7 +25,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadCount } from "@/stores/notificationsStore";
 import { apiService } from "@/services/apiService";
-import { LARGURA_DO_MENU } from "@/hooks/useDesktop";
+import { LARGURA_DO_MENU, useLayoutStore } from "@/hooks/useDesktop";
 import { colors } from "@/constants/theme";
 
 interface Item {
@@ -37,13 +37,21 @@ interface Item {
   contador?: number;
   /** Abre por cima (formulário), em vez de trocar a tela. */
   empilhar?: boolean;
+  /** Em vez de navegar, faz isto (o sino abre o painel ao lado). */
+  acao?: () => void;
 }
 
 function Linha({ item, ativo }: { item: Item; ativo: boolean }) {
   const { Icone } = item;
   return (
     <Pressable
-      onPress={() => (item.empilhar ? router.push(item.destino as never) : router.navigate(item.destino as never))}
+      onPress={() => {
+        if (item.acao) return item.acao();
+        // Ir pra qualquer lado pelo menu fecha o painel de notificações.
+        useLayoutStore.getState().setNotificacoesAbertas(false);
+        if (item.empilhar) router.push(item.destino as never);
+        else router.navigate(item.destino as never);
+      }}
       accessibilityRole="link"
       accessibilityState={{ selected: ativo }}
       // O react-native-web entrega "hovered" pro estilo; o tipo do RN não
@@ -100,6 +108,8 @@ export function MenuLateral() {
   const { data: me } = useCurrentUser();
   const { data: naoLidas } = useUnreadCount();
   const admin = !!me?.isAdmin;
+  const painelAberto = useLayoutStore((s) => s.notificacoesAbertas);
+  const setPainel = useLayoutStore((s) => s.setNotificacoesAbertas);
 
   // Mesmas chaves do menu do perfil: o número vem do mesmo cache.
   const { data: denuncias } = useQuery({
@@ -123,7 +133,10 @@ export function MenuLateral() {
       rotulo: "Notificações",
       Icone: Bell,
       destino: "/notifications",
-      ativoEm: (c) => c.startsWith("/notifications"),
+      // O sino abre o painel ao lado, como no Instagram web; aceso enquanto
+      // o painel está aberto. Com ele aberto, os outros itens apagam.
+      ativoEm: (c) => painelAberto || c.startsWith("/notifications"),
+      acao: () => setPainel(!painelAberto),
       contador: typeof naoLidas === "number" ? naoLidas : undefined,
     },
     { rotulo: "Criar", Icone: SquarePlus, destino: "/add-action", ativoEm: () => false, empilhar: true },
@@ -168,7 +181,11 @@ export function MenuLateral() {
 
       <View style={{ gap: 2 }}>
         {principais.map((item) => (
-          <Linha key={item.rotulo} item={item} ativo={item.ativoEm(caminho)} />
+          <Linha
+            key={item.rotulo}
+            item={item}
+            ativo={item.rotulo === "Notificações" ? item.ativoEm(caminho) : !painelAberto && item.ativoEm(caminho)}
+          />
         ))}
       </View>
 

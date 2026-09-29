@@ -20,7 +20,10 @@ export type Aberta =
   | { tipo: "curtidas"; postId: string }
   // Mais de uma foto quando o post compara antes e depois: a tela cheia
   // mostra um seletor entre elas, abrindo na de índice `inicial`.
-  | { tipo: "foto"; fotos: FotoAberta[]; inicial?: number };
+  | { tipo: "foto"; fotos: FotoAberta[]; inicial?: number }
+  // O post inteiro aberto por cima da página, no computador: foto à
+  // esquerda, comentários à direita (components/desktop/PostEmModal).
+  | { tipo: "post"; postId: string };
 
 export interface FotoAberta {
   url: string;
@@ -29,12 +32,28 @@ export interface FotoAberta {
 
 interface FolhasState {
   aberta: Aberta | null;
+  /**
+   * O post aberto por cima fica guardado aqui enquanto algo abre sobre ele
+   * (quem curtiu, a foto em tela cheia): fechar isso volta pro post, em vez
+   * de derrubar tudo e devolver a pessoa pra página.
+   */
+  embaixo: Aberta | null;
   abrir: (aberta: Aberta) => void;
   fechar: () => void;
+  /** Fecha tudo de uma vez — ao sair pra outra tela, por exemplo. */
+  fecharTudo: () => void;
 }
 
-export const useFolhas = create<FolhasState>((set) => ({
+export const useFolhas = create<FolhasState>((set, get) => ({
   aberta: null,
-  abrir: (aberta) => set({ aberta }),
-  fechar: () => set({ aberta: null }),
+  embaixo: null,
+  abrir: (aberta) => {
+    const atual = get().aberta;
+    const sobreOPost =
+      (atual?.tipo === "post" || atual?.tipo === "comentarios") &&
+      (aberta.tipo === "curtidas" || aberta.tipo === "foto");
+    set({ aberta, embaixo: sobreOPost ? atual : null });
+  },
+  fechar: () => set((s) => ({ aberta: s.embaixo, embaixo: null })),
+  fecharTudo: () => set({ aberta: null, embaixo: null }),
 }));

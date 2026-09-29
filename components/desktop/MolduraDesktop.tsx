@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Platform, View } from "react-native";
 import { MenuLateral } from "@/components/desktop/MenuLateral";
+import { PainelDeNotificacoes } from "@/components/desktop/PainelDeNotificacoes";
 import { COLUNA_AMPLA, COLUNA_PADRAO, useLayoutStore, useModoDesktop } from "@/hooks/useDesktop";
 
 /**
@@ -27,6 +28,7 @@ export function MolduraDesktop({ children }: { children: React.ReactNode }) {
   return (
     <View style={{ flex: 1, flexDirection: "row" }}>
       {desktop && <MenuLateral />}
+      {desktop && <PainelDeNotificacoes />}
       <View style={{ flex: 1, alignItems: desktop ? "center" : "stretch" }}>
         <View
           style={{

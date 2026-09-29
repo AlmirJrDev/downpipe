@@ -5,6 +5,8 @@ import { router } from "expo-router";
 import { GitCompareArrows } from "lucide-react-native";
 import { colors, spacing } from "@/constants/theme";
 import { postThumbnail } from "@/utils/post";
+import { useModoDesktop } from "@/hooks/useDesktop";
+import { useFolhas } from "@/stores/folhasStore";
 import type { Post } from "@/types";
 
 const GRID_GAP = 2;
@@ -12,7 +14,8 @@ const GRID_COLUMNS = 3;
 
 /**
  * Grade de publicações do perfil. Cada célula abre as publicações do perfil
- * em formato de feed, posicionadas na que foi tocada.
+ * em formato de feed, posicionadas na que foi tocada — no celular. No
+ * computador ela abre o post por cima do perfil, como no Instagram web.
  * Post sem imagem vira uma célula de texto em vez de sumir da grade —
  * antes um post assim simplesmente não aparecia em lugar nenhum do perfil.
  */
@@ -26,23 +29,32 @@ export function PostGrid({
   /** Dono da grade — a célula abre as publicações desse perfil em feed. */
   username: string;
 }) {
+  const desktop = useModoDesktop();
+  const abrir = useFolhas((s) => s.abrir);
+  // No monitor as células passam de 300 px: o vão de 2 px some e a grade
+  // vira um bloco só.
+  const vao = desktop ? 4 : GRID_GAP;
   // Arredondar para baixo: um subpixel de sobra faz a terceira coluna quebrar
   // para a linha seguinte.
   const cellSize = Math.floor(
-    (width - spacing.marginMobile * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS
+    (width - spacing.marginMobile * 2 - vao * (GRID_COLUMNS - 1)) / GRID_COLUMNS
   );
 
   return (
     <View
       className="flex-row flex-wrap"
-      style={{ paddingHorizontal: spacing.marginMobile, gap: GRID_GAP }}
+      style={{ paddingHorizontal: spacing.marginMobile, gap: vao }}
     >
       {posts.map((post) => {
         const thumbnail = postThumbnail(post);
         return (
           <Pressable
             key={post.id}
-            onPress={() => router.push(`/user-posts/${username}?postId=${post.id}`)}
+            onPress={() =>
+              desktop
+                ? abrir({ tipo: "post", postId: post.id })
+                : router.push(`/user-posts/${username}?postId=${post.id}`)
+            }
             style={{ width: cellSize, height: cellSize }}
             className="active:opacity-80"
           >

@@ -26,13 +26,20 @@ const MOLDURA_AMPLA_DE_VISITA = 1180;
 /** Abaixo disto a moldura de celular nem existe: é celular de verdade. */
 const COMECO_DA_MOLDURA = 860;
 
-/** Se a tela aberta agora pediu largura. Quem mexe é o useLarguraAmpla. */
+/**
+ * Se a tela aberta agora pediu largura (quem mexe é o useLarguraAmpla), e se
+ * o painel de notificações está aberto ao lado do menu.
+ */
 export const useLayoutStore = create<{
   larguraAmpla: boolean;
   setLarguraAmpla: (ampla: boolean) => void;
+  notificacoesAbertas: boolean;
+  setNotificacoesAbertas: (abertas: boolean) => void;
 }>((set) => ({
   larguraAmpla: false,
   setLarguraAmpla: (larguraAmpla) => set({ larguraAmpla }),
+  notificacoesAbertas: false,
+  setNotificacoesAbertas: (notificacoesAbertas) => set({ notificacoesAbertas }),
 }));
 
 /** Menu lateral e coluna central: web, janela larga, e alguém logado. */

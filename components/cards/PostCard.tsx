@@ -185,7 +185,7 @@ function OwnerMenu({ post }: { post: Post }) {
  * Etiqueta do rolê onde a foto foi tirada. É o fio que liga a publicação ao
  * encontro: daqui a pessoa chega na página dele e vê tudo que rolou lá.
  */
-function EventTag({ post }: { post: Post }) {
+export function EventTag({ post }: { post: Post }) {
   if (!post.event) return null;
 
   return (
@@ -444,7 +444,7 @@ function Carrossel({ post, fotos, altura }: { post: Post; fotos: string[]; altur
 }
 
 /** As fotos de uma publicação normal, na ordem em que foram enviadas. */
-function fotosDoPost(post: Post): string[] {
+export function fotosDoPost(post: Post): string[] {
   const doServidor = (post.media ?? [])
     .slice()
     .sort((a, b) => a.position - b.position)
@@ -484,7 +484,7 @@ function PreviaDeComentarios({ post }: { post: Post }) {
   );
 }
 
-function EngagementBar({ post }: { post: Post }) {
+export function EngagementBar({ post }: { post: Post }) {
   const { data: me } = useCurrentUser();
   const arte = useArteDeStory();
   const toggleLike = useToggleLike();
@@ -591,7 +591,7 @@ function EngagementBar({ post }: { post: Post }) {
   );
 }
 
-function PostHeader({ post }: { post: Post }) {
+export function PostHeader({ post }: { post: Post }) {
   const author = post.author;
   const car = post.car;
   if (!author) return null;
