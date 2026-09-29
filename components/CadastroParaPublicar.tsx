@@ -94,7 +94,9 @@ export function CadastroParaPublicar({
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title={modo === "cadastro" ? "Falta só sua conta" : "Entrar"}>
-      <View className="pb-2">
+      {/* px-5: a mesma margem do título da janela, que o BottomSheet só dá
+          ao cabeçalho — o corpo é de cada tela. */}
+      <View className="px-5 pb-2">
         <Text className="text-on-surface-variant mb-5" style={{ fontSize: 13.5, lineHeight: 19 }}>
           {modo === "cadastro"
             ? "O rolê já está preenchido. A conta é o que deixa você editar e cancelar ele depois, e responder quem tiver dúvida."
