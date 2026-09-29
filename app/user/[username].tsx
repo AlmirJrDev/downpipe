@@ -307,6 +307,7 @@ export default function UserProfileScreen() {
           username={user.username}
           isOrganizer={!!user.isOrganizer}
           isMe={isMe}
+          larguraEmGrade={largo ? width : undefined}
         />
 
         <View className="mt-8 px-4">

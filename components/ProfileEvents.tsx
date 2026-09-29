@@ -6,6 +6,8 @@ import { EventCard } from "@/components/cards/EventCard";
 import { useEventsByOrganizer } from "@/stores/eventsStore";
 import { colors, spacing, typography } from "@/constants/theme";
 
+const VAO = 12;
+
 /**
  * Rolês na página do organizador. É a tela que interessa a quem já organiza
  * encontro hoje: uma página que não some em 24h, com o histórico e a lista
@@ -18,10 +20,17 @@ export function ProfileEvents({
   username,
   isOrganizer,
   isMe,
+  larguraEmGrade,
 }: {
   username: string;
   isOrganizer: boolean;
   isMe: boolean;
+  /**
+   * No computador os rolês viram grade de 3, com esta largura total. Um
+   * embaixo do outro, cada card com 900 px de largura, o organizador com
+   * quinze encontros empurrava as publicações pra 4000 px de rolagem.
+   */
+  larguraEmGrade?: number;
 }) {
   const { data } = useEventsByOrganizer(username);
   const events = data?.data ?? [];
@@ -59,7 +68,22 @@ export function ProfileEvents({
               : "Nenhum encontro marcado no momento."}
           </Text>
         ) : (
-          events.map((event) => <EventCard key={event.id} event={event} />)
+          <View style={larguraEmGrade ? { flexDirection: "row", flexWrap: "wrap", columnGap: VAO } : undefined}>
+            {events.map((event) =>
+              larguraEmGrade ? (
+                <View
+                  key={event.id}
+                  style={{
+                    width: Math.floor((larguraEmGrade - spacing.marginMobile * 2 - VAO * 2) / 3),
+                  }}
+                >
+                  <EventCard event={event} />
+                </View>
+              ) : (
+                <EventCard key={event.id} event={event} />
+              )
+            )}
+          </View>
         )}
       </View>
     </View>

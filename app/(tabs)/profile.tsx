@@ -420,7 +420,12 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <ProfileEvents username={me.username} isOrganizer={!!me.isOrganizer} isMe />
+        <ProfileEvents
+          username={me.username}
+          isOrganizer={!!me.isOrganizer}
+          isMe
+          larguraEmGrade={largo ? width : undefined}
+        />
 
         <View className="mt-8 px-4">
           <Text className="text-on-surface mb-3" style={typography.labelCaps}>
