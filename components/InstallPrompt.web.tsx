@@ -10,6 +10,8 @@
  * instrução que não vai funcionar ali.
  */
 import React, { useEffect, useState } from "react";
+import { useModoDesktop } from "@/hooks/useDesktop";
+import { cartaoNoCanto, fundoNoCanto } from "@/components/desktop/cartaoNoCanto";
 
 type Situacao =
   | "instalando" // Chrome/Edge: dá pra instalar com um toque
@@ -61,6 +63,7 @@ function detectar(): Situacao {
 }
 
 export function InstallPrompt() {
+  const desktop = useModoDesktop();
   const [situacao, setSituacao] = useState<Situacao>("nenhuma");
   const [aberto, setAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
@@ -118,8 +121,8 @@ export function InstallPrompt() {
   if (!aberto || situacao === "nenhuma") return null;
 
   return (
-    <div style={estilos.fundo}>
-      <div style={estilos.cartao}>
+    <div style={fundoNoCanto(estilos.fundo, desktop)}>
+      <div style={cartaoNoCanto(estilos.cartao, desktop)}>
         <div style={estilos.topo}>
           <img src="/icon-192.png" alt="" width={44} height={44} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>

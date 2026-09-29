@@ -21,10 +21,13 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useAuthStore } from "@/stores/authStore";
 import { isPlaceholderUsername } from "@/utils/profile";
 import { statusPush, inscreverPush } from "@/services/webPush";
+import { useModoDesktop } from "@/hooks/useDesktop";
+import { cartaoNoCanto, fundoNoCanto } from "@/components/desktop/cartaoNoCanto";
 
 const CHAVE_DECIDIDO = "downpipe_notificacoes_decidido";
 
 export function NotificationPrompt() {
+  const desktop = useModoDesktop();
   const status = useAuthStore((s) => s.status);
   const { data: me } = useCurrentUser();
   const [aberto, setAberto] = useState(false);
@@ -98,8 +101,8 @@ export function NotificationPrompt() {
   if (!aberto) return null;
 
   return (
-    <div style={estilos.fundo}>
-      <div style={estilos.cartao}>
+    <div style={fundoNoCanto(estilos.fundo, desktop)}>
+      <div style={cartaoNoCanto(estilos.cartao, desktop)}>
         <div style={estilos.topo}>
           <img src="/icon-192.png" alt="" width={44} height={44} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>

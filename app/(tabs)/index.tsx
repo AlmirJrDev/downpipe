@@ -24,6 +24,16 @@ import { colors, spacing } from "@/constants/theme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadCount } from "@/stores/notificationsStore";
 import { Bell } from "lucide-react-native";
+import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
+import {
+  ColunaDaDireita,
+  LARGURA_DA_COLUNA_DIREITA,
+} from "@/components/desktop/ColunaDaDireita";
+
+/** O feed no computador tem a largura do feed do Instagram web. */
+const LARGURA_DO_FEED = 600;
+const VAO_ENTRE_COLUNAS = 40;
 
 /** Quantas publicações à frente já começam a baixar a foto. */
 const ADIANTAR = 4;
@@ -35,6 +45,19 @@ const VISIBILIDADE = { itemVisiblePercentThreshold: 30 };
 export default function HomeScreen() {
   const { data: me } = useCurrentUser();
   const { data: unreadCount = 0 } = useUnreadCount();
+
+  /**
+   * No computador: o feed numa coluna de 600 e, quando cabe, a coluna da
+   * direita com os próximos rolês e quem seguir — o modelo do Instagram web.
+   * O feed pede a largura toda pra caber as duas lado a lado; numa janela
+   * estreita demais pra isso, fica só o feed, com os blocos no topo dele
+   * como no celular.
+   */
+  const desktop = useModoDesktop();
+  useLarguraAmpla();
+  const conteudo = useLarguraDoConteudo();
+  const comColunaDireita =
+    desktop && conteudo >= LARGURA_DO_FEED + VAO_ENTRE_COLUNAS + LARGURA_DA_COLUNA_DIREITA;
 
   const {
     data,
@@ -93,6 +116,9 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-surface">
+      {/* No computador o menu lateral já tem a logo, as notificações e o
+          perfil — o cabeçalho de celular só repetiria os três. */}
+      {!desktop && (
       <AppHeader
         left={
           <Pressable hitSlop={8} onPress={() => router.push("/notifications")}>
@@ -127,7 +153,16 @@ export default function HomeScreen() {
           </Pressable>
         }
       />
+      )}
 
+      <View
+        style={
+          desktop
+            ? { flex: 1, flexDirection: "row", justifyContent: "center", gap: VAO_ENTRE_COLUNAS }
+            : { flex: 1 }
+        }
+      >
+      <View style={desktop ? { flex: 1, maxWidth: LARGURA_DO_FEED } : { flex: 1 }}>
       {isLoading ? (
         <FeedSkeleton />
       ) : isError ? (
@@ -160,8 +195,9 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <>
               <GettingStarted />
-              <QuemSeguir />
-              <FeedEvents />
+              {/* Com a coluna da direita, os dois moram lá. */}
+              {!comColunaDireita && <QuemSeguir />}
+              {!comColunaDireita && <FeedEvents />}
             </>
           }
           ListEmptyComponent={
@@ -185,6 +221,9 @@ export default function HomeScreen() {
           }
         />
       )}
+      </View>
+      {comColunaDireita && <ColunaDaDireita />}
+      </View>
     </View>
   );
 }

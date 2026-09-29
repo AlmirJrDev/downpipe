@@ -130,7 +130,11 @@ const estilos = `
       max-width: none;
       border-left: 0;
       border-right: 0;
-      background-color: #0A0A0A;
+      /* A mesma cor das telas (colors.surface). Com o preto mais fundo da
+         moldura, a coluna central virava uma caixa desenhada no meio do
+         monitor; o Instagram web é de uma cor só. Quem se destaca é o menu
+         lateral, um tom abaixo e com a linha na borda. */
+      background-color: #121212;
     }
   }
 `;
