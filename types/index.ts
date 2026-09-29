@@ -301,6 +301,8 @@ export interface CarEvent {
    */
   address: string | null;
   photoUrl: string | null;
+  /** Quadrada e pequena (128 px), pro pino do mapa. Null = usa a foto cheia. */
+  photoThumbUrl?: string | null;
   /** "public" entra no calendário; "link" só é alcançado por quem tem o id. */
   visibility: EventVisibility;
   /** Preenchidas pelo backend geocodificando o endereço; null quando não resolve. */

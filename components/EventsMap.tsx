@@ -65,7 +65,12 @@ function buildHtml(
     width:44px; height:44px; border-radius:22px; cursor:pointer;
     background:#1a1a1a center/cover no-repeat;
     border:2px solid ${accent}; box-shadow:0 2px 10px rgba(0,0,0,.6);
-    position:relative;
+    /* Sem "position" aqui de propósito. O MapLibre posiciona o marcador com
+       position:absolute + transform, e esta regra vem depois do CSS dele:
+       um position:relative venceria, cada pino passaria a ocupar espaço no
+       fluxo da página, empilhado sob o anterior, e o erro mudaria a cada
+       zoom — os pinos "saíam andando". O absolute do MapLibre já serve de
+       referência para o selo e a data lá dentro. */
   }
   /* Rolê que já confirmei fica verde: dá pra ver de relance o que é meu. */
   .pin.going { border-color:${going}; }
@@ -234,7 +239,9 @@ export function EventsMap({
           attendeesCount: e.attendeesCount,
           distanceKm: e.distanceKm,
           attending: !!e.attendingByMe,
-          photoUrl: e.photoUrl,
+          // A miniatura pesa uns 4 KB; a arte cheia, até 1 MB. Num mapa com
+          // vinte rolês é a diferença entre dez megas e um punhado de KB.
+          photoUrl: e.photoThumbUrl ?? e.photoUrl,
           dia: eventDateLabel(e.startsAt).day,
           mes: eventDateLabel(e.startsAt).month,
         })),
