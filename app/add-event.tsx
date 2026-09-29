@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -32,6 +32,10 @@ import { categoryLabel } from "@/utils/labels";
 import type { Category } from "@/types";
 import { voltarOuIrPara } from "@/utils/navigation";
 import type { EventVisibility } from "@/types";
+import { Alert } from "@/utils/alert";
+import { CadastroParaPublicar, type ComoEntrou } from "@/components/CadastroParaPublicar";
+import { guardarDestino, segurarBoasVindas, useEhVisitante } from "@/utils/visitante";
+import { apagarRascunho, guardarRascunho, lerRascunho } from "@/utils/rascunhoDoRole";
 
 const LABEL = { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 } as const;
 const INPUT = {
@@ -119,6 +123,87 @@ export default function AddEventScreen() {
   // novo no botão criaria um segundo rolê igual.
   const [criadoId, setCriadoId] = useState<string | null>(null);
 
+  /**
+   * Visitante publicando o próprio rolê: preenche tudo sem conta, e a conta
+   * é pedida só no botão de publicar (ver CadastroParaPublicar).
+   *
+   * "Entrou como visitante" é lido uma vez, na abertura: depois do cadastro
+   * a pessoa já está logada, mas o formulário continua sendo o dela de
+   * visitante — com rascunho e com as boas-vindas seguradas até publicar.
+   */
+  const ehVisitante = useEhVisitante();
+  const entrouComoVisitante = useRef(ehVisitante && !isEditing).current;
+  const [cadastroAberto, setCadastroAberto] = useState(false);
+
+  useEffect(() => {
+    if (!entrouComoVisitante) return;
+    segurarBoasVindas(true);
+    return () => segurarBoasVindas(false);
+  }, [entrouComoVisitante]);
+
+  // Rascunho de volta, uma vez só, na abertura.
+  useEffect(() => {
+    if (!entrouComoVisitante) return;
+    const r = lerRascunho();
+    if (!r) return;
+    setName(r.name);
+    setDateInput(r.dateInput);
+    setTimeInput(r.timeInput);
+    setLocation(r.location);
+    setCity(r.city);
+    setDescription(r.description);
+    setEndTimeInput(r.endTimeInput);
+    setEndEstimated(r.endEstimated);
+    setEntryNote(r.entryNote);
+    setAttractions(r.attractions);
+    setRules(r.rules);
+    setKind(r.kind);
+    setCarCategories(r.carCategories as Category[]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // E guardado enquanto a pessoa digita — com um respiro, pra não escrever
+  // no navegador a cada letra.
+  useEffect(() => {
+    if (!entrouComoVisitante || criadoId) return;
+    const t = setTimeout(
+      () =>
+        guardarRascunho({
+          name,
+          dateInput,
+          timeInput,
+          location,
+          city,
+          description,
+          endTimeInput,
+          endEstimated,
+          entryNote,
+          attractions,
+          rules,
+          kind,
+          carCategories,
+        }),
+      400
+    );
+    return () => clearTimeout(t);
+  }, [
+    entrouComoVisitante,
+    criadoId,
+    name,
+    dateInput,
+    timeInput,
+    location,
+    city,
+    description,
+    endTimeInput,
+    endEstimated,
+    entryNote,
+    attractions,
+    rules,
+    kind,
+    carCategories,
+  ]);
+
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     // Preenche uma vez só, pra um refetch não sobrescrever o que já foi
@@ -174,6 +259,20 @@ export default function AddEventScreen() {
   const submit = () => {
     if (!isValid || !startsAtIso) return;
     setError(null);
+    // Sem conta, a conta vem agora — com o formulário pronto atrás.
+    if (ehVisitante && !isEditing) {
+      setCadastroAberto(true);
+      return;
+    }
+    publicar();
+  };
+
+  /**
+   * Salva o rolê. `como` diz se a pessoa acabou de criar conta ou de entrar
+   * pela janela de cadastro — conta nova ainda precisa escolher o @.
+   */
+  const publicar = (como?: ComoEntrou) => {
+    if (!startsAtIso) return;
 
     const fields = {
       name: name.trim(),
@@ -215,8 +314,21 @@ export default function AddEventScreen() {
       // depois de criar o evento.
       onSuccess: async (created) => {
         setCriadoId(created.id);
+        if (entrouComoVisitante) apagarRascunho();
         const subiu = await enviarFoto(created.id);
-        if (subiu) router.replace(`/event/${created.id}`);
+        if (!subiu) return;
+
+        if (como === "cadastro") {
+          // Conta nova tem @ provisório, e o rolê apareceria "organizado por
+          // @u3f9a…". Ao sair daqui as boas-vindas são soltas, a pessoa
+          // escolhe o @, e o destino guardado traz ela de volta pro rolê.
+          guardarDestino(`/event/${created.id}`);
+          Alert.alert(
+            "Seu rolê está no ar",
+            "Falta só escolher o seu @ — é com ele que você aparece como organizador."
+          );
+        }
+        router.replace(`/event/${created.id}`);
       },
       onError,
     });
@@ -246,13 +358,27 @@ export default function AddEventScreen() {
     }
   };
 
+  /**
+   * Visitante que chegou direto pelo link da agenda não tem pra onde voltar
+   * dentro do app — e o "início" do app pediria login. Volta pra agenda, que
+   * é de onde ele veio.
+   */
+  const voltar = () => {
+    if (isEditing && eventId) return voltarOuIrPara(`/event/${eventId}`);
+    if (entrouComoVisitante && !router.canGoBack() && Platform.OS === "web") {
+      window.location.href = "/encontros";
+      return;
+    }
+    voltarOuIrPara("/(tabs)");
+  };
+
   const header = (
     <AppHeader
-      title={isEditing ? "Editar evento" : "Novo evento"}
+      title={isEditing ? "Editar evento" : entrouComoVisitante ? "Publicar meu rolê" : "Novo evento"}
       left={
         <Pressable
           hitSlop={8}
-          onPress={() => voltarOuIrPara(isEditing && eventId ? `/event/${eventId}` : "/(tabs)")}
+          onPress={voltar}
         >
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
@@ -364,8 +490,18 @@ export default function AddEventScreen() {
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
           PONTO NO MAPA
         </Text>
-        {/* Sem ponto escolhido o servidor tenta adivinhar pelo texto, e às
-            vezes erra por quilômetros. Escolher aqui elimina o palpite. */}
+        {/* A busca de endereço do mapa exige conta (ela gasta a cota do
+            serviço de mapas, que não pode ficar aberta pra qualquer um).
+            Pro visitante, o ponto sai do endereço escrito e ele ajusta
+            depois de publicar, já com conta. */}
+        {ehVisitante ? (
+          <Text className="text-muted mb-5" style={{ fontSize: 12.5, lineHeight: 18 }}>
+            A gente acha o ponto pelo lugar e pela cidade. Depois de publicar, você
+            pode ajustar no mapa editando o rolê.
+          </Text>
+        ) : (
+        /* Sem ponto escolhido o servidor tenta adivinhar pelo texto, e às
+            vezes erra por quilômetros. Escolher aqui elimina o palpite. */
         <Pressable
           onPress={() => setPickerOpen(true)}
           className="flex-row items-center gap-3 border border-outline p-4 mb-5 active:bg-white/5"
@@ -399,6 +535,7 @@ export default function AddEventScreen() {
             </Pressable>
           )}
         </Pressable>
+        )}
 
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
           ATÉ QUE HORAS (OPCIONAL)
@@ -569,7 +706,13 @@ export default function AddEventScreen() {
 
         <PrimaryButton
           label={
-            criadoId ? "Abrir o rolê" : isEditing ? "Salvar alterações" : "Criar evento"
+            criadoId
+              ? "Abrir o rolê"
+              : isEditing
+                ? "Salvar alterações"
+                : ehVisitante
+                  ? "Publicar rolê"
+                  : "Criar evento"
           }
           onPress={criadoId ? () => router.replace(`/event/${criadoId}`) : submit}
           loading={saving}
@@ -577,6 +720,15 @@ export default function AddEventScreen() {
           icon={<CalendarPlus size={15} color={colors.onPrimaryContainer} />}
         />
       </ScrollView>
+
+      <CadastroParaPublicar
+        visible={cadastroAberto}
+        onClose={() => setCadastroAberto(false)}
+        onEntrou={(como) => {
+          setCadastroAberto(false);
+          publicar(como);
+        }}
+      />
 
       <LocationPicker
         visible={pickerOpen}

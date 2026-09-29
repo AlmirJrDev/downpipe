@@ -19,10 +19,48 @@ import { useAuthStore } from "@/stores/authStore";
  * O resto do app (feed, garagem, notificações, criar coisas) continua
  * exigindo conta: sem uma, não há o que mostrar lá.
  */
-const TELAS_PUBLICAS = ["post", "car", "event", "user", "user-posts", "event-posts"];
+const TELAS_DE_CONTEUDO = ["post", "car", "event", "user", "user-posts", "event-posts"];
+
+/**
+ * Formulário que abre sem conta: a conta é pedida só no fim, na hora de
+ * publicar (ver components/CadastroParaPublicar). Quem veio da agenda
+ * divulgar o próprio rolê preenche primeiro e se cadastra depois.
+ */
+const FORMULARIOS_ABERTOS = ["add-event"];
 
 export function ehTelaPublica(primeiroSegmento: string | undefined): boolean {
-  return !!primeiroSegmento && TELAS_PUBLICAS.includes(primeiroSegmento);
+  return (
+    !!primeiroSegmento &&
+    (TELAS_DE_CONTEUDO.includes(primeiroSegmento) || FORMULARIOS_ABERTOS.includes(primeiroSegmento))
+  );
+}
+
+/**
+ * Tela de ver conteúdo, onde a barra de "crie sua conta" faz sentido. No
+ * formulário aberto ela cobriria o botão de publicar — e lá a conta já é
+ * pedida no momento certo.
+ */
+export function ehTelaDeConteudo(primeiroSegmento: string | undefined): boolean {
+  return !!primeiroSegmento && TELAS_DE_CONTEUDO.includes(primeiroSegmento);
+}
+
+/**
+ * Segura as boas-vindas de conta nova enquanto um rolê está sendo publicado.
+ *
+ * Conta recém-criada tem @ provisório, e o app manda a pessoa escolher o @
+ * assim que ela entra. Com o cadastro acontecendo no meio da publicação,
+ * isso arrancaria a pessoa do formulário antes de o rolê ser salvo. Quem
+ * segura é o próprio formulário, enquanto está aberto; depois de publicar
+ * ele solta, e aí sim a pessoa escolhe o @ — e volta pro rolê dela.
+ */
+let segurandoBoasVindas = false;
+
+export function segurarBoasVindas(segurar: boolean) {
+  segurandoBoasVindas = segurar;
+}
+
+export function boasVindasSeguradas(): boolean {
+  return segurandoBoasVindas;
 }
 
 /**

@@ -11,14 +11,14 @@ import { Platform, Pressable, Text, View, type ViewStyle } from "react-native";
 import { router, useSegments } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
-import { caminhoAberto, ehTelaPublica, guardarDestino, useEhVisitante } from "@/utils/visitante";
+import { caminhoAberto, ehTelaDeConteudo, guardarDestino, useEhVisitante } from "@/utils/visitante";
 
 export function ConviteParaEntrar() {
   const ehVisitante = useEhVisitante();
   const segments = useSegments();
   const insets = useSafeAreaInsets();
 
-  if (!ehVisitante || !ehTelaPublica(segments[0])) return null;
+  if (!ehVisitante || !ehTelaDeConteudo(segments[0])) return null;
 
   const entrar = (para: "/login" | "/register") => {
     // Guarda de onde ela saiu: depois de entrar, volta pra este mesmo

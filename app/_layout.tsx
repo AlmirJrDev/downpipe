@@ -15,6 +15,7 @@ import { AlertHost } from "@/components/ui/AlertHost";
 import { FolhasDoPost } from "@/components/FolhasDoPost";
 import { ConviteParaEntrar } from "@/components/ConviteParaEntrar";
 import {
+  boasVindasSeguradas,
   caminhoAberto,
   ehTelaPublica,
   guardarDestino,
@@ -98,6 +99,9 @@ function AuthRedirect() {
     const inOnboardingFlow = segments[0] === "welcome" || segments[0] === "edit-profile";
 
     if (needsOnboarding && !inOnboardingFlow) {
+      // Conta criada no meio da publicação de um rolê: as boas-vindas
+      // esperam o rolê ser salvo (ver segurarBoasVindas).
+      if (boasVindasSeguradas()) return;
       router.replace("/welcome");
     } else if (!needsOnboarding && !inOnboardingFlow && temDestino()) {
       // Entrou (ou terminou o onboarding de conta nova): segue pro link que
