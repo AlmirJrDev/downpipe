@@ -15,6 +15,8 @@ import { EmptyState } from "@/components/ui/States";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { colors, spacing, typography } from "@/constants/theme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import type { Category } from "@/types";
 
 // Espelha carCategoryEnum do backend — "Off-road"/"Daily"/"Projetos" não
@@ -23,6 +25,16 @@ const CATEGORIES: Category[] = ["JDM", "Euro", "Muscle", "Performance", "Clássi
 
 export default function ExploreScreen() {
   const { data: me } = useCurrentUser();
+
+  /**
+   * No computador o Explorar pede a largura toda e os carros viram grade —
+   * como o Explorar do Instagram web. Um card de carro de 600 px de largura,
+   * um embaixo do outro, era um celular esticado.
+   */
+  const desktop = useModoDesktop();
+  useLarguraAmpla();
+  const conteudo = useLarguraDoConteudo();
+  const colunas = !desktop ? 1 : conteudo >= 900 ? 3 : conteudo >= 620 ? 2 : 1;
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
@@ -79,9 +91,13 @@ export default function ExploreScreen() {
       {!(tab === "events" && eventsView === "map") && (
         <AppHeader
           right={
-            <Pressable hitSlop={8} onPress={() => router.push("/(tabs)/profile")}>
-              <UserAvatar uri={me?.avatarUrl ?? ""} size={28} />
-            </Pressable>
+            // No computador o perfil está no menu lateral: o avatar aqui
+            // só repetiria.
+            desktop ? undefined : (
+              <Pressable hitSlop={8} onPress={() => router.push("/(tabs)/profile")}>
+                <UserAvatar uri={me?.avatarUrl ?? ""} size={28} />
+              </Pressable>
+            )
           }
         />
       )}
@@ -95,12 +111,27 @@ export default function ExploreScreen() {
         />
       ) : (
       <FlatList
+        // A quantidade de colunas não muda com a lista montada: a chave
+        // força remontar quando a janela passa de um corte pro outro.
+        key={`colunas-${colunas}`}
         data={cars}
         keyExtractor={(c) => c.id}
-        renderItem={({ item }) => <CarCard car={item} />}
+        numColumns={colunas}
+        columnWrapperStyle={colunas > 1 ? { gap: 16 } : undefined}
+        renderItem={({ item }) =>
+          colunas > 1 ? (
+            // Largura fixa por coluna: com flex:1 a última linha, se tiver
+            // um carro só, esticaria ele pela linha inteira.
+            <View style={{ width: `${100 / colunas}%`, flexShrink: 1 }}>
+              <CarCard car={item} />
+            </View>
+          ) : (
+            <CarCard car={item} />
+          )
+        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: spacing.marginMobile,
+          paddingHorizontal: desktop ? 24 : spacing.marginMobile,
           paddingBottom: spacing.lg,
         }}
         onEndReached={() => {

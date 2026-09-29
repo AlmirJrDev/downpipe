@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Logo } from "@/components/Logo";
 import { colors, spacing, typography } from "@/constants/theme";
+import { useModoDesktop } from "@/hooks/useDesktop";
 
 // Os dois slots laterais têm largura fixa e igual para o wordmark ficar
 // opticamente centrado. Com `justify-between` ele desloca conforme o conteúdo
@@ -25,6 +26,32 @@ interface AppHeaderProps {
 
 export function AppHeader({ left, right, title, bordered = true }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
+  const desktop = useModoDesktop();
+
+  /**
+   * No computador a logo mora no menu lateral. Cabeçalho sem título é o das
+   * telas principais, que só mostrava a logo — repetida ali ela é ruído.
+   * Se sobra algum botão (o "⋯" do menu da conta no perfil), fica uma barra
+   * fina só com ele; se não sobra nada, o cabeçalho some.
+   */
+  if (desktop && !title) {
+    if (!left && !right) return null;
+    return (
+      <View
+        style={{
+          paddingTop: spacing.md,
+          paddingHorizontal: spacing.marginMobile,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: colors.surface,
+        }}
+      >
+        <View>{left}</View>
+        <View>{right}</View>
+      </View>
+    );
+  }
 
   return (
     <View
