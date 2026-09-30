@@ -57,7 +57,14 @@ function desenharCobrindo(
   const escala = Math.max(largura / img.width, altura / img.height);
   const l = img.width * escala;
   const a = img.height * escala;
+  // Recorta no retângulo: sem isto a sobra da foto vertical vazava pra baixo
+  // do fim da foto, e aparecia uma faixa dela entre o degradê e o título.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, largura, altura);
+  ctx.clip();
   ctx.drawImage(img, x + (largura - l) / 2, y + (altura - a) / 2, l, a);
+  ctx.restore();
 }
 
 /** Quebra o texto em no máximo `maxLinhas`, com reticências na última. */
