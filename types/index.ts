@@ -353,6 +353,40 @@ export interface CarEvent {
   updatedAt: string;
 }
 
+/**
+ * Ingresso do rolê. Na fase 1 não existe venda: confirmar presença já gera
+ * o ingresso, e ele é a própria linha de presença com um código e a hora
+ * da entrada. Desmarcar presença apaga o ingresso junto.
+ */
+export interface EventTicket {
+  eventId: string;
+  /** Aleatório e impossível de chutar — é ele que vai no QR. */
+  code: string;
+  holderName: string;
+  holderUsername: string | null;
+  /** "VW Gol GTI" — o que a portaria confere junto com o rosto. */
+  carLabel: string | null;
+  checkedInAt: string | null;
+}
+
+/** Uma linha da lista que a portaria baixa antes do rolê. */
+export interface CheckinEntry {
+  code: string;
+  userId: string;
+  username: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  carLabel: string | null;
+  checkedInAt: string | null;
+}
+
+export interface CheckinList {
+  eventId: string;
+  /** Hora do servidor quando a lista foi montada. */
+  generatedAt: string;
+  entries: CheckinEntry[];
+}
+
 /** Quem confirmou presença. Mesmo formato achatado do PostLiker. */
 export interface EventAttendee {
   userId: string;

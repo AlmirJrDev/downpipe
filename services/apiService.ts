@@ -24,6 +24,8 @@ import type {
   CarEvent,
   EventAttendee,
   EventVisibility,
+  EventTicket,
+  CheckinList,
   Project,
   ProjectStep,
   ProjectStatus,
@@ -790,6 +792,30 @@ async function unattendEvent(id: string): Promise<{ attendingByMe: boolean; atte
   return api.delete(`/events/${id}/attend`);
 }
 
+// ---------------------------------------------------------------- Ingresso e portaria
+
+/** null = quem pergunta não confirmou presença, então não tem ingresso. */
+async function getMyTicket(eventId: string): Promise<EventTicket | null> {
+  return nullOn404(() => api.get<EventTicket>(`/events/${eventId}/ticket`));
+}
+
+/** Só o organizador: a lista inteira, pra portaria validar sem internet. */
+async function getCheckinList(eventId: string): Promise<CheckinList> {
+  return api.get<CheckinList>(`/events/${eventId}/checkin`);
+}
+
+/**
+ * Entradas registradas no celular da portaria, enviadas em lote. O servidor
+ * guarda a primeira hora de cada código e devolve a lista atualizada — é
+ * assim que um portão fica sabendo de quem entrou pelo outro.
+ */
+async function syncCheckins(
+  eventId: string,
+  checkins: { code: string; at: string; deviceId: string }[]
+): Promise<CheckinList> {
+  return api.post<CheckinList>(`/events/${eventId}/checkin`, { checkins });
+}
+
 // ---------------------------------------------------------------- Moderação
 
 /** Motivos fechados: o backend valida contra a mesma lista. */
@@ -1179,6 +1205,9 @@ export const apiService = {
   sendEventMessage,
   deleteEventMessage,
   getEventChatUnread,
+  getMyTicket,
+  getCheckinList,
+  syncCheckins,
   respondCarTag,
   denunciar,
   bloquear,

@@ -17,6 +17,13 @@
       "expo-router",
       "expo-image-picker",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "O Downpipe usa a camera na portaria do role, para ler o QR dos ingressos.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "O Downpipe usa sua localizacao para marcar o ponto exato do encontro no mapa."

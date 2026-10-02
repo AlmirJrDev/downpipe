@@ -197,6 +197,8 @@ export default function RootLayout() {
                   <Stack.Screen name="excluir-minha-conta" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-chat/[id]" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="ingresso/[id]" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="portaria/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="post/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="arte/[tipo]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen

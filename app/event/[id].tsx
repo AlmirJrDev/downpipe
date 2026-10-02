@@ -29,6 +29,8 @@ import {
   MessagesSquare,
   Navigation,
   Pencil,
+  QrCode,
+  ScanLine,
   Share2,
   Ticket,
   TriangleAlert,
@@ -428,6 +430,32 @@ export default function EventDetailsScreen() {
               </Text>
             </Pressable>
           </View>
+
+          {/* O ingresso é de quem confirmou; a portaria, de quem organiza.
+              Os dois ficam colados nas ações porque é aqui que a pessoa abre
+              a tela na fila do rolê. */}
+          {attending && (
+            <Pressable
+              onPress={() => router.push(`/ingresso/${event.id}`)}
+              className="flex-row items-center justify-center gap-2 mt-2.5 py-4 border border-outline active:bg-white/5"
+            >
+              <QrCode size={16} color={colors.onSurface} />
+              <Text className="text-on-surface" style={{ fontSize: 13, fontWeight: "700", letterSpacing: 1.2 }}>
+                MEU INGRESSO
+              </Text>
+            </Pressable>
+          )}
+          {isOrganizer && (
+            <Pressable
+              onPress={() => router.push(`/portaria/${event.id}`)}
+              className="flex-row items-center justify-center gap-2 mt-2.5 py-4 border border-outline active:bg-white/5"
+            >
+              <ScanLine size={16} color={colors.onSurface} />
+              <Text className="text-on-surface" style={{ fontSize: 13, fontWeight: "700", letterSpacing: 1.2 }}>
+                PORTARIA
+              </Text>
+            </Pressable>
+          )}
 
           {/* Logo abaixo de "vou": é pra quem vai. Quem ainda não confirmou
               não vê o botão — veria só um convite pra confirmar do outro lado. */}

@@ -180,8 +180,24 @@ export function useToggleAttendance() {
     onSettled: (_data, _err, variables) => {
       queryClient.invalidateQueries({ queryKey: ["event", variables.eventId] });
       queryClient.invalidateQueries({ queryKey: ["event-attendees", variables.eventId] });
+      // Confirmar cria o ingresso e desmarcar apaga.
+      queryClient.invalidateQueries({ queryKey: ["event-ticket", variables.eventId] });
       invalidateEventLists(queryClient);
     },
+  });
+}
+
+/**
+ * Meu ingresso. Recarrega sozinho enquanto a tela está aberta: é assim que
+ * o "entrada liberada" aparece no celular de quem acabou de passar pela
+ * portaria, sem precisar puxar pra atualizar.
+ */
+export function useMyTicket(eventId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["event-ticket", eventId],
+    queryFn: () => apiService.getMyTicket(eventId),
+    enabled: !!eventId && enabled,
+    refetchInterval: (query) => (query.state.data?.checkedInAt ? false : 10_000),
   });
 }
 
@@ -207,6 +223,8 @@ export function useUpdateAttendanceCar() {
       // A lista de confirmados é onde o carro aparece — é ela que precisa
       // recarregar, não o evento.
       queryClient.invalidateQueries({ queryKey: ["event-attendees", variables.eventId] });
+      // O carro sai impresso no ingresso.
+      queryClient.invalidateQueries({ queryKey: ["event-ticket", variables.eventId] });
     },
   });
 }
