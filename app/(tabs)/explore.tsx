@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { apiService } from "@/services/apiService";
 import { AppHeader } from "@/components/AppHeader";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -38,7 +38,16 @@ export default function ExploreScreen() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
-  const [tab, setTab] = useState<ExploreTab>("cars");
+  // ?aba=roles abre direto nos rolês. Sem isso, todo "ver todos os rolês"
+  // do app caía na aba de carros, e a pessoa tinha que achar a outra aba.
+  const { aba } = useLocalSearchParams<{ aba?: string }>();
+  const [tab, setTab] = useState<ExploreTab>(aba === "roles" ? "events" : "cars");
+  // A aba fica montada entre uma visita e outra: chegar de novo com ?aba
+  // tem de trocar a aba aberta, e não só a da primeira vez.
+  useEffect(() => {
+    if (aba === "roles") setTab("events");
+    else if (aba === "carros") setTab("cars");
+  }, [aba]);
   // O modo de visualização dos rolês vive aqui porque o cabeçalho some no
   // mapa — ele é só logo e avatar, decoração enquanto se lê um mapa.
   const [eventsView, setEventsView] = useState<"list" | "map">("list");

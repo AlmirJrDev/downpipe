@@ -7,8 +7,7 @@
  * perfil ou um rolê não pode fazer o menu sumir.
  */
 import React from "react";
-import { Platform, Pressable, Text, View } from "react-native";
-import { Image } from "expo-image";
+import { Pressable, Text, View } from "react-native";
 import { router, usePathname } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -22,6 +21,7 @@ import {
   Warehouse,
   type LucideIcon,
 } from "lucide-react-native";
+import { Logo } from "@/components/Logo";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadCount } from "@/stores/notificationsStore";
 import { apiService } from "@/services/apiService";
@@ -169,14 +169,7 @@ export function MenuLateral() {
       }}
     >
       <Pressable onPress={() => router.navigate("/(tabs)" as never)} style={{ paddingHorizontal: 12, marginBottom: 30 }}>
-        {/* A logo da landing: no computador o menu é a primeira coisa que
-            se lê, e ali ela identifica o app como no site. */}
-        <Image
-          source={{ uri: Platform.OS === "web" ? "/logo-lp.png" : undefined }}
-          style={{ width: 120, height: 20 }}
-          contentFit="contain"
-          accessibilityLabel="Downpipe"
-        />
+        <Logo height={20} />
       </Pressable>
 
       <View style={{ gap: 2 }}>

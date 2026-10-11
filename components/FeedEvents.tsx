@@ -31,7 +31,7 @@ export function FeedEvents() {
         <Text className="text-on-surface" style={typography.labelCaps}>
           Próximos rolês
         </Text>
-        <Pressable onPress={() => router.push("/(tabs)/explore")} hitSlop={8}>
+        <Pressable onPress={() => router.push("/(tabs)/explore?aba=roles")} hitSlop={8}>
           <Text className="text-primary" style={{ fontSize: 12, fontWeight: "600" }}>
             Ver todos
           </Text>

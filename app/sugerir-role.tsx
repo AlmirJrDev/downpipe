@@ -68,7 +68,7 @@ export default function SugerirRoleScreen() {
       left={
         <Pressable
           hitSlop={8}
-          onPress={() => voltarOuIrPara("/(tabs)/explore")}
+          onPress={() => voltarOuIrPara("/(tabs)/explore?aba=roles")}
           accessibilityRole="button"
           accessibilityLabel="Voltar"
         >
@@ -100,7 +100,7 @@ export default function SugerirRoleScreen() {
           <View className="w-full mt-7">
             <PrimaryButton
               label="Voltar pros rolês"
-              onPress={() => voltarOuIrPara("/(tabs)/explore")}
+              onPress={() => voltarOuIrPara("/(tabs)/explore?aba=roles")}
             />
           </View>
         </View>

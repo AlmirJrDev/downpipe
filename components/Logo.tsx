@@ -10,11 +10,15 @@ interface LogoProps {
   height?: number;
 }
 
-/** Wordmark do Downpipe. Só a altura é informada — largura vem da proporção. */
+/**
+ * Wordmark do Downpipe, na versão principal: letras brancas e o escapamento
+ * vermelho. A toda branca (logo-downpipe.png) fica pro que não tem cor, como
+ * marca d'água. Só a altura é informada — largura vem da proporção.
+ */
 export function Logo({ height = 18 }: LogoProps) {
   return (
     <Image
-      source={require("@/assets/logo-downpipe.png")}
+      source={require("@/assets/logo-downpipe-principal.png")}
       style={{ height, width: height * LOGO_RATIO }}
       contentFit="contain"
       // A logo é decorativa quando acompanha o nome; em telas onde ela é o

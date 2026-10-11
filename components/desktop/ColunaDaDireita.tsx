@@ -157,7 +157,7 @@ export function ColunaDaDireita() {
 
       {roles.length > 0 && (
         <View>
-          <Cabecalho titulo="PRÓXIMOS ROLÊS" acao="Ver todos" onAcao={() => router.navigate("/(tabs)/explore" as never)} />
+          <Cabecalho titulo="PRÓXIMOS ROLÊS" acao="Ver todos" onAcao={() => router.navigate("/(tabs)/explore?aba=roles" as never)} />
           {roles.map((r) => (
             <Role key={r.id} evento={r} />
           ))}

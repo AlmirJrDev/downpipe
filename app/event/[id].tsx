@@ -178,7 +178,7 @@ export default function EventDetailsScreen() {
         <AppHeader
           title="Evento"
           left={
-            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/explore")}>
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)/explore?aba=roles")}>
               <ArrowLeft size={22} color={colors.onSurface} />
             </Pressable>
           }
@@ -204,7 +204,7 @@ export default function EventDetailsScreen() {
       {
         text: "Cancelar evento",
         style: "destructive",
-        onPress: () => deleteEvent.mutate(event.id, { onSuccess: () => voltarOuIrPara("/(tabs)/explore") }),
+        onPress: () => deleteEvent.mutate(event.id, { onSuccess: () => voltarOuIrPara("/(tabs)/explore?aba=roles") }),
       },
     ]);
 
@@ -266,7 +266,7 @@ export default function EventDetailsScreen() {
             style={{ top: insets.top + 8, left: 16, right: 16 }}
           >
             <Pressable
-              onPress={() => voltarOuIrPara("/(tabs)/explore")}
+              onPress={() => voltarOuIrPara("/(tabs)/explore?aba=roles")}
               className="w-9 h-9 rounded-full items-center justify-center"
               style={{ backgroundColor: colors.overlayMedium }}
             >
