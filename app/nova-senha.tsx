@@ -16,6 +16,7 @@ import { colors, typography } from "@/constants/theme";
 import { PrimaryButton } from "@/components/ui/Button";
 import { authService } from "@/services/authService";
 import { ApiError } from "@/services/api";
+import { TelaDeEntrada } from "@/components/desktop/TelaDeEntrada";
 
 /** Lê o access_token do fragmento da URL. Só existe no navegador. */
 function tokenDaUrl(): string | null {
@@ -95,6 +96,7 @@ export default function NovaSenhaScreen() {
   };
 
   return (
+    <TelaDeEntrada>
     <KeyboardAvoidingView
       className="flex-1 bg-surface"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -177,5 +179,6 @@ export default function NovaSenhaScreen() {
         )}
       </ScrollView>
     </KeyboardAvoidingView>
+    </TelaDeEntrada>
   );
 }

@@ -16,6 +16,7 @@ import { abrirLegal } from "@/utils/legal";
 import { useAuthStore } from "@/stores/authStore";
 import { ApiError } from "@/services/api";
 import { voltarOuIrPara } from "@/utils/navigation";
+import { TelaDeEntrada } from "@/components/desktop/TelaDeEntrada";
 
 function Field({
   label,
@@ -113,6 +114,7 @@ export default function RegisterScreen() {
   };
 
   return (
+    <TelaDeEntrada>
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.surface }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -199,5 +201,6 @@ export default function RegisterScreen() {
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
+    </TelaDeEntrada>
   );
 }

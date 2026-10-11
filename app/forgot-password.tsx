@@ -13,6 +13,7 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { authService } from "@/services/authService";
 import { ApiError } from "@/services/api";
 import { voltarOuIrPara } from "@/utils/navigation";
+import { TelaDeEntrada } from "@/components/desktop/TelaDeEntrada";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -36,6 +37,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
+    <TelaDeEntrada>
     <KeyboardAvoidingView
       className="flex-1 bg-surface"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -121,5 +123,6 @@ export default function ForgotPasswordScreen() {
         )}
       </ScrollView>
     </KeyboardAvoidingView>
+    </TelaDeEntrada>
   );
 }

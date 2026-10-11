@@ -174,14 +174,15 @@ const estilos = `
 `;
 
 /**
- * Abre a moldura antes de o React montar, na página do rolê.
+ * Abre a moldura antes de o React montar, na página do rolê e nas telas de
+ * entrada (login, cadastro, senha), que no computador têm duas colunas.
  *
  * Sem isto quem chega pelo Google via a página nascer com 460 px e pular
  * pra largura cheia um instante depois, quando a tela monta e pede a
  * largura. O hook confirma e mantém depois; aqui é só a primeira pintura.
  */
 const larguraDoRole = `
-  if (window.innerWidth >= 1024 && /^\\/app\\/event\\//.test(window.location.pathname)) {
+  if (window.innerWidth >= 1024 && /^\\/app\\/(event\\/|login|register|forgot-password|nova-senha)/.test(window.location.pathname)) {
     document.documentElement.dataset.largura = 'ampla';
   }
   // Quem tem sessão guardada vai cair no modo desktop assim que o app
