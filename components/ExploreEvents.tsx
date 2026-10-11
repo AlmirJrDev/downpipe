@@ -54,6 +54,11 @@ export function ExploreEvents({
   const larguraDoConteudo = useLarguraDoConteudo();
   const colunas = !desktop ? 1 : larguraDoConteudo >= 900 ? 3 : 2;
   const VAO_DA_GRADE = 16;
+  // Largura exata em px: com porcentagem, os cards da última linha (que não
+  // encolhem pra caber o vão) saíam mais largos que os de cima.
+  const larguraDoCard = Math.floor(
+    (larguraDoConteudo - spacing.marginMobile * 2 - VAO_DA_GRADE * (colunas - 1)) / colunas
+  );
 
   /**
    * Recuo do topo no mapa. Não dá pra confiar só no `insets.top`: em vários
@@ -270,7 +275,10 @@ export function ExploreEvents({
             // os controles precisam descer o recorte do aparelho.
             top: topInset + spacing.sm,
             left: spacing.marginMobile,
-            right: spacing.marginMobile,
+            right: desktop ? undefined : spacing.marginMobile,
+            // No computador o painel não estica pela tela toda: uma busca de
+            // 1100 px de largura por cima do mapa só tampava o mapa.
+            width: desktop ? 520 : undefined,
             gap: 8,
             // Fundo atrás da busca e dos filtros: sem ele os nomes das
             // cidades do mapa passavam por baixo do texto, e "Cidade..."
@@ -408,7 +416,7 @@ export function ExploreEvents({
         colunas > 1 ? (
           // Largura fixa por coluna: com flex:1, o último rolê sozinho na
           // linha esticaria pela linha inteira.
-          <View style={{ width: `${100 / colunas}%`, flexShrink: 1 }}>
+          <View style={{ width: larguraDoCard }}>
             <EventCard event={item} />
           </View>
         ) : (

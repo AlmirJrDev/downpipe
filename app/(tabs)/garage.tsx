@@ -89,7 +89,7 @@ export default function GarageScreen() {
         }}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <View style={colunas > 1 ? { width: `${100 / colunas}%`, flexShrink: 1 } : undefined}>
+          <View style={colunas > 1 ? { width: Math.floor((largura - spacing.marginMobile * 2 - 16 * (colunas - 1)) / colunas) } : undefined}>
             <Pressable onLongPress={() => setActionCar(item)}>
               <GarageCard car={item} />
             </Pressable>
