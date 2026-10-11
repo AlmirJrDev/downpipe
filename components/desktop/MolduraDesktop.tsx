@@ -15,6 +15,7 @@ import { COLUNA_AMPLA, COLUNA_PADRAO, useLayoutStore, useModoDesktop } from "@/h
 export function MolduraDesktop({ children }: { children: React.ReactNode }) {
   const desktop = useModoDesktop();
   const ampla = useLayoutStore((s) => s.larguraAmpla);
+  const cheia = useLayoutStore((s) => s.telaCheia);
 
   // Tira a moldura de celular do #root (ver +html.tsx): no desktop quem
   // limita a largura é a coluna central daqui.
@@ -34,7 +35,7 @@ export function MolduraDesktop({ children }: { children: React.ReactNode }) {
           style={{
             flex: 1,
             width: "100%",
-            maxWidth: desktop ? (ampla ? COLUNA_AMPLA : COLUNA_PADRAO) : undefined,
+            maxWidth: desktop && !cheia ? (ampla ? COLUNA_AMPLA : COLUNA_PADRAO) : undefined,
           }}
         >
           {children}

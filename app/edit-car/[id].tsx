@@ -26,6 +26,7 @@ import { carCatalogName } from "@/utils/car";
 import { ApiError } from "@/services/api";
 import { voltarOuIrPara } from "@/utils/navigation";
 import type { Category, ProjectStatus } from "@/types";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 const CATEGORIES: Category[] = ["JDM", "Euro", "Muscle", "Performance", "Clássicos", "Stance", "Other"];
 const STATUSES: ProjectStatus[] = ["planning", "building", "complete"];
@@ -240,7 +241,7 @@ export default function EditCarScreen() {
         >
           STATUS DO PROJETO
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+        <LinhaDeOpcoes className="mb-5">
           {STATUSES.map((s) => (
             <CategoryChip
               key={s}
@@ -249,7 +250,7 @@ export default function EditCarScreen() {
               onPress={() => setStatus(s)}
             />
           ))}
-        </ScrollView>
+        </LinhaDeOpcoes>
 
         <Text
           className="text-on-surface-variant mb-2"
@@ -257,7 +258,7 @@ export default function EditCarScreen() {
         >
           CATEGORIA
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+        <LinhaDeOpcoes className="mb-5">
           {CATEGORIES.map((c) => (
             <CategoryChip
               key={c}
@@ -266,7 +267,7 @@ export default function EditCarScreen() {
               onPress={() => setCategory(category === c ? null : c)}
             />
           ))}
-        </ScrollView>
+        </LinhaDeOpcoes>
 
         {error && (
           <Text className="text-error mb-4" style={{ fontSize: 13 }}>

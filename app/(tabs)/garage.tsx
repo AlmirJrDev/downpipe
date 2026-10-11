@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Alert } from "@/utils/alert";
 import { router } from "expo-router";
-import { Car as CarIcon, Plus, Pencil, Trash2 } from "lucide-react-native";
+import { Car as CarIcon, MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react-native";
 import { useMyGarage, useRemoveCar } from "@/stores/garageStore";
 import { AppHeader } from "@/components/AppHeader";
 import { GarageCard } from "@/components/cards/GarageCard";
@@ -17,12 +17,20 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { SecondaryButton } from "@/components/ui/Button";
 import { carTitle } from "@/utils/car";
 import { colors, spacing, typography } from "@/constants/theme";
+import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import type { Car } from "@/types";
 
 export default function GarageScreen() {
   const { data: cars, isLoading } = useMyGarage();
   const removeCar = useRemoveCar();
   const [actionCar, setActionCar] = useState<Car | null>(null);
+  // No computador a garagem abre a coluna e os carros viram grade: um card
+  // só, estreito no meio do monitor, deixava a tela vazia dos dois lados.
+  const desktop = useModoDesktop();
+  useLarguraAmpla();
+  const largura = useLarguraDoConteudo();
+  const colunas = !desktop ? 1 : largura >= 900 ? 3 : 2;
 
   const confirmDelete = () => {
     if (!actionCar) return;
@@ -70,17 +78,34 @@ export default function GarageScreen() {
     <View className="flex-1 bg-surface">
       <AppHeader />
       <FlatList
+        key={`colunas-${colunas}`}
         data={cars}
         keyExtractor={(c) => c.id}
+        numColumns={colunas}
+        columnWrapperStyle={colunas > 1 ? { gap: 16 } : undefined}
         contentContainerStyle={{
           paddingHorizontal: spacing.marginMobile,
           paddingBottom: spacing.lg,
         }}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <Pressable onLongPress={() => setActionCar(item)}>
-            <GarageCard car={item} />
-          </Pressable>
+          <View style={colunas > 1 ? { width: `${100 / colunas}%`, flexShrink: 1 } : undefined}>
+            <Pressable onLongPress={() => setActionCar(item)}>
+              <GarageCard car={item} />
+            </Pressable>
+            {/* Editar e excluir só existiam segurando o dedo no card — com
+                mouse ninguém descobre, e no celular também não é óbvio. */}
+            <Pressable
+              onPress={() => setActionCar(item)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`Opções de ${carTitle(item)}`}
+              className="absolute items-center justify-center"
+              style={{ top: 12, left: 12, width: 34, height: 34, backgroundColor: colors.overlayMedium }}
+            >
+              <MoreHorizontal size={18} color={colors.onSurface} />
+            </Pressable>
+          </View>
         )}
         ListHeaderComponent={
           <View

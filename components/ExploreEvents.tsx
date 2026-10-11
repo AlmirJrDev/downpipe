@@ -22,6 +22,7 @@ import { EventPreviewCard } from "@/components/EventPreviewCard";
 import { EmptyState } from "@/components/ui/States";
 import { ExploreSegment, type ExploreTab } from "@/components/ExploreSegment";
 import { useEvents } from "@/stores/eventsStore";
+import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
 import { colors, spacing, typography } from "@/constants/theme";
 
 /**
@@ -47,6 +48,12 @@ export function ExploreEvents({
 }) {
   const setView = onViewChange;
   const insets = useSafeAreaInsets();
+  // No computador a lista vira grade: um card de rolê com 1100 px de largura
+  // cortava o flyer numa faixa fina, sem dar pra ler nada da arte.
+  const desktop = useModoDesktop();
+  const larguraDoConteudo = useLarguraDoConteudo();
+  const colunas = !desktop ? 1 : larguraDoConteudo >= 900 ? 3 : 2;
+  const VAO_DA_GRADE = 16;
 
   /**
    * Recuo do topo no mapa. Não dá pra confiar só no `insets.top`: em vários
@@ -251,7 +258,7 @@ export function ExploreEvents({
           center={center}
           radiusKm={center ? radiusKm : null}
           // Barra de status + linha de busca (46) + chips (~34) + folgas.
-          controlsTop={topInset + 100}
+          controlsTop={topInset + 128}
           onSelect={setSelectedId}
         />
 
@@ -265,6 +272,14 @@ export function ExploreEvents({
             left: spacing.marginMobile,
             right: spacing.marginMobile,
             gap: 8,
+            // Fundo atrás da busca e dos filtros: sem ele os nomes das
+            // cidades do mapa passavam por baixo do texto, e "Cidade..."
+            // virava "Cidade... MOGI GUAÇU".
+            padding: 10,
+            backgroundColor: "rgba(18,18,18,0.9)",
+            borderWidth: 1,
+            borderColor: colors.border,
+            ...({ backdropFilter: "blur(8px)" } as object),
           }}
           pointerEvents="box-none"
         >
@@ -339,7 +354,9 @@ export function ExploreEvents({
             className="absolute items-center justify-center active:opacity-80"
             style={{
               right: spacing.marginMobile,
-              bottom: semCoordenada > 0 ? 54 : spacing.md,
+              // Acima da linha de créditos do mapa (CARTO/OpenStreetMap), que
+              // o botão cobria — e esses créditos são exigência da licença.
+              bottom: (semCoordenada > 0 ? 54 : spacing.md) + 30,
               width: 52,
               height: 52,
               backgroundColor: colors.primaryContainer,
@@ -381,9 +398,23 @@ export function ExploreEvents({
 
   return (
     <FlatList
+      // numColumns não muda com a lista montada: a chave remonta no corte.
+      key={`colunas-${colunas}`}
       data={events}
       keyExtractor={(e) => e.id}
-      renderItem={({ item }) => <EventCard event={item} />}
+      numColumns={colunas}
+      columnWrapperStyle={colunas > 1 ? { gap: VAO_DA_GRADE } : undefined}
+      renderItem={({ item }) =>
+        colunas > 1 ? (
+          // Largura fixa por coluna: com flex:1, o último rolê sozinho na
+          // linha esticaria pela linha inteira.
+          <View style={{ width: `${100 / colunas}%`, flexShrink: 1 }}>
+            <EventCard event={item} />
+          </View>
+        ) : (
+          <EventCard event={item} />
+        )
+      }
       showsVerticalScrollIndicator={false}
       style={{ backgroundColor: colors.surface }}
       contentContainerStyle={{

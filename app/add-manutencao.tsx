@@ -33,6 +33,7 @@ import {
 import { voltarOuIrPara } from "@/utils/navigation";
 import { ApiError } from "@/services/api";
 import { colors } from "@/constants/theme";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 /**
  * Sugestões, não lista fechada: cada carro tem a mania dele. O intervalo que
@@ -210,7 +211,7 @@ export default function AddManutencaoScreen() {
             >
               O QUE FOI FEITO
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            <LinhaDeOpcoes className="mb-4">
               {SUGESTOES.map((s) => (
                 <Pressable
                   key={s.nome}
@@ -229,7 +230,7 @@ export default function AddManutencaoScreen() {
                   </Text>
                 </Pressable>
               ))}
-            </ScrollView>
+            </LinhaDeOpcoes>
           </>
         )}
 

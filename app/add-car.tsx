@@ -28,6 +28,7 @@ import { apiService } from "@/services/apiService";
 import { useAddCar, useUploadCarPhoto } from "@/stores/garageStore";
 import { suggestCarName } from "@/utils/car";
 import type { Category, VehicleBrand, VehicleModel, VehicleVersion } from "@/types";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 // Espelha carCategoryEnum do backend.
 const CATEGORIES: Category[] = ["JDM", "Euro", "Muscle", "Performance", "Clássicos", "Stance", "Other"];
@@ -415,11 +416,11 @@ export default function AddCarScreen() {
           >
             CATEGORIA
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+          <LinhaDeOpcoes className="mb-5">
             {CATEGORIES.map((c) => (
               <CategoryChip key={c} label={categoryLabel(c)} active={category === c} onPress={() => setCategory(category === c ? null : c)} />
             ))}
-          </ScrollView>
+          </LinhaDeOpcoes>
 
           <View className="mt-4">
             <PrimaryButton

@@ -24,6 +24,7 @@ import { useEvents } from "@/stores/eventsStore";
 import { carTitle } from "@/utils/car";
 import { ApiError } from "@/services/api";
 import type { Car, CarEvent } from "@/types";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 // Mesma proporcao em que a foto aparece nesta tela.
 const POST_ASPECT = 4 / 5;
@@ -180,7 +181,7 @@ export default function AddPostScreen() {
         <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
           CARRO NA FOTO
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+        <LinhaDeOpcoes className="mb-2">
           {cars.map((car) => (
             <Pressable
               key={car.id}
@@ -220,7 +221,7 @@ export default function AddPostScreen() {
               {otherCar ? carTitle(otherCar) : "+ Carro de outra pessoa"}
             </Text>
           </Pressable>
-        </ScrollView>
+        </LinhaDeOpcoes>
 
         {otherCar ? (
           <View className="flex-row items-center gap-2 mb-5">
@@ -247,7 +248,7 @@ export default function AddPostScreen() {
             <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
               FOI EM ALGUM ROLÊ?
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+            <LinhaDeOpcoes className="mb-5">
               {taggableEvents.map((event) => {
                 const active = selectedEventId === event.id;
                 return (
@@ -269,7 +270,7 @@ export default function AddPostScreen() {
                   </Pressable>
                 );
               })}
-            </ScrollView>
+            </LinhaDeOpcoes>
           </>
         )}
 

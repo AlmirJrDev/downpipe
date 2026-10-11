@@ -35,11 +35,16 @@ export const useLayoutStore = create<{
   setLarguraAmpla: (ampla: boolean) => void;
   notificacoesAbertas: boolean;
   setNotificacoesAbertas: (abertas: boolean) => void;
+  /** A tela ocupa tudo ao lado do menu, sem coluna (o mapa de rolês). */
+  telaCheia: boolean;
+  setTelaCheia: (cheia: boolean) => void;
 }>((set) => ({
   larguraAmpla: false,
   setLarguraAmpla: (larguraAmpla) => set({ larguraAmpla }),
   notificacoesAbertas: false,
   setNotificacoesAbertas: (notificacoesAbertas) => set({ notificacoesAbertas }),
+  telaCheia: false,
+  setTelaCheia: (telaCheia) => set({ telaCheia }),
 }));
 
 /** Menu lateral e coluna central: web, janela larga, e alguém logado. */

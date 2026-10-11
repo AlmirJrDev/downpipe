@@ -21,6 +21,7 @@ import { useCreatePost } from "@/stores/socialStore";
 import { carTitle } from "@/utils/car";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { ApiError } from "@/services/api";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 // Mesma proporção do componente BeforeAfter — as duas fotos precisam do
 // mesmo enquadramento, senão a sobreposição não alinha.
@@ -128,7 +129,7 @@ export default function AddEvolutionScreen() {
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             CARRO
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+          <LinhaDeOpcoes className="mb-5">
             {cars.map((c) => (
               <Pressable
                 key={c.id}
@@ -145,7 +146,7 @@ export default function AddEvolutionScreen() {
                 </Text>
               </Pressable>
             ))}
-          </ScrollView>
+          </LinhaDeOpcoes>
 
           <Text className="text-muted mb-3" style={{ fontSize: 12, lineHeight: 16 }}>
             Use o mesmo ângulo nas duas fotos — a comparação fica muito melhor quando só o carro muda.

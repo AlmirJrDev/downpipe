@@ -29,6 +29,7 @@ import { categoryLabel } from "@/utils/labels";
 import { ApiError } from "@/services/api";
 import { rotaDeCompartilharMod } from "@/utils/compartilharMod";
 import type { ModificationCategory } from "@/types";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 // Espelha modificationCategoryEnum do backend.
 const CATEGORIES: ModificationCategory[] = [
@@ -256,7 +257,7 @@ export default function AddModificationScreen() {
               <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
                 CARRO
               </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+              <LinhaDeOpcoes className="mb-5">
                 {cars.map((car) => (
                   <Pressable
                     key={car.id}
@@ -268,7 +269,7 @@ export default function AddModificationScreen() {
                     </Text>
                   </Pressable>
                 ))}
-              </ScrollView>
+              </LinhaDeOpcoes>
             </>
           )}
 
@@ -287,7 +288,7 @@ export default function AddModificationScreen() {
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             CATEGORIA
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+          <LinhaDeOpcoes className="mb-5">
             {CATEGORIES.map((c) => (
               <Pressable
                 key={c}
@@ -299,12 +300,12 @@ export default function AddModificationScreen() {
                 </Text>
               </Pressable>
             ))}
-          </ScrollView>
+          </LinhaDeOpcoes>
 
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             ÍCONE
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+          <LinhaDeOpcoes className="mb-5">
             {MOD_ICONS.map((option) => {
               const active = icon === option.value;
               return (
@@ -324,7 +325,7 @@ export default function AddModificationScreen() {
                 </Pressable>
               );
             })}
-          </ScrollView>
+          </LinhaDeOpcoes>
 
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             CUSTO (R$)

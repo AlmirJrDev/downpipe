@@ -1,11 +1,12 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Car, Wrench, Camera, Flag, GitCompareArrows, CalendarPlus, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { colors } from "@/constants/theme";
 import { voltarOuIrPara } from "@/utils/navigation";
+import { useModoDesktop } from "@/hooks/useDesktop";
 import type { AddAction } from "@/types";
 
 const actions: {
@@ -61,11 +62,15 @@ const actions: {
 
 export default function AddActionScreen() {
   const insets = useSafeAreaInsets();
+  const desktop = useModoDesktop();
 
   const go = (route: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace(route as any);
   };
+  const fechar = () => voltarOuIrPara("/(tabs)");
+
+  if (desktop) return <JanelaDeCriar onEscolher={go} onFechar={fechar} />;
 
   return (
     <View
@@ -137,5 +142,86 @@ export default function AddActionScreen() {
         <X size={22} color={colors.onSurface} />
       </Pressable>
     </View>
+  );
+}
+
+/**
+ * O Criar no computador: uma janela no meio da tela, por cima da página —
+ * como o "Criar" do Instagram web. A versão de celular, esticada numa
+ * coluna de cima a baixo, virava seis caixas enormes num monitor.
+ */
+function JanelaDeCriar({
+  onEscolher,
+  onFechar,
+}: {
+  onEscolher: (rota: string) => void;
+  onFechar: () => void;
+}) {
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onFechar}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Pressable
+          onPress={onFechar}
+          accessibilityLabel="Fechar"
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim }}
+        />
+        <View
+          style={{
+            width: 460,
+            backgroundColor: colors.surfaceLow,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <View
+            className="flex-row items-center justify-between px-5"
+            style={{ height: 56, borderBottomWidth: 1, borderBottomColor: colors.border }}
+          >
+            <Text className="text-on-surface" style={{ fontSize: 16, fontWeight: "700" }}>
+              Criar
+            </Text>
+            <Pressable onPress={onFechar} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fechar">
+              <X size={20} color={colors.onSurface} />
+            </Pressable>
+          </View>
+          <View style={{ paddingVertical: 8 }}>
+            {actions.map((a) => {
+              const Icon = a.icon;
+              return (
+                <Pressable
+                  key={a.key}
+                  onPress={() => onEscolher(a.route)}
+                  style={(estado) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    backgroundColor: (estado as unknown as { hovered?: boolean }).hovered
+                      ? colors.surfaceContainer
+                      : "transparent",
+                  })}
+                >
+                  <View
+                    className="items-center justify-center border border-outline-variant"
+                    style={{ width: 40, height: 40 }}
+                  >
+                    <Icon size={19} color={colors.onSurface} strokeWidth={1.7} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
+                      {a.title}
+                    </Text>
+                    <Text className="text-on-surface-variant" style={{ fontSize: 12, marginTop: 1 }}>
+                      {a.subtitle}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }

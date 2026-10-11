@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, View } from "react-native";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { apiService } from "@/services/apiService";
 import { AppHeader } from "@/components/AppHeader";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/ui/States";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { colors, spacing, typography } from "@/constants/theme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
+import { useLarguraDoConteudo, useLayoutStore, useModoDesktop } from "@/hooks/useDesktop";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import type { Category } from "@/types";
 
@@ -51,6 +51,18 @@ export default function ExploreScreen() {
   // O modo de visualização dos rolês vive aqui porque o cabeçalho some no
   // mapa — ele é só logo e avatar, decoração enquanto se lê um mapa.
   const [eventsView, setEventsView] = useState<"list" | "map">("list");
+
+  // O mapa no computador ocupa tudo ao lado do menu: dentro da coluna
+  // sobravam duas faixas vazias nas laterais. Por foco, como a largura
+  // ampla, pra não vazar pra tela aberta por cima.
+  const setTelaCheia = useLayoutStore((s) => s.setTelaCheia);
+  const mapaAberto = desktop && tab === "events" && eventsView === "map";
+  useFocusEffect(
+    useCallback(() => {
+      setTelaCheia(mapaAberto);
+      return () => setTelaCheia(false);
+    }, [mapaAberto, setTelaCheia])
+  );
 
   // Espera a digitação parar antes de chamar a API — sem isso seria uma
   // requisição por tecla.

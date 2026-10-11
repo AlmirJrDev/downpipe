@@ -13,6 +13,7 @@ import { useMyGarage } from "@/stores/garageStore";
 import { useCreatePost } from "@/stores/socialStore";
 import { carTitle } from "@/utils/car";
 import { ApiError } from "@/services/api";
+import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
 
 // Mesma proporcao em que a foto aparece nesta tela.
 const UPDATE_ASPECT = 4 / 3;
@@ -105,7 +106,7 @@ export default function AddProjectUpdateScreen() {
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             CARRO
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+          <LinhaDeOpcoes className="mb-5">
             {cars.map((c) => (
               <Pressable
                 key={c.id}
@@ -117,7 +118,7 @@ export default function AddProjectUpdateScreen() {
                 </Text>
               </Pressable>
             ))}
-          </ScrollView>
+          </LinhaDeOpcoes>
 
           <Pressable
             onPress={pickPhoto}
