@@ -35,17 +35,12 @@ module.exports = {
         success: "#22c55e",
         warning: "#eab308",
       },
-      // A pilha do sistema, que é o que o react-native-web já aplica em
-      // Text e TextInput. Antes dizia ["Inter"] — mas Inter não é carregada
-      // em lugar nenhum do projeto (sem @font-face, sem link), então quem
-      // pegava essa família caía em serifa. Medido: "Inter" renderizava com
-      // a mesma largura de uma fonte inexistente.
-      //
-      // Se um dia quiserem Inter de verdade, é carregar a fonte primeiro e
-      // só então declarar aqui — declarar sem carregar é pior que não
-      // declarar, porque quebra em silêncio.
+      // Inter, carregada pelo @font-face do app/+html.tsx (public/fonts).
+      // Já houve um ["Inter"] aqui sem a fonte carregada, e o texto caía em
+      // serifa: se um dia a Inter sair do +html, sai daqui também.
       fontFamily: {
         sans: [
+          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",

@@ -132,7 +132,22 @@ function espacar(ctx: CanvasRenderingContext2D, valor: string) {
   }
 }
 
+/**
+ * O canvas não espera fonte: se a Inter ainda não baixou quando a arte é
+ * desenhada, o texto sai na fonte do sistema e fica assim na imagem.
+ * Pedir os pesos usados antes garante a Inter — e se falhar, segue com a
+ * de reserva em vez de travar a arte.
+ */
+async function garantirFonte() {
+  try {
+    await Promise.all(["400", "700"].map((peso) => document.fonts.load(`${peso} 40px Inter`)));
+  } catch {
+    // Sem a Inter a arte sai na fonte do sistema — feia, mas sai.
+  }
+}
+
 async function desenhar(arte: ArteDeStory): Promise<HTMLCanvasElement> {
+  await garantirFonte();
   const L = LARGURA;
   const A = ALTURAS[arte.tamanho ?? "story"];
 

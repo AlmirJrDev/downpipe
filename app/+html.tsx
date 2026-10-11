@@ -37,6 +37,12 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Downpipe" />
 
+        {/* A Inter vem do próprio site (public/fonts), não de um CDN: a CSP
+            só libera fonte da mesma origem, e o app tem de abrir igual sem
+            internet. O preload tira o "pulo" da fonte do sistema pra Inter
+            na primeira pintura. */}
+        <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="" />
+
         {/* Desliga o scroll do body: quem rola é o ScrollView de dentro. */}
         <ScrollViewStyleReset />
 
@@ -54,6 +60,34 @@ export default function Root({ children }: PropsWithChildren) {
 // O fundo tem de ser pintado antes do JS avaliar: são 4 MB de bundle, e sem
 // isto a primeira coisa que a pessoa vê é uma tela branca piscando.
 const estilos = `
+  /* Inter variável: um arquivo cobre do 100 ao 900, então o fontWeight do
+     app continua valendo sem um arquivo por peso. */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url(/fonts/inter-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url(/fonts/inter-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+
+  /* A mesma letra em todo aparelho. Antes cada um usava a do sistema — San
+     Francisco no iPhone, Roboto no Android, Segoe UI no Windows — e o app
+     tinha uma cara em cada lugar. O !important é porque o react-native-web
+     escreve a pilha do sistema numa classe de cada texto, e uma regra
+     herdada não passaria por cima dela. */
+  html, body, body * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  }
+
   html, body, #root { background-color: #131313; }
   body { overscroll-behavior-y: none; }
 

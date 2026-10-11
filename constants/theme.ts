@@ -8,18 +8,16 @@ import type { TextStyle } from "react-native";
 // look "Material genérico" em vez de oficina. O vermelho só entra em CTA,
 // progresso, status e no wordmark.
 /**
- * Pilha de fontes do app.
+ * Pilha de fontes do app: Inter, carregada do próprio site (ver o
+ * @font-face em app/+html.tsx), e a do sistema de reserva enquanto ela
+ * não chega.
  *
- * É exatamente a que o react-native-web aplica em Text e TextInput. Existe
- * como token porque elementos do DOM escritos à mão (o <input type="date">
- * da web, por exemplo) não herdam nada do react-native-web e precisam
- * declarar a mesma pilha, ou saem numa fonte diferente do resto da tela.
- *
- * Cuidado com "inherit" nesses elementos: o tailwind.config declara Inter,
- * que não é carregada em lugar nenhum — herdar dela cai em serifa.
+ * Os textos do react-native-web recebem a Inter pela regra global do
+ * +html. Este token é pro que não passa por ali: o canvas da arte pro
+ * story, que não lê CSS nenhum, e elementos do DOM escritos à mão.
  */
 export const FONT_STACK =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
 export const colors = {
   // Elevação por camada tonal (o design system não usa sombra difusa):
