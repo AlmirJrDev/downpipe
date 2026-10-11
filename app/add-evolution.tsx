@@ -22,6 +22,8 @@ import { carTitle } from "@/utils/car";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { ApiError } from "@/services/api";
 import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
+import { FormularioEmColunas } from "@/components/desktop/FormularioEmColunas";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 
 // Mesma proporção do componente BeforeAfter — as duas fotos precisam do
 // mesmo enquadramento, senão a sobreposição não alinha.
@@ -30,6 +32,8 @@ const EVOLUTION_ASPECT = 4 / 3;
 type Slot = "before" | "after";
 
 export default function AddEvolutionScreen() {
+  // No computador, a foto ao lado dos campos (ver FormularioEmColunas).
+  const larga = useLarguraAmpla();
   const { data: myCars } = useMyGarage();
   const createPost = useCreatePost();
 
@@ -100,6 +104,21 @@ export default function AddEvolutionScreen() {
     </View>
   );
 
+
+  // No computador as duas fotos vão pra coluna da esquerda; no celular ficam onde sempre estiveram, depois do carro.
+  const fotosDoFormulario = (
+    <>
+      <Text className="text-muted mb-3" style={{ fontSize: 12, lineHeight: 16 }}>
+            Use o mesmo ângulo nas duas fotos — a comparação fica muito melhor quando só o carro muda.
+          </Text>
+
+          <View className="flex-row gap-3 mb-6">
+            <PhotoSlot slot="before" uri={beforeUri} label="ANTES" />
+            <PhotoSlot slot="after" uri={afterUri} label="DEPOIS" />
+          </View>
+    </>
+  );
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.surface }}
@@ -126,6 +145,7 @@ export default function AddEvolutionScreen() {
           contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
         >
+          <FormularioEmColunas larga={larga} lateral={larga ? fotosDoFormulario : null}>
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             CARRO
           </Text>
@@ -148,14 +168,7 @@ export default function AddEvolutionScreen() {
             ))}
           </LinhaDeOpcoes>
 
-          <Text className="text-muted mb-3" style={{ fontSize: 12, lineHeight: 16 }}>
-            Use o mesmo ângulo nas duas fotos — a comparação fica muito melhor quando só o carro muda.
-          </Text>
-
-          <View className="flex-row gap-3 mb-6">
-            <PhotoSlot slot="before" uri={beforeUri} label="ANTES" />
-            <PhotoSlot slot="after" uri={afterUri} label="DEPOIS" />
-          </View>
+          {!larga && fotosDoFormulario}
 
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             LEGENDA
@@ -189,6 +202,7 @@ export default function AddEvolutionScreen() {
             disabled={!isValid}
             icon={<GitCompareArrows size={15} color={colors.onPrimaryContainer} />}
           />
+          </FormularioEmColunas>
         </ScrollView>
       )}
 

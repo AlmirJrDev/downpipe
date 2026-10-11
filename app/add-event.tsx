@@ -36,6 +36,8 @@ import { Alert } from "@/utils/alert";
 import { CadastroParaPublicar, type ComoEntrou } from "@/components/CadastroParaPublicar";
 import { guardarDestino, segurarBoasVindas, useEhVisitante } from "@/utils/visitante";
 import { apagarRascunho, guardarRascunho, lerRascunho } from "@/utils/rascunhoDoRole";
+import { FormularioEmColunas } from "@/components/desktop/FormularioEmColunas";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 
 const LABEL = { fontSize: 11, fontWeight: "700", letterSpacing: 1.5 } as const;
 const INPUT = {
@@ -89,6 +91,8 @@ export default function AddEventScreen() {
   // eventId presente = edição do evento existente.
   const { eventId } = useLocalSearchParams<{ eventId?: string }>();
   const isEditing = !!eventId;
+  // No computador, o flyer à esquerda e os campos à direita.
+  const larga = useLarguraAmpla();
 
   const { data: existing, isPending: loadingExisting } = useEventById(eventId ?? "");
   const createEvent = useCreateEvent();
@@ -420,15 +424,20 @@ export default function AddEventScreen() {
         contentContainerStyle={{ paddingTop: 20, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
+        <FormularioEmColunas
+          larga={larga}
+          lateral={
         <Pressable onPress={pickPhoto} className="mb-5 border border-outline active:opacity-80">
+          {/* No computador o flyer aparece inteiro, em pé como ele é; no
+              celular, uma faixa cortada pra não empurrar o formulário. */}
           {photoPreview ? (
             <Image
               source={{ uri: photoPreview }}
-              style={{ width: "100%", height: 160 }}
-              contentFit="cover"
+              style={larga ? { width: "100%", aspectRatio: 4 / 5 } : { width: "100%", height: 160 }}
+              contentFit={larga ? "contain" : "cover"}
             />
           ) : (
-            <View className="items-center justify-center gap-2" style={{ height: 120 }}>
+            <View className="items-center justify-center gap-2" style={larga ? { aspectRatio: 4 / 5 } : { height: 120 }}>
               <Camera size={22} color={colors.onSurfaceVariant} />
               <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
                 Adicionar foto do rolê (opcional)
@@ -436,7 +445,8 @@ export default function AddEventScreen() {
             </View>
           )}
         </Pressable>
-
+          }
+        >
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
           NOME DO EVENTO
         </Text>
@@ -719,6 +729,7 @@ export default function AddEventScreen() {
           disabled={!criadoId && !isValid}
           icon={<CalendarPlus size={15} color={colors.onPrimaryContainer} />}
         />
+        </FormularioEmColunas>
       </ScrollView>
 
       <CadastroParaPublicar

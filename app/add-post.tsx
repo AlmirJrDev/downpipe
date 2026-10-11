@@ -25,6 +25,8 @@ import { carTitle } from "@/utils/car";
 import { ApiError } from "@/services/api";
 import type { Car, CarEvent } from "@/types";
 import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
+import { FormularioEmColunas } from "@/components/desktop/FormularioEmColunas";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 
 // Mesma proporcao em que a foto aparece nesta tela.
 const POST_ASPECT = 4 / 5;
@@ -35,6 +37,9 @@ const MAXIMO_DE_FOTOS = 6;
 export default function AddPostScreen() {
   const { data: myCars } = useMyGarage();
   const createPost = useCreatePost();
+  // No computador, as fotos à esquerda e os campos à direita — o "Criar
+  // publicação" do Instagram web.
+  const larga = useLarguraAmpla();
 
   // Várias fotos por publicação: quem vai num rolê tira vinte, e antes
   // tinha que escolher uma ou publicar cinco vezes seguidas.
@@ -119,6 +124,10 @@ export default function AddPostScreen() {
       />
 
       <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <FormularioEmColunas
+          larga={larga}
+          lateral={
+        <>
         <Pressable
           onPress={pickPhoto}
           className="border border-dashed border-outline-variant items-center justify-center mb-3"
@@ -177,7 +186,9 @@ export default function AddPostScreen() {
             </Text>
           </View>
         )}
-
+        </>
+          }
+        >
         <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
           CARRO NA FOTO
         </Text>
@@ -300,6 +311,7 @@ export default function AddPostScreen() {
           disabled={!isValid}
           icon={<Send size={15} color={colors.onPrimaryContainer} />}
         />
+        </FormularioEmColunas>
       </ScrollView>
 
       <CarTagSheet

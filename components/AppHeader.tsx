@@ -24,6 +24,19 @@ interface AppHeaderProps {
   bordered?: boolean;
 }
 
+/**
+ * Alguns títulos chegam já em caixa alta ("PUBLICAÇÃO", "@FULANO"), que no
+ * celular é o estilo. No cabeçalho de página do computador a caixa alta
+ * gritaria: vira frase normal, deixando o @ em minúsculas como é de fato.
+ */
+function tituloDePagina(titulo: string): string {
+  const temLetra = /[A-Za-zÀ-ÿ]/.test(titulo);
+  if (!temLetra || titulo !== titulo.toUpperCase()) return titulo;
+  if (titulo.startsWith("@")) return titulo.toLowerCase();
+  const baixo = titulo.toLocaleLowerCase("pt-BR");
+  return baixo.charAt(0).toLocaleUpperCase("pt-BR") + baixo.slice(1);
+}
+
 export function AppHeader({ left, right, title, bordered = true }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
   const desktop = useModoDesktop();
@@ -34,6 +47,37 @@ export function AppHeader({ left, right, title, bordered = true }: AppHeaderProp
    * Se sobra algum botão (o "⋯" do menu da conta no perfil), fica uma barra
    * fina só com ele; se não sobra nada, o cabeçalho some.
    */
+  /**
+   * Tela com título, no computador: cabeçalho de página, alinhado à
+   * esquerda e em letra normal — como as telas do Instagram web. O título
+   * vermelho, miúdo, em caixa alta e centralizado é o cabeçalho de app de
+   * celular, e num monitor deixava formulário e configuração com cara de
+   * celular esticado.
+   */
+  if (desktop && title) {
+    return (
+      <View
+        style={{
+          paddingTop: 28,
+          paddingBottom: 16,
+          paddingHorizontal: spacing.marginMobile,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 14,
+          backgroundColor: colors.surface,
+          borderBottomWidth: bordered ? 1 : 0,
+          borderBottomColor: colors.border,
+        }}
+      >
+        {left ? <View>{left}</View> : null}
+        <Text numberOfLines={1} style={{ flex: 1, fontSize: 22, fontWeight: "700", color: colors.onSurface }}>
+          {tituloDePagina(title)}
+        </Text>
+        {right ? <View>{right}</View> : null}
+      </View>
+    );
+  }
+
   if (desktop && !title) {
     if (!left && !right) return null;
     return (

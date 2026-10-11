@@ -5,9 +5,10 @@ import {
   ScrollView,
   Text,
   View,
-  useWindowDimensions,
+  type ViewStyle,
 } from "react-native";
 import { useLarguraDoConteudo } from "@/hooks/useDesktop";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import { Share } from "@/utils/share";
 import { linkPublico } from "@/utils/linkPublico";
 import { Image } from "expo-image";
@@ -45,6 +46,26 @@ const TABS: { key: TabKey; label: string; soDono?: boolean }[] = [
 ];
 
 /**
+ * O carro no computador: a foto grande à esquerda, parada enquanto a ficha
+ * rola ao lado — o mesmo desenho da página do rolê. No celular era uma foto
+ * de 380 px em cima e a ficha embaixo; num monitor isso virava uma faixa de
+ * foto esticada e uma coluna de texto perdida no meio.
+ */
+const ESTILO_LARGO = {
+  moldura: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 32, paddingTop: 32 },
+  colunas: { flexDirection: "row", alignItems: "flex-start", gap: 40 },
+  foto: {
+    flex: 6,
+    aspectRatio: 4 / 3,
+    position: "sticky" as ViewStyle["position"],
+    top: 32,
+    backgroundColor: colors.surfaceContainer,
+    overflow: "hidden",
+  },
+  ficha: { flex: 5, paddingTop: 0, paddingHorizontal: 0 },
+} satisfies Record<string, ViewStyle>;
+
+/**
  * Um número da ficha do carro.
  *
  * Largura fixa de um terço, e não flex-1: com cinco números, flex-1 os
@@ -71,6 +92,7 @@ export default function CarDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<TabKey>("overview");
+  const larga = useLarguraAmpla();
 
   const { data: resolvedCar, isLoading } = useCarById(id);
   const { data: mods } = useModsByCar(id);
@@ -81,7 +103,10 @@ export default function CarDetailsScreen() {
   // A largura do conteúdo, não a da janela: no computador o conteúdo mora
   // numa coluna, e a grade medida pela janela nascia larga demais.
   const width = useLarguraDoConteudo();
-  const carThumb = (width - 40 - 6) / 3;
+  // No computador a grade mora na coluna da ficha: 5 de 11 partes do que
+  // sobra da largura de leitura, menos as margens (32+32) e o vão (40).
+  const larguraDaGrade = larga ? ((Math.min(width, ESTILO_LARGO.moldura.maxWidth) - 64 - 40) * 5) / 11 : width - 40;
+  const carThumb = (larguraDaGrade - 6) / 3;
   const { data: me } = useCurrentUser();
   const isOwner = !!me && !!resolvedCar && me.id === resolvedCar.ownerId;
   const { data: manutencoes, isPending: manutencoesPendentes } = useManutencoes(
@@ -156,11 +181,21 @@ export default function CarDetailsScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <ImageGallery images={gallery} height={380} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={larga ? { paddingBottom: 40 } : undefined}>
+        <View style={larga ? ESTILO_LARGO.moldura : undefined}>
+        <View style={larga ? ESTILO_LARGO.colunas : undefined}>
+        <View style={larga ? ESTILO_LARGO.foto : undefined}>
+          {larga ? (
+            // A galeria mede a largura da janela pra paginar; dentro da
+            // coluna ela cortaria a foto. Aqui é uma foto só, cobrindo.
+            resolvedCar.photoUrl ? (
+              <Image source={{ uri: resolvedCar.photoUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={200} />
+            ) : null
+          ) : (
+            <ImageGallery images={gallery} height={380} />
+          )}
           <View
-            style={{ position: "absolute", top: insets.top + 8, left: 16, right: 16 }}
+            style={{ position: "absolute", top: larga ? 12 : insets.top + 8, left: larga ? 12 : 16, right: larga ? 12 : 16 }}
             className="flex-row justify-between"
           >
             <Pressable
@@ -197,8 +232,8 @@ export default function CarDetailsScreen() {
           </View>
         </View>
 
-        <View className="px-5 pt-4">
-          <Text className="text-on-surface" style={{ fontSize: 22, fontWeight: "600" }}>
+        <View className="px-5 pt-4" style={larga ? ESTILO_LARGO.ficha : undefined}>
+          <Text className="text-on-surface" style={{ fontSize: larga ? 28 : 22, fontWeight: "600" }}>
             {carTitle(resolvedCar)}
             {year ? ` ${year}` : ""}
             {engineDisplacement ? ` • ${engineDisplacement}` : ""}
@@ -556,6 +591,8 @@ export default function CarDetailsScreen() {
               ))}
             </View>
           )}
+        </View>
+        </View>
         </View>
       </ScrollView>
     </View>

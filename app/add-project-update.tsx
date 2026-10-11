@@ -14,11 +14,15 @@ import { useCreatePost } from "@/stores/socialStore";
 import { carTitle } from "@/utils/car";
 import { ApiError } from "@/services/api";
 import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
+import { FormularioEmColunas } from "@/components/desktop/FormularioEmColunas";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 
 // Mesma proporcao em que a foto aparece nesta tela.
 const UPDATE_ASPECT = 4 / 3;
 
 export default function AddProjectUpdateScreen() {
+  // No computador, a foto ao lado dos campos (ver FormularioEmColunas).
+  const larga = useLarguraAmpla();
   const { data: myCars } = useMyGarage();
   const createPost = useCreatePost();
 
@@ -84,6 +88,29 @@ export default function AddProjectUpdateScreen() {
     );
   };
 
+
+  // No computador a foto vai pra coluna da esquerda; no celular fica onde sempre esteve, depois do carro.
+  const fotosDoFormulario = (
+    <>
+      <Pressable
+            onPress={pickPhoto}
+            className="border border-dashed border-outline-variant items-center justify-center mb-5"
+            style={{ aspectRatio: UPDATE_ASPECT, overflow: "hidden" }}
+          >
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+            ) : (
+              <>
+                <Camera size={26} color={colors.onSurface} />
+                <Text className="text-on-surface mt-2" style={{ fontSize: 13, fontWeight: "600" }}>
+                  Foto do progresso
+                </Text>
+              </>
+            )}
+          </Pressable>
+    </>
+  );
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.surface }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <AppHeader
@@ -103,6 +130,7 @@ export default function AddProjectUpdateScreen() {
         </View>
       ) : (
         <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+          <FormularioEmColunas larga={larga} lateral={larga ? fotosDoFormulario : null}>
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             CARRO
           </Text>
@@ -120,22 +148,7 @@ export default function AddProjectUpdateScreen() {
             ))}
           </LinhaDeOpcoes>
 
-          <Pressable
-            onPress={pickPhoto}
-            className="border border-dashed border-outline-variant items-center justify-center mb-5"
-            style={{ aspectRatio: UPDATE_ASPECT, overflow: "hidden" }}
-          >
-            {photoUri ? (
-              <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-            ) : (
-              <>
-                <Camera size={26} color={colors.onSurface} />
-                <Text className="text-on-surface mt-2" style={{ fontSize: 13, fontWeight: "600" }}>
-                  Foto do progresso
-                </Text>
-              </>
-            )}
-          </Pressable>
+          {!larga && fotosDoFormulario}
 
           <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
             FASE / SUBTÍTULO
@@ -203,6 +216,7 @@ export default function AddProjectUpdateScreen() {
             disabled={!isValid}
             icon={<Flag size={15} color={colors.onPrimaryContainer} />}
           />
+          </FormularioEmColunas>
         </ScrollView>
       )}
 

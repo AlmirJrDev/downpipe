@@ -27,6 +27,8 @@ import { ApiError } from "@/services/api";
 import { voltarOuIrPara } from "@/utils/navigation";
 import type { Category, ProjectStatus } from "@/types";
 import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
+import { FormularioEmColunas } from "@/components/desktop/FormularioEmColunas";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 
 const CATEGORIES: Category[] = ["JDM", "Euro", "Muscle", "Performance", "Clássicos", "Stance", "Other"];
 const STATUSES: ProjectStatus[] = ["planning", "building", "complete"];
@@ -36,6 +38,8 @@ const CAR_ASPECT = 4 / 3;
 
 export default function EditCarScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  // No computador, a foto ao lado dos campos (ver FormularioEmColunas).
+  const larga = useLarguraAmpla();
   const { data: car, isLoading } = useCarById(id);
   const updateCar = useUpdateCar();
   const uploadPhoto = useUploadCarPhoto();
@@ -153,6 +157,10 @@ export default function EditCarScreen() {
         contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
+        <FormularioEmColunas
+          larga={larga}
+          lateral={
+        <>
         {catalogName && (
           <View className="border border-border bg-card px-4 py-3 mb-6">
             <Text
@@ -196,7 +204,9 @@ export default function EditCarScreen() {
             </>
           )}
         </Pressable>
-
+        </>
+          }
+        >
         <FormField
           label="Nome na garagem"
           placeholder="Ex: Porsche 718 Boxster"
@@ -283,6 +293,7 @@ export default function EditCarScreen() {
             disabled={!name.trim()}
           />
         </View>
+        </FormularioEmColunas>
       </ScrollView>
 
       <ImageCropper

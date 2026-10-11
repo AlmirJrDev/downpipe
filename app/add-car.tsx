@@ -29,6 +29,8 @@ import { useAddCar, useUploadCarPhoto } from "@/stores/garageStore";
 import { suggestCarName } from "@/utils/car";
 import type { Category, VehicleBrand, VehicleModel, VehicleVersion } from "@/types";
 import { LinhaDeOpcoes } from "@/components/ui/LinhaDeOpcoes";
+import { FormularioEmColunas } from "@/components/desktop/FormularioEmColunas";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 
 // Espelha carCategoryEnum do backend.
 const CATEGORIES: Category[] = ["JDM", "Euro", "Muscle", "Performance", "Clássicos", "Stance", "Other"];
@@ -61,6 +63,13 @@ const CAR_ASPECT = 4 / 3;
 
 export default function AddCarScreen() {
   const { onboarding } = useLocalSearchParams<{ onboarding?: string }>();
+  // No computador: marcas, modelos e versões em três colunas, e os detalhes
+  // com a foto ao lado dos campos. Uma lista de 100 marcas, uma por linha,
+  // num monitor, era rolar sem fim por uma tira estreita.
+  const larga = useLarguraAmpla();
+  const colunasDoCatalogo = larga ? 3 : 1;
+  const celulaDoCatalogo = (item: React.ReactElement) =>
+    larga ? <View style={{ width: "33.333%", paddingHorizontal: 6 }}>{item}</View> : item;
   const isOnboarding = onboarding === "1";
   const addCar = useAddCar();
   const uploadPhoto = useUploadCarPhoto();
@@ -208,7 +217,7 @@ export default function AddCarScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <AppHeader
-        title={(isOnboarding && stage === "brand" ? "Seu primeiro carro" : headerTitle).toUpperCase()}
+        title={isOnboarding && stage === "brand" ? "Seu primeiro carro" : headerTitle}
         left={
           <Pressable hitSlop={8} onPress={goBack}>
             <ArrowLeft size={22} color={colors.onSurface} />
@@ -239,9 +248,11 @@ export default function AddCarScreen() {
             </View>
           ) : (
             <FlatList
+              key={`catalogo-${colunasDoCatalogo}`}
+              numColumns={colunasDoCatalogo}
               data={filteredBrands}
               keyExtractor={(b) => b.id}
-              renderItem={({ item }) => (
+              renderItem={({ item }) => celulaDoCatalogo(
                 <PickerRow
                   label={item.name}
                   onPress={() => {
@@ -251,7 +262,7 @@ export default function AddCarScreen() {
                   }}
                 />
               )}
-              contentContainerStyle={{ paddingBottom: 24 }}
+              contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: larga ? 10 : 0 }}
             />
           )}
           <View className="px-4 py-4 border-t border-border">
@@ -275,9 +286,11 @@ export default function AddCarScreen() {
             </View>
           ) : (
             <FlatList
+              key={`catalogo-${colunasDoCatalogo}`}
+              numColumns={colunasDoCatalogo}
               data={filteredModels}
               keyExtractor={(m) => m.id}
-              renderItem={({ item }) => (
+              renderItem={({ item }) => celulaDoCatalogo(
                 <PickerRow
                   label={item.name}
                   onPress={() => {
@@ -292,7 +305,7 @@ export default function AddCarScreen() {
                   Nenhum modelo encontrado pra essa marca.
                 </Text>
               }
-              contentContainerStyle={{ paddingBottom: 24 }}
+              contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: larga ? 10 : 0 }}
             />
           )}
         </View>
@@ -306,9 +319,11 @@ export default function AddCarScreen() {
             </View>
           ) : (
             <FlatList
+              key={`catalogo-${colunasDoCatalogo}`}
+              numColumns={colunasDoCatalogo}
               data={years ?? []}
               keyExtractor={(v) => v.id}
-              renderItem={({ item }) => (
+              renderItem={({ item }) => celulaDoCatalogo(
                 <PickerRow label={item.name} sublabel={String(item.year)} onPress={() => goToDetails(item)} />
               )}
               ListEmptyComponent={
@@ -316,7 +331,7 @@ export default function AddCarScreen() {
                   Nenhuma versão encontrada pra esse modelo.
                 </Text>
               }
-              contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }}
+              contentContainerStyle={{ paddingTop: 8, paddingBottom: 24, paddingHorizontal: larga ? 10 : 0 }}
             />
           )}
         </View>
@@ -328,6 +343,10 @@ export default function AddCarScreen() {
           contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
         >
+          <FormularioEmColunas
+            larga={larga}
+            lateral={
+          <>
           {skippedCatalog ? (
             <Text className="text-on-surface-variant mb-6" style={typography.bodyMd}>
               Descreva seu veículo — ele não está no catálogo.
@@ -371,7 +390,9 @@ export default function AddCarScreen() {
               </>
             )}
           </Pressable>
-
+          </>
+            }
+          >
           <FormField
             label="Nome na garagem"
             placeholder="Ex: Porsche 718 Boxster"
@@ -431,6 +452,7 @@ export default function AddCarScreen() {
               icon={<Plus size={15} color={colors.onPrimaryContainer} />}
             />
           </View>
+          </FormularioEmColunas>
         </ScrollView>
       )}
 
