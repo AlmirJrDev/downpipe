@@ -9,7 +9,8 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { useCameraPermissions } from "expo-camera";
+import { CameraDeQR } from "@/components/CameraDeQR";
 import * as Haptics from "expo-haptics";
 import { ArrowLeft, Camera, List, RefreshCw, WifiOff } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
@@ -265,12 +266,7 @@ function Leitor({ lerQr }: { lerQr: (conteudo: string) => ResultadoDaLeitura }) 
 
   return (
     <View className="flex-1">
-      <CameraView
-        style={{ flex: 1 }}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={aoLer}
-      />
+      <CameraDeQR style={{ flex: 1 }} onLer={(data) => aoLer({ data })} />
       {/* Mira: mostra onde pôr o QR sem precisar explicar. */}
       {!resultado && (
         <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
