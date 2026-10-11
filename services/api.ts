@@ -75,6 +75,46 @@ function runRefresh(): Promise<string | null> {
   return refreshInFlight;
 }
 
+/** O que o app mostra quando nem chega no servidor. Era o texto de desenvolvedor
+ * ("conectar em ... EXPO_PUBLIC_API_URL") — que no site saía "conectar em ."
+ * e não dizia nada pra quem estava usando. */
+const SEM_CONEXAO = "Sem conexão com o Downpipe agora. Confira sua internet e tente de novo.";
+
+/** Resposta do Render enquanto o servidor sobe ou troca de versão no deploy. */
+const SUBINDO = new Set([502, 503, 504]);
+const ESPERAS_MS = [700, 1800];
+
+/**
+ * fetch que não desiste no primeiro tropeço.
+ *
+ * O erro de conexão aparecia de vez em quando: celular trocando de Wi-Fi pra
+ * 4G, sinal fraco, ou o servidor reiniciando num deploy. Quase sempre a
+ * segunda tentativa, um instante depois, já passa. Só leitura repete
+ * sozinha: um POST que falhou no meio pode ter chegado no servidor, e
+ * mandar de novo duplicaria o comentário ou a curtida.
+ */
+async function buscarComPaciencia(url: string, init: RequestInit): Promise<Response> {
+  const metodo = (init.method ?? "GET").toUpperCase();
+  const podeRepetir = metodo === "GET" || metodo === "HEAD";
+
+  for (let tentativa = 0; ; tentativa++) {
+    const ultima = !podeRepetir || tentativa >= ESPERAS_MS.length;
+    try {
+      const res = await fetch(url, init);
+      if (!SUBINDO.has(res.status) || ultima) return res;
+    } catch {
+      if (ultima) {
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn(`Sem resposta de ${url || "(mesma origem)"} — o backend está rodando?`);
+        }
+        throw new ApiError("NETWORK_ERROR", SEM_CONEXAO, 0);
+      }
+    }
+    await new Promise((r) => setTimeout(r, ESPERAS_MS[tentativa]));
+  }
+}
+
 async function send(
   path: string,
   options: RequestInit,
@@ -93,16 +133,7 @@ async function send(
   if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
-  let res: Response;
-  try {
-    res = await fetch(`${API_URL}${path}`, { ...options, headers });
-  } catch {
-    throw new ApiError(
-      "NETWORK_ERROR",
-      `Não foi possível conectar em ${API_URL}. Verifique se o backend está rodando e se EXPO_PUBLIC_API_URL aponta pro endereço certo.`,
-      0
-    );
-  }
+  const res = await buscarComPaciencia(`${API_URL}${path}`, { ...options, headers });
 
   // Token expirado: renova uma vez e repete a requisição, de forma
   // transparente. Exclui /auth/* pra não recursar no próprio refresh.
@@ -165,7 +196,7 @@ export const api = {
         body: JSON.stringify(body),
       });
     } catch {
-      throw new ApiError("NETWORK_ERROR", "Não foi possível conectar ao servidor.", 0);
+      throw new ApiError("NETWORK_ERROR", SEM_CONEXAO, 0);
     }
     const json = await res.json().catch(() => null);
     if (!res.ok || !json || json.error) {
