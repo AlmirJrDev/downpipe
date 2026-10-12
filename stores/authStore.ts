@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { authService, type AuthUser, type SupabaseSession } from "@/services/authService";
 import { setAuthToken, setRefreshHandler } from "@/services/api";
-import { clearSession, loadSession, saveSession } from "@/services/tokenStorage";
+import { clearSession, loadSession, saveSession, type StoredSession } from "@/services/tokenStorage";
 import { emModoDemo, sairDoModoDemo } from "@/services/demo/modoDemo";
 
 type AuthStatus = "hydrating" | "signedOut" | "signedIn";
@@ -17,6 +17,8 @@ interface AuthState {
     displayName?: string;
   }) => Promise<{ requiresEmailConfirmation: boolean }>;
   login: (input: { email: string; password: string }) => Promise<void>;
+  /** Sessão que chegou pronta de fora — a volta do login com Google. */
+  entrarComSessao: (sessao: StoredSession) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -101,6 +103,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     const result = await authService.login(input);
     await persistSession(result.session);
     set({ status: "signedIn", user: result.user });
+  },
+
+  entrarComSessao: async (sessao) => {
+    await saveSession(sessao);
+    setAuthToken(sessao.accessToken);
+    set({ status: "signedIn" });
   },
 
   logout: async () => {

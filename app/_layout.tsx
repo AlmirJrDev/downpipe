@@ -74,7 +74,9 @@ function AuthRedirect() {
       segments[0] === "login" ||
       segments[0] === "register" ||
       segments[0] === "forgot-password" ||
-      segments[0] === "nova-senha";
+      segments[0] === "nova-senha" ||
+      // A volta do Google: chega deslogada e é ela quem faz o login.
+      segments[0] === "entrar";
 
     if (status === "signedOut") {
       // Telas que um link compartilhado abre ficam de pé sem conta: quem

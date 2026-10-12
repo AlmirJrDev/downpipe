@@ -16,6 +16,7 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/authStore";
 import { ApiError } from "@/services/api";
 import { TelaDeEntrada } from "@/components/desktop/TelaDeEntrada";
+import { BotaoGoogle } from "@/components/BotaoGoogle";
 
 function Field({
   label,
@@ -123,6 +124,9 @@ export default function LoginScreen() {
         <Text className="text-on-surface text-center mb-8" style={typography.headlineSm}>
           Entrar
         </Text>
+
+        {/* Some sozinho enquanto o Google não estiver ligado no Supabase. */}
+        <BotaoGoogle />
 
         <Field
           label="E-mail"

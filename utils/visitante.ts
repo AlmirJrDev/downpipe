@@ -76,6 +76,11 @@ export function guardarDestino(caminho: string | null) {
 }
 
 /** Tem para onde voltar? Espia sem consumir. */
+/** O destino guardado, sem consumir — pra levar junto numa ida e volta (login com Google). */
+export function verDestino(): string | null {
+  return destino;
+}
+
 export function temDestino(): boolean {
   return destino !== null;
 }

@@ -17,6 +17,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { ApiError } from "@/services/api";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { TelaDeEntrada } from "@/components/desktop/TelaDeEntrada";
+import { BotaoGoogle } from "@/components/BotaoGoogle";
 
 function Field({
   label,
@@ -136,6 +137,9 @@ export default function RegisterScreen() {
         <Text className="text-on-surface-variant mb-6" style={typography.bodyMd}>
           Crie sua conta para salvar sua garagem e acompanhar seus projetos.
         </Text>
+
+        {/* Some sozinho enquanto o Google não estiver ligado no Supabase. */}
+        <BotaoGoogle />
 
         <Field
           label="Nome de exibição"
