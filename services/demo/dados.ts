@@ -46,7 +46,13 @@ export interface Pessoa extends AuthorRef {
   following: number;
 }
 
-const avatar = (nome: string) => `/demo/avatares/${nome}.png`;
+/**
+ * Endereço completo, e não /demo/...: o mapa desenha os pinos numa página
+ * própria, onde um caminho relativo não acha a imagem.
+ */
+const ORIGEM = typeof window !== "undefined" && window.location ? window.location.origin : "";
+
+const avatar = (nome: string) => `${ORIGEM}/demo/avatares/${nome}.png`;
 
 export const PESSOAS = {
   rafa: { id: "u-rafa", username: "rafa.turbo", displayName: "Rafa Moreira", avatarUrl: avatar("rafa"), bio: "Golf GTI rumo aos 350 cv. Campinas.", instagram: "rafa.turbo", gearheadSince: 2014, followers: 1284, following: 312 },
@@ -69,7 +75,7 @@ export function autor(p: Pessoa): AuthorRef {
 
 // ------------------------------------------------------------------ carros
 
-const foto = (nome: string) => `/demo/carros/${nome}.jpg`;
+const foto = (nome: string) => `${ORIGEM}/demo/carros/${nome}.jpg`;
 
 function carro(
   id: string,
@@ -192,7 +198,7 @@ export const PROJETO_DO_GOLF: Project = {
 
 // --------------------------------------------------------------- encontros
 
-const flyer = (nome: string) => `/demo/flyers/${nome}.jpg`;
+const flyer = (nome: string) => `${ORIGEM}/demo/flyers/${nome}.jpg`;
 
 function encontro(id: string, organizador: Pessoa, extra: Partial<CarEvent> & Pick<CarEvent, "name" | "startsAt" | "location" | "city" | "latitude" | "longitude">): CarEvent {
   return {
