@@ -9,7 +9,7 @@ import {
   type ViewToken,
 } from "react-native";
 import { Image } from "expo-image";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { apiService } from "@/services/apiService";
 import { AppHeader } from "@/components/AppHeader";
@@ -17,8 +17,9 @@ import { PostCard } from "@/components/cards/PostCard";
 import { QuemSeguir } from "@/components/QuemSeguir";
 import { GettingStarted } from "@/components/GettingStarted";
 import { FeedEventCard } from "@/components/cards/FeedEventCard";
+import { FeedCarCard } from "@/components/cards/FeedCarCard";
 import { useEvents } from "@/stores/eventsStore";
-import type { CarEvent, Post } from "@/types";
+import type { Car, CarEvent, Post } from "@/types";
 import { FeedSkeleton } from "@/components/ui/States";
 import { EmptyState } from "@/components/ui/States";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -33,7 +34,19 @@ import {
   LARGURA_DA_COLUNA_DIREITA,
 } from "@/components/desktop/ColunaDaDireita";
 
-type ItemDoFeed = { tipo: "post"; post: Post } | { tipo: "encontro"; event: CarEvent };
+type ItemDoFeed =
+  | { tipo: "post"; post: Post }
+  | { tipo: "encontro"; event: CarEvent }
+  | { tipo: "carro"; car: Car };
+
+const quandoDe = (item: ItemDoFeed) =>
+  item.tipo === "post" ? item.post.createdAt : item.tipo === "encontro" ? item.event.createdAt : item.car.createdAt;
+
+const chaveDe = (item: ItemDoFeed) =>
+  item.tipo === "post" ? item.post.id : item.tipo === "encontro" ? `encontro-${item.event.id}` : `carro-${item.car.id}`;
+
+const fotoDe = (item: ItemDoFeed) =>
+  item.tipo === "post" ? item.post.imageUrl : item.tipo === "encontro" ? item.event.photoUrl : item.car.photoUrl;
 
 /** O feed no computador tem a largura do feed do Instagram web. */
 const LARGURA_DO_FEED = 600;
@@ -86,33 +99,41 @@ export default function HomeScreen() {
   const posts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   /**
-   * Os encontros que vêm aí entram na linha do tempo como publicação, pela
-   * hora em que foram publicados. São de todo mundo, não só de quem a
-   * pessoa segue: encontro é o que o app tem de público, e é o que faz o
-   * feed de quem acabou de chegar não abrir vazio.
+   * Encontros que vêm aí e carros novos nas garagens entram na linha do
+   * tempo como publicação, pela hora em que foram publicados. São de todo
+   * mundo, não só de quem a pessoa segue: é o Explorar vindo até o feed, e
+   * é o que faz o feed de quem acabou de chegar não abrir vazio.
    *
-   * Encontro mais antigo que o último post carregado espera a próxima
-   * página — senão ele pularia pro meio de posts que ainda nem chegaram.
+   * Item mais antigo que o último post carregado espera a próxima página —
+   * senão ele pularia pro meio de posts que ainda nem chegaram.
    */
   const { data: encontrosData } = useEvents({});
+  const { data: carrosData } = useQuery({
+    queryKey: ["feed-cars"],
+    queryFn: () => apiService.getExploreCars(1, 30),
+    staleTime: 60_000,
+  });
   const feed = useMemo<ItemDoFeed[]>(() => {
-    const encontros = (encontrosData?.pages.flatMap((p) => p.data) ?? [])
-      .filter((e) => e.visibility === "public")
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const extras: ItemDoFeed[] = [
+      ...(encontrosData?.pages.flatMap((p) => p.data) ?? [])
+        .filter((e) => e.visibility === "public")
+        .map((event) => ({ tipo: "encontro" as const, event })),
+      // Carro sem foto não tem o que mostrar num cartão de feed.
+      ...(carrosData?.data ?? []).filter((c) => !!c.photoUrl).map((car) => ({ tipo: "carro" as const, car })),
+    ].sort((a, b) => quandoDe(b).localeCompare(quandoDe(a)));
+
     const itens: ItemDoFeed[] = [];
     let i = 0;
     for (const post of posts) {
       // Anúncio não tem data de verdade: fica onde a lista pôs.
       if (post.type !== "ad" && post.type !== "house_ad") {
-        while (i < encontros.length && encontros[i].createdAt > post.createdAt) {
-          itens.push({ tipo: "encontro", event: encontros[i++] });
-        }
+        while (i < extras.length && quandoDe(extras[i]) > post.createdAt) itens.push(extras[i++]);
       }
       itens.push({ tipo: "post", post });
     }
-    if (!hasNextPage) while (i < encontros.length) itens.push({ tipo: "encontro", event: encontros[i++] });
+    if (!hasNextPage) while (i < extras.length) itens.push(extras[i++]);
     return itens;
-  }, [posts, encontrosData, hasNextPage]);
+  }, [posts, encontrosData, carrosData, hasNextPage]);
 
   /**
    * Começa a baixar as fotos das próximas publicações antes de elas entrarem
@@ -136,7 +157,7 @@ export default function HomeScreen() {
 
       const proximas = feedRef.current
         .slice(ultimoVisivel + 1, ultimoVisivel + 1 + ADIANTAR)
-        .map((item) => (item.tipo === "post" ? item.post.imageUrl : item.event.photoUrl))
+        .map(fotoDe)
         .filter((url): url is string => !!url && !jaPedidas.current.has(url));
 
       if (proximas.length === 0) return;
@@ -207,9 +228,15 @@ export default function HomeScreen() {
         // novo, que é quem mais precisa dele.
         <FlatList
           data={feed}
-          keyExtractor={(item) => (item.tipo === "post" ? item.post.id : `encontro-${item.event.id}`)}
+          keyExtractor={chaveDe}
           renderItem={({ item }) =>
-            item.tipo === "post" ? <PostCard post={item.post} /> : <FeedEventCard event={item.event} />
+            item.tipo === "post" ? (
+              <PostCard post={item.post} />
+            ) : item.tipo === "encontro" ? (
+              <FeedEventCard event={item.event} />
+            ) : (
+              <FeedCarCard car={item.car} />
+            )
           }
           // Fundo explícito: é o que aparece na área de overscroll do
           // pull-to-refresh, que não é coberta pelo contentContainer.
