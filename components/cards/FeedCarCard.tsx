@@ -1,10 +1,11 @@
 /**
- * Carro novo na garagem de alguém, no meio do feed, do tamanho de um post.
+ * Carro da garagem de alguém, sugerido no meio do feed, do tamanho de um
+ * post.
  *
- * É o Explorar vindo até a pessoa: entra na linha do tempo pela hora em que
- * o carro foi cadastrado, como "fulano colocou um carro na garagem". A foto
- * é o cartão inteiro; embaixo, o nome do carro e os números que o dono
- * preencheu (potência, investido, status), que é o que faz alguém tocar.
+ * É o Explorar vindo até a pessoa, de vez em quando, na vaga que era dos
+ * anúncios. A foto é o cartão inteiro; embaixo, o nome do carro e os
+ * números que o dono preencheu (potência, investido, status), que é o que
+ * faz alguém tocar.
  */
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -14,7 +15,6 @@ import { Gauge, Heart, Wallet } from "lucide-react-native";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatusChip } from "@/components/ui/Chips";
 import { carCatalogName, carTitle, carYear } from "@/utils/car";
-import { timeAgo } from "@/utils/time";
 import { colors } from "@/constants/theme";
 import type { Car } from "@/types";
 
@@ -50,13 +50,10 @@ export function FeedCarCard({ car }: { car: Car }) {
               {dono ? `@${dono.username}` : "Garagem"}
             </Text>
             <Text className="text-on-surface-variant" style={{ fontSize: 12 }}>
-              colocou um carro na garagem
+              Da garagem do pessoal
             </Text>
           </View>
         </Pressable>
-        <Text className="text-muted" style={{ fontSize: 12 }}>
-          {timeAgo(car.createdAt)}
-        </Text>
       </View>
 
       <Pressable onPress={abrir} accessibilityRole="link" accessibilityLabel={`Abrir ${carTitle(car)}`}>

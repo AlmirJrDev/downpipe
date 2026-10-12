@@ -39,8 +39,10 @@ type ItemDoFeed =
   | { tipo: "encontro"; event: CarEvent }
   | { tipo: "carro"; car: Car };
 
-const quandoDe = (item: ItemDoFeed) =>
-  item.tipo === "post" ? item.post.createdAt : item.tipo === "encontro" ? item.event.createdAt : item.car.createdAt;
+/** De quantas em quantas publicações entra uma sugestão (encontro ou carro). */
+const POSTS_POR_SUGESTAO = 4;
+/** Quantas sugestões fecham o feed quando as publicações acabam. */
+const SUGESTOES_NO_FIM = 3;
 
 const chaveDe = (item: ItemDoFeed) =>
   item.tipo === "post" ? item.post.id : item.tipo === "encontro" ? `encontro-${item.event.id}` : `carro-${item.car.id}`;
@@ -99,13 +101,16 @@ export default function HomeScreen() {
   const posts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   /**
-   * Encontros que vêm aí e carros novos nas garagens entram na linha do
-   * tempo como publicação, pela hora em que foram publicados. São de todo
-   * mundo, não só de quem a pessoa segue: é o Explorar vindo até o feed, e
-   * é o que faz o feed de quem acabou de chegar não abrir vazio.
+   * Sugestões no meio do feed: um encontro que vem aí ou um carro da
+   * garagem do pessoal, de vez em quando — na vaga que era dos anúncios.
+   * Não seguem a linha do tempo: um feed com todos os encontros enfileirados
+   * pela data de cadastro parecia um mural de quem cadastrou, e não o que
+   * a galera está fazendo.
    *
-   * Item mais antigo que o último post carregado espera a próxima página —
-   * senão ele pularia pro meio de posts que ainda nem chegaram.
+   * Um a cada POSTS_POR_SUGESTAO publicações, alternando encontro e carro.
+   * Encontros pelo mais próximo de acontecer; carros pelo mais novo. Os da
+   * própria pessoa ficam de fora. Feed curto (conta nova) ainda ganha
+   * algumas no fim, pra não abrir vazio.
    */
   const { data: encontrosData } = useEvents({});
   const { data: carrosData } = useQuery({
@@ -114,26 +119,43 @@ export default function HomeScreen() {
     staleTime: 60_000,
   });
   const feed = useMemo<ItemDoFeed[]>(() => {
-    const extras: ItemDoFeed[] = [
-      ...(encontrosData?.pages.flatMap((p) => p.data) ?? [])
-        .filter((e) => e.visibility === "public")
-        .map((event) => ({ tipo: "encontro" as const, event })),
-      // Carro sem foto não tem o que mostrar num cartão de feed.
-      ...(carrosData?.data ?? []).filter((c) => !!c.photoUrl).map((car) => ({ tipo: "carro" as const, car })),
-    ].sort((a, b) => quandoDe(b).localeCompare(quandoDe(a)));
+    const encontros: ItemDoFeed[] = (encontrosData?.pages.flatMap((p) => p.data) ?? [])
+      .filter((e) => e.visibility === "public" && e.organizerId !== me?.id)
+      .map((event) => ({ tipo: "encontro", event }));
+    // Carro sem foto não tem o que mostrar num cartão de feed.
+    const carros: ItemDoFeed[] = (carrosData?.data ?? [])
+      .filter((c) => !!c.photoUrl && c.ownerId !== me?.id)
+      .map((car) => ({ tipo: "carro", car }));
+
+    let e = 0;
+    let c = 0;
+    let vez = 0;
+    const proxima = (): ItemDoFeed | null => {
+      // Alterna; se um dos dois acabou, segue com o outro.
+      const querEncontro = vez++ % 2 === 0;
+      if (querEncontro && e < encontros.length) return encontros[e++];
+      if (c < carros.length) return carros[c++];
+      if (e < encontros.length) return encontros[e++];
+      return null;
+    };
 
     const itens: ItemDoFeed[] = [];
-    let i = 0;
-    for (const post of posts) {
-      // Anúncio não tem data de verdade: fica onde a lista pôs.
-      if (post.type !== "ad" && post.type !== "house_ad") {
-        while (i < extras.length && quandoDe(extras[i]) > post.createdAt) itens.push(extras[i++]);
-      }
+    posts.forEach((post, i) => {
       itens.push({ tipo: "post", post });
+      if ((i + 1) % POSTS_POR_SUGESTAO === 0) {
+        const s = proxima();
+        if (s) itens.push(s);
+      }
+    });
+    if (!hasNextPage) {
+      for (let k = 0; k < SUGESTOES_NO_FIM; k++) {
+        const s = proxima();
+        if (!s) break;
+        itens.push(s);
+      }
     }
-    if (!hasNextPage) while (i < extras.length) itens.push(extras[i++]);
     return itens;
-  }, [posts, encontrosData, carrosData, hasNextPage]);
+  }, [posts, encontrosData, carrosData, hasNextPage, me?.id]);
 
   /**
    * Começa a baixar as fotos das próximas publicações antes de elas entrarem

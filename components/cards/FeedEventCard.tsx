@@ -1,9 +1,9 @@
 /**
- * Encontro no meio do feed, do tamanho de uma publicação.
+ * Encontro sugerido no meio do feed, do tamanho de uma publicação.
  *
- * Entra na linha do tempo pela hora em que foi publicado, como um post: é
- * a novidade "saiu um encontro". A data do encontro vem em destaque logo
- * abaixo da arte, porque é o que decide se a pessoa vai.
+ * Entra de vez em quando, na vaga que era dos anúncios — não como "fulano
+ * publicou": o que importa é o encontro, não quem cadastrou. A data vem em
+ * destaque logo abaixo da arte, porque é o que decide se a pessoa vai.
  *
  * "Eu vou" confirma direto daqui, sem abrir a página; o resto (carro,
  * rota, chat) fica na página do encontro.
@@ -13,10 +13,8 @@ import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { CalendarCheck, MapPin, Users } from "lucide-react-native";
-import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useToggleAttendance } from "@/stores/eventsStore";
 import { eventDateLabel, eventFullDate } from "@/utils/event";
-import { timeAgo } from "@/utils/time";
 import { colors } from "@/constants/theme";
 import type { CarEvent } from "@/types";
 
@@ -25,39 +23,33 @@ export function FeedEventCard({ event }: { event: CarEvent }) {
   const { weekday, day, month } = eventDateLabel(event.startsAt);
   const vou = !!event.attendingByMe;
   const abrir = () => router.push(`/event/${event.id}`);
-  const quem = event.organizer;
+  // Quem organiza de verdade: o @ do Instagram quando o encontro veio de
+  // fora, ou o perfil de quem criou aqui. Encontro cadastrado pela equipe
+  // chega sem organizador (o servidor tira) e o cartão não credita ninguém.
+  const credito = event.organizerInstagram
+    ? `por @${event.organizerInstagram}`
+    : event.organizer
+      ? `por @${event.organizer.username}`
+      : null;
 
   return (
     <View className="mb-6 border border-border bg-card">
-      <View className="flex-row items-center px-4 py-3 gap-3">
-        <Pressable
-          onPress={() => (quem ? router.push(`/user/${quem.username}`) : abrir())}
-          className="flex-row items-center gap-3 flex-1"
-          hitSlop={4}
+      <Pressable onPress={abrir} className="flex-row items-center px-4 py-3 gap-3">
+        <View
+          className="items-center justify-center"
+          style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surfaceHighest }}
         >
-          {quem ? (
-            <UserAvatar uri={quem.avatarUrl ?? ""} size={38} />
-          ) : (
-            <View
-              className="items-center justify-center"
-              style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surfaceHighest }}
-            >
-              <CalendarCheck size={18} color={colors.primary} />
-            </View>
-          )}
-          <View className="flex-1">
-            <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
-              {quem ? `@${quem.username}` : "Novo encontro"}
-            </Text>
-            <Text className="text-on-surface-variant" style={{ fontSize: 12 }}>
-              publicou um encontro
-            </Text>
-          </View>
-        </Pressable>
-        <Text className="text-muted" style={{ fontSize: 12 }}>
-          {timeAgo(event.createdAt)}
-        </Text>
-      </View>
+          <CalendarCheck size={18} color={colors.primary} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
+            Encontro em {event.city}
+          </Text>
+          <Text className="text-on-surface-variant" style={{ fontSize: 12 }} numberOfLines={1}>
+            {credito ?? "Sugestão pra você"}
+          </Text>
+        </View>
+      </Pressable>
 
       <Pressable onPress={abrir} accessibilityRole="link" accessibilityLabel={`Abrir ${event.name}`}>
         {event.photoUrl ? (
