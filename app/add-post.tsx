@@ -257,7 +257,7 @@ export default function AddPostScreen() {
         {taggableEvents.length > 0 && (
           <>
             <Text className="text-on-surface-variant mb-2" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.5 }}>
-              FOI EM ALGUM ROLÊ?
+              FOI EM ALGUM ENCONTRO?
             </Text>
             <LinhaDeOpcoes className="mb-5">
               {taggableEvents.map((event) => {

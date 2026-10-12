@@ -19,7 +19,7 @@ export function ExploreSegment({
 }) {
   const options: { key: ExploreTab; label: string }[] = [
     { key: "cars", label: "Carros" },
-    { key: "events", label: "Rolês" },
+    { key: "events", label: "Encontros" },
   ];
 
   return (

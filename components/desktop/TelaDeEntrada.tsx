@@ -35,7 +35,7 @@ function Vitrine() {
       <View style={{ gap: 12 }}>
         <Text style={{ color: colors.onSurface, fontSize: 40, lineHeight: 44, fontWeight: "800", letterSpacing: -0.8 }}>
           A rede do seu carro{"\n"}
-          <Text style={{ color: colors.primaryContainer }}>e dos seus rolês</Text>
+          <Text style={{ color: colors.primaryContainer }}>e dos seus encontros</Text>
         </Text>
         <Text style={{ color: colors.onSurfaceVariant, fontSize: 16, lineHeight: 24, maxWidth: 460 }}>
           Sua garagem, os encontros perto de você e as fotos de quem esteve lá.
@@ -47,7 +47,7 @@ function Vitrine() {
       {roles.length > 0 && (
         <View style={{ gap: 10 }}>
           <Text style={{ color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.6 }}>
-            PRÓXIMOS ROLÊS
+            PRÓXIMOS ENCONTROS
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {roles.map((r) => {

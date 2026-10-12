@@ -280,7 +280,7 @@ export default function CarDetailsScreen() {
             {/* Rolês em que o carro apareceu. Derivado das publicações
                 marcadas com evento — é o único vínculo que existe entre
                 carro e encontro. */}
-            <StatBlock label="ROLÊS" value={String(resolvedCar.eventsCount ?? 0)} />
+            <StatBlock label="ENCONTROS" value={String(resolvedCar.eventsCount ?? 0)} />
             {/* Curtidas somadas das fotos deste carro — carro não tem curtida
                 própria. Só aparece quando existe: uma ficha que começa com
                 "0 curtidas" fala mal de um carro que ninguém viu ainda. */}

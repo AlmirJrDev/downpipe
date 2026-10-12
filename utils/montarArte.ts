@@ -51,7 +51,7 @@ export function destaquesDoCarro(car: Car, modsCount: number): OpcaoDeDestaque[]
   if (car.amountInvested > 0)
     opcoes.push({ chave: "investido", rotulo: "Investido", valor: reais(car.amountInvested) });
   if (modsCount > 0) opcoes.push({ chave: "mods", rotulo: "Mods", valor: String(modsCount) });
-  if (car.eventsCount) opcoes.push({ chave: "roles", rotulo: "Rolês", valor: String(car.eventsCount) });
+  if (car.eventsCount) opcoes.push({ chave: "roles", rotulo: "Encontros", valor: String(car.eventsCount) });
   const dias = diasDeProjeto(car.createdAt);
   opcoes.push({ chave: "tempo", rotulo: "No projeto", valor: `${dias} ${dias === 1 ? "dia" : "dias"}` });
   if (car.torque != null) opcoes.push({ chave: "torque", rotulo: "Torque", valor: `${car.torque} kgfm` });
@@ -96,7 +96,7 @@ export function destaquesDoPerfil(user: User): OpcaoDeDestaque[] {
   if (user.followersCount > 0)
     opcoes.push({ chave: "seguidores", rotulo: "Seguidores", valor: String(user.followersCount) });
   if (user.eventsAttendedCount)
-    opcoes.push({ chave: "roles", rotulo: "Rolês", valor: String(user.eventsAttendedCount) });
+    opcoes.push({ chave: "roles", rotulo: "Encontros", valor: String(user.eventsAttendedCount) });
   if (user.projectsCount > 0)
     opcoes.push({ chave: "projetos", rotulo: "Projetos", valor: String(user.projectsCount) });
   if (user.gearheadSince)
@@ -125,7 +125,7 @@ export function arteDoPerfil(user: User, carros: Car[], posts: Post[]): ArteDeSt
     avatar: user.avatarUrl,
     titulo: user.displayName || `@${user.username}`,
     subtitulo: user.bio ?? null,
-    selo: user.isOrganizer ? "Organiza rolês" : null,
+    selo: user.isOrganizer ? "Organiza encontros" : null,
     destaques: destaquesDoPerfil(user).slice(0, MAXIMO_DE_DESTAQUES),
     arroba: user.instagram ?? user.username,
     link: linkPublico.perfil(user.username).replace(/^https?:[/][/]/, ""),
@@ -167,6 +167,6 @@ export function arteDoPost(post: Post, instagramDoAutor?: string | null): ArteDe
 
 /** Os selos oferecidos no editor, sempre com o do próprio conteúdo na frente. */
 export function selosSugeridos(atual: string | null): string[] {
-  const padrao = ["Projeto em andamento", "Projeto pronto", "Antes e depois", "Novidade na garagem", "Organiza rolês", "Me acha no Downpipe"];
+  const padrao = ["Projeto em andamento", "Projeto pronto", "Antes e depois", "Novidade na garagem", "Organiza encontros", "Me acha no Downpipe"];
   return atual ? [atual, ...padrao.filter((s) => s !== atual)] : padrao;
 }

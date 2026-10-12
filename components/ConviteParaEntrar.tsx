@@ -67,7 +67,7 @@ export function ConviteParaEntrar() {
         style={{ fontSize: 12.5, lineHeight: 17 }}
       >
         Você está de visita. Entre pra curtir, comentar, confirmar presença nos
-        rolês e montar a sua garagem.
+        encontros e montar a sua garagem.
       </Text>
       <View className="flex-row gap-2" style={largo ? { width: 360 } : undefined}>
         <Pressable

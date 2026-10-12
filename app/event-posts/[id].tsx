@@ -34,7 +34,7 @@ export default function EventPostsScreen() {
   return (
     <View className="flex-1 bg-surface">
       <AppHeader
-        title={event?.name ?? "No rolê"}
+        title={event?.name ?? "No encontro"}
         left={
           <Pressable hitSlop={8} onPress={() => voltarOuIrPara(`/event/${id}`)}>
             <ArrowLeft size={22} color={colors.onSurface} />
@@ -49,7 +49,7 @@ export default function EventPostsScreen() {
       ) : posts.length === 0 ? (
         <EmptyState
           title="Nada registrado ainda"
-          description="Quem for ao rolê pode marcar o evento na publicação, e as fotos aparecem aqui."
+          description="Quem for ao encontro pode marcar o evento na publicação, e as fotos aparecem aqui."
         />
       ) : (
         <FlatList

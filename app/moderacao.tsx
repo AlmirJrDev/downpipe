@@ -30,7 +30,7 @@ const TIPO: Record<Denuncia["target"]["tipo"], string> = {
   comentario: "Comentário",
   mensagem: "Mensagem de chat",
   perfil: "Perfil",
-  evento: "Rolê",
+  evento: "Encontro",
 };
 
 function Botao({
@@ -107,7 +107,7 @@ export default function ModeracaoScreen() {
       tipo === "mensagem"
         ? "Ela some do chat pra todo mundo."
         : tipo === "evento"
-          ? "O rolê sai do calendário e quem confirmou presença é avisado. Não dá pra desfazer."
+          ? "O encontro sai do calendário e quem confirmou presença é avisado. Não dá pra desfazer."
           : "Não dá pra desfazer. As denúncias desse conteúdo saem da fila junto.",
       [
         { text: "Cancelar", style: "cancel" },

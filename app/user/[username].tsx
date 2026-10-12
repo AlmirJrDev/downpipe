@@ -198,7 +198,7 @@ export default function UserProfileScreen() {
             numeros={[
               { label: "carros", value: userCars.length },
               { label: "projetos", value: user.projectsCount },
-              { label: "rolês", value: user.eventsAttendedCount ?? 0 },
+              { label: "encontros", value: user.eventsAttendedCount ?? 0 },
               { label: "seguidores", value: user.followersCount, onPress: () => setFollowSheet("followers") },
               { label: "seguindo", value: user.followingCount, onPress: () => setFollowSheet("following") },
             ]}
@@ -242,7 +242,7 @@ export default function UserProfileScreen() {
           <View className="flex-row border-t border-b border-border mt-6 py-1">
             <StatCard label="Carros" value={String(userCars.length)} />
             <StatCard label="Projetos" value={String(user.projectsCount)} />
-            <StatCard label="Rolês" value={String(user.eventsAttendedCount ?? 0)} />
+            <StatCard label="Encontros" value={String(user.eventsAttendedCount ?? 0)} />
             <StatCard
               label="Seguidores"
               value={String(user.followersCount)}

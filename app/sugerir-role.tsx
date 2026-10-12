@@ -64,7 +64,7 @@ export default function SugerirRoleScreen() {
 
   const cabecalho = (
     <AppHeader
-      title="Vi um rolê"
+      title="Vi um encontro"
       left={
         <Pressable
           hitSlop={8}
@@ -99,7 +99,7 @@ export default function SugerirRoleScreen() {
           </Text>
           <View className="w-full mt-7">
             <PrimaryButton
-              label="Voltar pros rolês"
+              label="Voltar pros encontros"
               onPress={() => voltarOuIrPara("/(tabs)/explore?aba=roles")}
             />
           </View>
@@ -126,7 +126,7 @@ export default function SugerirRoleScreen() {
         </Text>
 
         <FormField
-          label="Nome do rolê"
+          label="Nome do encontro"
           placeholder="Ex: Encontro de Carros Antigos de Sumaré"
           value={name}
           onChangeText={setName}

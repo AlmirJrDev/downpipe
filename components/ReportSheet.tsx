@@ -39,7 +39,7 @@ const MOTIVOS: { valor: MotivoDenuncia; rotulo: string }[] = [
  * escolher "outro" e escrever o que a gente já podia ter perguntado.
  */
 const MOTIVOS_DE_ROLE: { valor: MotivoDenuncia; rotulo: string }[] = [
-  { valor: "role_nao_aconteceu", rotulo: "Fui lá e o rolê não existia" },
+  { valor: "role_nao_aconteceu", rotulo: "Fui lá e o encontro não existia" },
   { valor: "informacao_falsa", rotulo: "Data, horário ou lugar errado" },
   { valor: "conteudo_improprio", rotulo: "Conteúdo impróprio" },
   { valor: "spam", rotulo: "Spam ou propaganda" },
@@ -95,7 +95,7 @@ export function ReportSheet({
             style={{ fontSize: 13, lineHeight: 19 }}
           >
             {ehRole
-              ? "Vamos conferir com a fonte. Se o rolê não existir mesmo, ele sai do ar e quem confirmou é avisado."
+              ? "Vamos conferir com a fonte. Se o encontro não existir mesmo, ele sai do ar e quem confirmou é avisado."
               : "Vamos analisar. Se quiser não ver mais essa pessoa enquanto isso, dá para bloquear pelo perfil dela."}
           </Text>
           <Pressable onPress={fechar} className="mt-6 px-8 py-3 border border-outline">

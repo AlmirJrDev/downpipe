@@ -45,7 +45,7 @@ function actionText(type: NotificationType): string {
     case "project_update":
       return "publicou uma atualização do projeto";
     case "event_attend":
-      return "vai num rolê";
+      return "vai num encontro";
     case "car_tag":
       return "marcou seu carro numa foto";
   }

@@ -224,9 +224,9 @@ export default function EventChatScreen() {
 
   const cabecalho = (
     <AppHeader
-      title={evento?.name ? evento.name.toUpperCase() : "CHAT DO ROLÊ"}
+      title={evento?.name ? evento.name.toUpperCase() : "CHAT DO ENCONTRO"}
       left={
-        <Pressable hitSlop={8} onPress={voltar} accessibilityRole="button" accessibilityLabel="Voltar pro rolê">
+        <Pressable hitSlop={8} onPress={voltar} accessibilityRole="button" accessibilityLabel="Voltar pro encontro">
           <ArrowLeft size={22} color={colors.onSurface} />
         </Pressable>
       }
@@ -253,10 +253,10 @@ export default function EventChatScreen() {
           title={bloqueado ? "Chat de quem vai" : "Chat indisponível"}
           description={
             bloqueado
-              ? "Confirme presença no rolê pra entrar na conversa e receber os avisos do organizador."
+              ? "Confirme presença no encontro pra entrar na conversa e receber os avisos do organizador."
               : erro ?? ""
           }
-          actionLabel={bloqueado ? "Ver o rolê" : "Tentar de novo"}
+          actionLabel={bloqueado ? "Ver o encontro" : "Tentar de novo"}
           onAction={bloqueado ? () => router.replace(`/event/${eventId}`) : () => setTentativa((t) => t + 1)}
         />
       </View>
@@ -309,7 +309,7 @@ export default function EventChatScreen() {
         <TextInput
           value={texto}
           onChangeText={setTexto}
-          placeholder={souOrganizador ? "Escreva um aviso ou mensagem..." : "Mensagem pro rolê..."}
+          placeholder={souOrganizador ? "Escreva um aviso ou mensagem..." : "Mensagem pro encontro..."}
           placeholderTextColor={colors.inputPlaceholder}
           multiline
           maxLength={1000}

@@ -70,7 +70,7 @@ export function CadastroParaPublicar({
         // falharia. Hoje ela está desligada; se um dia ligarem, a pessoa
         // fica sabendo o que fazer em vez de ver um erro sem sentido.
         if (requiresEmailConfirmation) {
-          setErro("Conta criada! Confirme seu e-mail, entre e toque em publicar de novo — o rolê fica salvo aqui.");
+          setErro("Conta criada! Confirme seu e-mail, entre e toque em publicar de novo — o encontro fica salvo aqui.");
           setModo("login");
           return;
         }
@@ -99,8 +99,8 @@ export function CadastroParaPublicar({
       <View className="px-5 pb-2">
         <Text className="text-on-surface-variant mb-5" style={{ fontSize: 13.5, lineHeight: 19 }}>
           {modo === "cadastro"
-            ? "O rolê já está preenchido. A conta é o que deixa você editar e cancelar ele depois, e responder quem tiver dúvida."
-            : "Entre com a sua conta e o rolê é publicado em seguida."}
+            ? "O encontro já está preenchido. A conta é o que deixa você editar e cancelar ele depois, e responder quem tiver dúvida."
+            : "Entre com a sua conta e o encontro é publicado em seguida."}
         </Text>
 
         {modo === "cadastro" && (

@@ -84,7 +84,7 @@ function Pessoa({ sugestao }: { sugestao: Sugestao }) {
     sugestao.carsCount > 0
       ? `${sugestao.carsCount} ${sugestao.carsCount === 1 ? "carro" : "carros"} na garagem`
       : sugestao.isOrganizer
-        ? "Organiza rolês"
+        ? "Organiza encontros"
         : "Por aqui há pouco";
 
   return (
@@ -157,7 +157,7 @@ export function ColunaDaDireita() {
 
       {roles.length > 0 && (
         <View>
-          <Cabecalho titulo="PRÓXIMOS ROLÊS" acao="Ver todos" onAcao={() => router.navigate("/(tabs)/explore?aba=roles" as never)} />
+          <Cabecalho titulo="PRÓXIMOS ENCONTROS" acao="Ver todos" onAcao={() => router.navigate("/(tabs)/explore?aba=roles" as never)} />
           {roles.map((r) => (
             <Role key={r.id} evento={r} />
           ))}

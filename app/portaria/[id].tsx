@@ -86,7 +86,7 @@ export default function PortariaScreen() {
       ) : portaria.conexao === "sem_permissao" ? (
         <EmptyState
           title="Só quem organiza"
-          description="A portaria é do organizador do rolê. Entre com a conta que criou o encontro."
+          description="A portaria é do organizador do encontro. Entre com a conta que criou o encontro."
         />
       ) : portaria.semLista ? (
         portaria.conexao === "sincronizando" ? (
@@ -100,7 +100,7 @@ export default function PortariaScreen() {
           <EmptyState
             icon={<WifiOff size={36} color={colors.muted} />}
             title="Lista não baixada"
-            description="A portaria precisa de internet uma vez, antes do rolê, pra baixar quem confirmou. Depois funciona sem sinal."
+            description="A portaria precisa de internet uma vez, antes do encontro, pra baixar quem confirmou. Depois funciona sem sinal."
             actionLabel="Tentar de novo"
             onAction={() => void portaria.sincronizar()}
           />
@@ -351,7 +351,7 @@ function visualDoResultado(r: ResultadoDaLeitura): {
       return {
         fundo: colors.primaryContainer,
         texto: "#ffffff",
-        titulo: "OUTRO ROLÊ",
+        titulo: "OUTRO ENCONTRO",
         detalhe: "Esse ingresso é de outro encontro.",
       };
     case "nao_encontrado":

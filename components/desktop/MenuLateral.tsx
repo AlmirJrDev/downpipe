@@ -147,7 +147,7 @@ export function MenuLateral() {
     ? [
         { rotulo: "Moderação", Icone: Flag, destino: "/moderacao", ativoEm: (c) => c.startsWith("/moderacao"), contador: denuncias },
         {
-          rotulo: "Rolês na fila",
+          rotulo: "Encontros na fila",
           Icone: CalendarCheck,
           destino: "/fila-de-roles",
           ativoEm: (c) => c.startsWith("/fila-de-roles"),

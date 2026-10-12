@@ -328,7 +328,7 @@ export default function AddEventScreen() {
           // escolhe o @, e o destino guardado traz ela de volta pro rolê.
           guardarDestino(`/event/${created.id}`);
           Alert.alert(
-            "Seu rolê está no ar",
+            "Seu encontro está no ar",
             "Falta só escolher o seu @ — é com ele que você aparece como organizador."
           );
         }
@@ -357,7 +357,7 @@ export default function AddEventScreen() {
       // — já custou duas rodadas de conserto às cegas.
       const motivo =
         err instanceof ApiError ? err.message : err instanceof Error ? err.message : String(err);
-      setError(`O rolê foi salvo, mas a foto não subiu: ${motivo}`);
+      setError(`O encontro foi salvo, mas a foto não subiu: ${motivo}`);
       return false;
     }
   };
@@ -378,7 +378,7 @@ export default function AddEventScreen() {
 
   const header = (
     <AppHeader
-      title={isEditing ? "Editar evento" : entrouComoVisitante ? "Publicar meu rolê" : "Novo evento"}
+      title={isEditing ? "Editar evento" : entrouComoVisitante ? "Publicar meu encontro" : "Novo evento"}
       left={
         <Pressable
           hitSlop={8}
@@ -440,7 +440,7 @@ export default function AddEventScreen() {
             <View className="items-center justify-center gap-2" style={larga ? { aspectRatio: 4 / 5 } : { height: 120 }}>
               <Camera size={22} color={colors.onSurfaceVariant} />
               <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
-                Adicionar foto do rolê (opcional)
+                Adicionar foto do encontro (opcional)
               </Text>
             </View>
           )}
@@ -507,7 +507,7 @@ export default function AddEventScreen() {
         {ehVisitante ? (
           <Text className="text-muted mb-5" style={{ fontSize: 12.5, lineHeight: 18 }}>
             A gente acha o ponto pelo lugar e pela cidade. Depois de publicar, você
-            pode ajustar no mapa editando o rolê.
+            pode ajustar no mapa editando o encontro.
           </Text>
         ) : (
         /* Sem ponto escolhido o servidor tenta adivinhar pelo texto, e às
@@ -594,7 +594,7 @@ export default function AddEventScreen() {
         </View>
 
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
-          TIPO DE ROLÊ
+          TIPO DE ENCONTRO
         </Text>
         <View className="flex-row flex-wrap mb-5">
           {TIPOS_DE_ROLE.map((t) => (
@@ -626,7 +626,7 @@ export default function AddEventScreen() {
         />
 
         <Text className="text-on-surface-variant mb-2" style={LABEL}>
-          O QUE TEM NO ROLÊ
+          O QUE TEM NO ENCONTRO
         </Text>
         <View className="flex-row flex-wrap mb-5">
           {ATRACOES.map((a) => (
@@ -717,11 +717,11 @@ export default function AddEventScreen() {
         <PrimaryButton
           label={
             criadoId
-              ? "Abrir o rolê"
+              ? "Abrir o encontro"
               : isEditing
                 ? "Salvar alterações"
                 : ehVisitante
-                  ? "Publicar rolê"
+                  ? "Publicar encontro"
                   : "Criar evento"
           }
           onPress={criadoId ? () => router.replace(`/event/${criadoId}`) : submit}

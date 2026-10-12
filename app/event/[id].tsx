@@ -470,7 +470,7 @@ export default function EventDetailsScreen() {
                   className="text-on-surface"
                   style={{ fontSize: 13, fontWeight: "700", letterSpacing: 1.2 }}
                 >
-                  CHAT DO ROLÊ
+                  CHAT DO ENCONTRO
                 </Text>
               </View>
               {!!naoLidas && naoLidas > 0 && (
@@ -531,7 +531,7 @@ export default function EventDetailsScreen() {
               </ScrollView>
               <Text className="text-muted mt-2" style={{ fontSize: 11 }}>
                 {meuCarroNoRole
-                  ? "Quem ver seu carro no rolê consegue descobrir que é seu."
+                  ? "Quem ver seu carro no encontro consegue descobrir que é seu."
                   : "Opcional — deixe em branco se for de carona."}
               </Text>
             </View>
@@ -709,7 +709,7 @@ export default function EventDetailsScreen() {
             <View className="mt-7">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-on-surface" style={typography.labelCaps}>
-                  Fotos do rolê
+                  Fotos do encontro
                 </Text>
                 <Pressable onPress={() => router.push(`/event-posts/${event.id}`)} hitSlop={8}>
                   <Text className="text-primary" style={{ fontSize: 12, fontWeight: "600" }}>
@@ -818,7 +818,7 @@ export default function EventDetailsScreen() {
             >
               <TriangleAlert size={14} color={colors.muted} />
               <Text className="text-muted" style={{ fontSize: 13 }}>
-                Esse rolê não existe ou está errado?
+                Esse encontro não existe ou está errado?
               </Text>
             </Pressable>
           )}

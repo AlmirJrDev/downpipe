@@ -54,11 +54,11 @@ function buildHtml(
 <style>
   html, body, #map { margin:0; padding:0; height:100%; width:100%; background:#121212; }
   /**
-   * O pino é a arte do rolê.
+   * O pino é a arte do encontro.
    *
    * Antes ele mostrava o número de confirmados, e num app novo isso é uma
    * tela cheia de "0" — que não diz nada e ainda passa a impressão de lugar
-   * vazio. O cartaz diz na hora que rolê é aquele, e é o que a pessoa
+   * vazio. O cartaz diz na hora que encontro é aquele, e é o que a pessoa
    * reconhece do story que viu.
    */
   .pin {
@@ -72,7 +72,7 @@ function buildHtml(
        zoom — os pinos "saíam andando". O absolute do MapLibre já serve de
        referência para o selo e a data lá dentro. */
   }
-  /* Rolê que já confirmei fica verde: dá pra ver de relance o que é meu. */
+  /* Encontro que já confirmei fica verde: dá pra ver de relance o que é meu. */
   .pin.going { border-color:${going}; }
   /* Sem arte, o pino vira a data — ainda é informação, ao contrário do zero. */
   .pin .quando {

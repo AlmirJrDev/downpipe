@@ -65,8 +65,8 @@ export default function IngressoScreen() {
         {cabecalho}
         <EmptyState
           title="Sem ingresso"
-          description="O ingresso aparece quando você confirma presença no rolê."
-          actionLabel="Ver o rolê"
+          description="O ingresso aparece quando você confirma presença no encontro."
+          actionLabel="Ver o encontro"
           onAction={voltar}
         />
       </View>
@@ -157,7 +157,7 @@ export default function IngressoScreen() {
               Carro
             </Text>
             <Text className="text-on-surface" style={{ fontSize: 16 }}>
-              {ticket.carLabel ?? "Sem carro — escolha na página do rolê, se for levar"}
+              {ticket.carLabel ?? "Sem carro — escolha na página do encontro, se for levar"}
             </Text>
           </View>
         </View>

@@ -34,9 +34,9 @@ const SOME = [
   "Seu perfil, foto e bio",
   "Seus carros, com modificações e projetos",
   "Suas publicações e todas as fotos que você enviou",
-  "Seus comentários, curtidas e mensagens nos chats de rolê",
+  "Seus comentários, curtidas e mensagens nos chats de encontro",
   "Quem você segue e quem te segue",
-  "Os rolês que você organizou e suas presenças",
+  "Os encontros que você organizou e suas presenças",
   "Suas notificações e publicações salvas",
 ];
 

@@ -116,7 +116,7 @@ export default function ProfileScreen() {
               onPress: () => router.push("/moderacao"),
             },
             {
-              text: rolesNaFila ? `Rolês na fila (${rolesNaFila})` : "Rolês na fila",
+              text: rolesNaFila ? `Encontros na fila (${rolesNaFila})` : "Encontros na fila",
               onPress: () => router.push("/fila-de-roles"),
             },
           ]
@@ -273,7 +273,7 @@ export default function ProfileScreen() {
             numeros={[
               { label: "carros", value: cars.length },
               { label: "projetos", value: me.projectsCount },
-              { label: "rolês", value: me.eventsAttendedCount ?? 0 },
+              { label: "encontros", value: me.eventsAttendedCount ?? 0 },
               { label: "seguidores", value: me.followersCount, onPress: () => setFollowSheet("followers") },
               { label: "seguindo", value: me.followingCount, onPress: () => setFollowSheet("following") },
             ]}
@@ -326,7 +326,7 @@ export default function ProfileScreen() {
             <StatCard label="Carros" value={String(cars.length)} />
             <StatCard label="Projetos" value={String(me.projectsCount)} />
             {/* Rolês em que já esteve: histórico, não intenção. */}
-            <StatCard label="Rolês" value={String(me.eventsAttendedCount ?? 0)} />
+            <StatCard label="Encontros" value={String(me.eventsAttendedCount ?? 0)} />
             {/* "Seguindo" existia só no perfil dos outros — no meu, o número
                 que eu mais quero conferir não aparecia. */}
             <StatCard
@@ -350,7 +350,7 @@ export default function ProfileScreen() {
           {cars.length === 0 ? (
             <Text className="text-on-surface-variant px-4" style={{ fontSize: 13 }}>
               Sua garagem está vazia. Adicione um carro quando quiser — dá pra
-              usar o app só pelas fotos e pelos rolês.
+              usar o app só pelas fotos e pelos encontros.
             </Text>
           ) : (
             <>

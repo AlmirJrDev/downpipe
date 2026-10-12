@@ -29,7 +29,7 @@ export function FeedEvents() {
     <View className="mb-6">
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-on-surface" style={typography.labelCaps}>
-          Próximos rolês
+          Próximos encontros
         </Text>
         <Pressable onPress={() => router.push("/(tabs)/explore?aba=roles")} hitSlop={8}>
           <Text className="text-primary" style={{ fontSize: 12, fontWeight: "600" }}>

@@ -55,7 +55,7 @@ const actions: {
     key: "evento",
     icon: CalendarPlus,
     title: "Encontro",
-    subtitle: "Marque um rolê e veja quem confirma",
+    subtitle: "Marque um encontro e veja quem confirma",
     route: "/add-event",
   },
 ];

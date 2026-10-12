@@ -199,7 +199,7 @@ export default function EditProfileScreen() {
               Organizo encontros
             </Text>
             <Text className="text-muted" style={{ fontSize: 12, marginTop: 2 }}>
-              Coloca seus rolês em destaque no seu perfil.
+              Coloca seus encontros em destaque no seu perfil.
             </Text>
           </View>
         </Pressable>

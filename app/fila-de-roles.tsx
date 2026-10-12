@@ -274,21 +274,21 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           await subirFoto.mutateAsync({ id: eventId, localUri: fotoLocal });
         } catch (err) {
           setErro(
-            `O rolê foi publicado, mas a foto não subiu: ${
-              err instanceof ApiError ? err.message : "tente pela tela do rolê."
+            `O encontro foi publicado, mas a foto não subiu: ${
+              err instanceof ApiError ? err.message : "tente pela tela do encontro."
             }`
           );
         }
       }
       atualizar();
       Alert.alert(
-        semLocalizacao ? "Publicado, mas sem ponto no mapa" : "Rolê publicado",
+        semLocalizacao ? "Publicado, mas sem ponto no mapa" : "Encontro publicado",
         semLocalizacao
-          ? "O endereço não resolveu, e sem ponto ele não aparece no “perto de mim”. Abra o rolê e marque o pino."
+          ? "O endereço não resolveu, e sem ponto ele não aparece no “perto de mim”. Abra o encontro e marque o pino."
           : "Ele já está no calendário.",
         [
           { text: "Fechar", style: "cancel" },
-          { text: "Ver o rolê", onPress: () => router.push(`/event/${eventId}`) },
+          { text: "Ver o encontro", onPress: () => router.push(`/event/${eventId}`) },
         ]
       );
     },
@@ -319,7 +319,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
   });
 
   const confirmarDescarte = () =>
-    Alert.alert("Descartar este rolê?", "Ele sai da fila e não vira evento.", [
+    Alert.alert("Descartar este encontro?", "Ele sai da fila e não vira evento.", [
       { text: "Cancelar", style: "cancel" },
       { text: "Descartar", style: "destructive", onPress: () => descartar.mutate() },
     ]);
@@ -364,7 +364,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           hitSlop={6}
         >
           <Text className="text-primary" style={{ fontSize: 13, fontWeight: "600" }}>
-            Ver o rolê publicado
+            Ver o encontro publicado
           </Text>
         </Pressable>
       ) : null}
@@ -389,7 +389,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
       ) : (
         <View className="mt-5 border-t border-border pt-5">
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
-            FOTO DO ROLÊ
+            FOTO DO ENCONTRO
           </Text>
           {fotoLocal ?? foto ? (
             <View className="mb-2">
@@ -400,7 +400,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
               />
               {fotoLocal ? (
                 <Text className="text-muted mt-1" style={{ fontSize: 11 }}>
-                  Arte escolhida por você — sobe quando o rolê for publicado.
+                  Arte escolhida por você — sobe quando o encontro for publicado.
                 </Text>
               ) : null}
             </View>
@@ -437,7 +437,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           ) : (
             <Text className="text-muted mb-2" style={{ fontSize: 12 }}>
               Sem link de fonte não dá pra puxar a arte. Dá pra subir uma foto
-              editando o rolê depois de publicar.
+              editando o encontro depois de publicar.
             </Text>
           )}
           {/* O que vem é a prévia que o Instagram publica pra quem não está
@@ -452,7 +452,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           </Text>
 
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
-            NOME DO ROLÊ
+            NOME DO ENCONTRO
           </Text>
           <TextInput
             value={name}
@@ -615,7 +615,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           />
 
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
-            TIPO DE ROLÊ
+            TIPO DE ENCONTRO
           </Text>
           <View className="flex-row flex-wrap mb-5">
             {TIPOS_DE_ROLE.map((t) => (
@@ -629,7 +629,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
           </View>
 
           <Text className="text-on-surface-variant mb-2" style={LABEL}>
-            O QUE TEM NO ROLÊ
+            O QUE TEM NO ENCONTRO
           </Text>
           <View className="flex-row flex-wrap mb-5">
             {ATRACOES.map((a) => (
@@ -715,7 +715,7 @@ function CardDaFila({ role, aba }: { role: RoleNaFila; aba: Aba }) {
 
           <View className="flex-row gap-2 mt-2">
             <Botao
-              label="Descartar este rolê"
+              label="Descartar este encontro"
               destrutivo
               onPress={confirmarDescarte}
               ocupado={salvando}
@@ -765,7 +765,7 @@ export default function FilaDeRolesScreen() {
 
   const cabecalho = (
     <AppHeader
-      title="Rolês na fila"
+      title="Encontros na fila"
       left={
         <Pressable
           hitSlop={8}
@@ -852,17 +852,17 @@ export default function FilaDeRolesScreen() {
             title={aba === "pending" ? "Fila vazia" : "Nada aqui ainda"}
             description={
               aba === "pending"
-                ? "Nenhum rolê esperando conferência."
+                ? "Nenhum encontro esperando conferência."
                 : aba === "approved"
-                  ? "Os rolês que você publicar aparecem aqui."
-                  : "Os rolês que você descartar aparecem aqui."
+                  ? "Os encontros que você publicar aparecem aqui."
+                  : "Os encontros que você descartar aparecem aqui."
             }
           />
         ) : (
           <>
             {aba === "pending" && (
               <Text className="text-muted mb-4" style={{ fontSize: 12, lineHeight: 16 }}>
-                {roles.length === 1 ? "1 rolê esperando" : `${roles.length} rolês esperando`}.
+                {roles.length === 1 ? "1 encontro esperando" : `${roles.length} encontros esperando`}.
                 Abra a fonte, confira a data e publique.
               </Text>
             )}

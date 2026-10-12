@@ -44,7 +44,7 @@ export function ProfileEvents({
         style={{ paddingHorizontal: spacing.marginMobile }}
       >
         <Text className="text-on-surface" style={typography.labelCaps}>
-          Rolês
+          Encontros
         </Text>
         {isMe && (
           <Pressable

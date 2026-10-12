@@ -52,7 +52,7 @@ function Cartao({ sugestao }: { sugestao: Sugestao }) {
         @{sugestao.username}
       </Text>
       <Text className="text-muted mt-0.5" style={{ fontSize: 11 }} numberOfLines={1}>
-        {resumo || (sugestao.isOrganizer ? "Organiza rolês" : "Por aqui há pouco")}
+        {resumo || (sugestao.isOrganizer ? "Organiza encontros" : "Por aqui há pouco")}
       </Text>
 
       <Pressable

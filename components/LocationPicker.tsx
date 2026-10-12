@@ -271,7 +271,7 @@ export function LocationPicker({
             className="text-on-surface"
             style={{ fontSize: 12, fontWeight: "700", letterSpacing: 2 }}
           >
-            ONDE É O ROLÊ
+            ONDE É O ENCONTRO
           </Text>
           <View style={{ width: 22 }} />
         </View>

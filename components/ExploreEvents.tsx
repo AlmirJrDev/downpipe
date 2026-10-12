@@ -155,7 +155,7 @@ export function ExploreEvents({
 
       <View className="flex-row mb-3">
         <CategoryChip label="Próximos" active={!past} onPress={() => setPast(false)} />
-        <CategoryChip label="Já rolaram" active={past} onPress={() => setPast(true)} />
+        <CategoryChip label="Já aconteceram" active={past} onPress={() => setPast(true)} />
       </View>
 
       {/* Distância: só faz sentido depois de saber de onde. */}
@@ -197,7 +197,7 @@ export function ExploreEvents({
                 className="text-on-surface"
                 style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
               >
-                ROLÊS PERTO DE MIM
+                ENCONTROS PERTO DE MIM
               </Text>
             </>
           )}
@@ -220,7 +220,7 @@ export function ExploreEvents({
             className="text-on-surface"
             style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
           >
-            CRIAR ROLÊ
+            CRIAR ENCONTRO
           </Text>
         </Pressable>
 
@@ -235,7 +235,7 @@ export function ExploreEvents({
             className="text-on-surface"
             style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
           >
-            VI UM ROLÊ
+            VI UM ENCONTRO
           </Text>
         </Pressable>
       </View>
@@ -328,7 +328,7 @@ export function ExploreEvents({
               />
             )}
             <CategoryChip
-              label={past ? "Já rolaram" : "Próximos"}
+              label={past ? "Já aconteceram" : "Próximos"}
               active
               onPress={() => setPast(!past)}
             />
@@ -397,7 +397,7 @@ export function ExploreEvents({
               backgroundColor: colors.surfaceLow,
             }}
           >
-            {semCoordenada} {semCoordenada === 1 ? "rolê sem local no mapa" : "rolês sem local no mapa"} — veja na lista
+            {semCoordenada} {semCoordenada === 1 ? "encontro sem local no mapa" : "encontros sem local no mapa"} — veja na lista
           </Text>
         )}
       </View>
@@ -447,7 +447,7 @@ export function ExploreEvents({
       ListEmptyComponent={
         !isLoading ? (
           <EmptyState
-            title={past ? "Nenhum rolê passado" : "Nenhum rolê marcado"}
+            title={past ? "Nenhum encontro passado" : "Nenhum encontro marcado"}
             description={
               center
                 ? `Nada num raio de ${radiusKm} km. Tente aumentar a distância.`

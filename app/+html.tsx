@@ -24,7 +24,7 @@ export default function Root({ children }: PropsWithChildren) {
         <title>Downpipe</title>
         <meta
           name="description"
-          content="Rede social automotiva: sua garagem, os rolês e quem vai estar lá."
+          content="Rede social automotiva: sua garagem, os encontros e quem vai estar lá."
         />
 
         <link rel="manifest" href="/manifest.json" />
@@ -143,7 +143,7 @@ const estilos = `
   }
 
   /* A exceção: a tela que pede largura (ver hooks/useLarguraAmpla) sai da
-     moldura. Hoje é só a página do rolê, que é onde chega quem vem do Google
+     moldura. Hoje é só a página do encontro, que é onde chega quem vem do Google
      pelo computador. 1024 é o mesmo corte do hook — abaixo disso ela
      continua de uma coluna, e abrir a moldura só esticaria o celular. */
   @media (min-width: 1024px) {
