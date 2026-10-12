@@ -1,7 +1,8 @@
 import "../global.css";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, usePathname, useRouter, useSegments } from "expo-router";
+import { registrarVisita } from "@/utils/visitas";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -41,6 +42,13 @@ const navigationTheme = {
     notification: colors.primaryContainer,
   },
 };
+
+/** Cada tela aberta vira uma visita na tela Tráfego (ver utils/visitas). */
+function ContadorDeVisitas() {
+  const caminho = usePathname();
+  useEffect(() => registrarVisita(caminho), [caminho]);
+  return null;
+}
 
 // Redireciona entre (tabs), login/register e o onboarding (edit-profile
 // forçado pra quem ainda está com o @ placeholder do signup) conforme o
@@ -170,6 +178,7 @@ export default function RootLayout() {
             ) : (
               <>
                 <AuthRedirect />
+                <ContadorDeVisitas />
                 {/* No computador, menu lateral + coluna central em volta de
                     todas as telas (ver components/desktop). No celular não
                     muda nada. */}
@@ -198,6 +207,7 @@ export default function RootLayout() {
                   <Stack.Screen name="fila-de-roles" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="relato" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="relatos" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="trafego" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="excluir-minha-conta" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-chat/[id]" options={{ animation: "slide_from_right" }} />

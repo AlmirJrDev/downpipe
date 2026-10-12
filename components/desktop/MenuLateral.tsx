@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   CalendarCheck,
+  ChartColumn,
   Compass,
   Flag,
   Home,
@@ -167,6 +168,7 @@ export function MenuLateral() {
           ativoEm: (c) => c.startsWith("/relatos"),
           contador: relatos,
         },
+        { rotulo: "Tráfego", Icone: ChartColumn, destino: "/trafego", ativoEm: (c) => c.startsWith("/trafego") },
       ]
     : [];
 

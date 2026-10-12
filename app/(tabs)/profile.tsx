@@ -129,6 +129,7 @@ export default function ProfileScreen() {
               text: relatosNovos ? `Relatos (${relatosNovos})` : "Relatos",
               onPress: () => router.push("/relatos"),
             },
+            { text: "Tráfego", onPress: () => router.push("/trafego") },
           ]
         : []),
       { text: "Contar como tá sendo", onPress: () => router.push("/relato") },

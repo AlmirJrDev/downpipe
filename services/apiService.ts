@@ -1140,12 +1140,38 @@ async function marcarRelatoLido(id: string): Promise<void> {
   await api.post(`/admin/feedback/${id}/read`, {});
 }
 
+// ------------------------------------------------------------------- Tráfego
+
+export interface Contagem {
+  nome: string;
+  pessoas: number;
+}
+
+export interface Trafego {
+  dias: number;
+  pessoas: number;
+  visualizacoes: number;
+  noInstagram: number;
+  funil: { viramOSite: number; abriramOApp: number; foramProCadastro: number; contasCriadas: number };
+  porDia: { dia: string; pessoas: number; visualizacoes: number }[];
+  origens: Contagem[];
+  campanhas: Contagem[];
+  aparelhos: Contagem[];
+  paginas: Contagem[];
+}
+
+/** Só quem administra: 404 pros outros. */
+async function getTrafego(dias: number): Promise<Trafego> {
+  return api.get<Trafego>(`/admin/trafego?dias=${dias}`);
+}
+
 const apiDeVerdade = {
   sugerirRole,
   mandarRelato,
   getRelatos,
   contarRelatosNaoLidos,
   marcarRelatoLido,
+  getTrafego,
   getFilaDeRoles,
   contarRolesNaFila,
   aprovarRole,
