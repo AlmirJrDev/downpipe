@@ -35,6 +35,8 @@ import type {
   VehicleVersion,
   VehicleDetail,
 } from "@/types";
+import { emModoDemo } from "@/services/demo/modoDemo";
+import { criarApiDemo } from "@/services/demo/apiDemo";
 
 function qs(params: Record<string, string | number | undefined>): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined);
@@ -1104,7 +1106,7 @@ async function descartarRole(id: string): Promise<void> {
   await api.post(`/admin/suggestions/${id}/reject`, {});
 }
 
-export const apiService = {
+const apiDeVerdade = {
   sugerirRole,
   getFilaDeRoles,
   contarRolesNaFila,
@@ -1219,3 +1221,9 @@ export const apiService = {
   subscribePush,
   unsubscribePush,
 };
+
+/**
+ * Com ?demo=1, o app inteiro roda com dados inventados (ver services/demo):
+ * nenhuma chamada com dado de usuário sai pro servidor.
+ */
+export const apiService = emModoDemo() ? criarApiDemo(apiDeVerdade) : apiDeVerdade;

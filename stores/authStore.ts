@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { authService, type AuthUser, type SupabaseSession } from "@/services/authService";
 import { setAuthToken, setRefreshHandler } from "@/services/api";
 import { clearSession, loadSession, saveSession } from "@/services/tokenStorage";
+import { emModoDemo, sairDoModoDemo } from "@/services/demo/modoDemo";
 
 type AuthStatus = "hydrating" | "signedOut" | "signedIn";
 
@@ -54,6 +55,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   hydrate: async () => {
+    // Demonstração: entra direto como o perfil inventado. Não existe sessão
+    // de verdade, e nenhuma chamada com ela sai do aparelho.
+    if (emModoDemo()) {
+      setAuthToken("demo");
+      set({ status: "signedIn" });
+      return;
+    }
+
     const stored = await loadSession();
     if (!stored) {
       set({ status: "signedOut" });
@@ -95,6 +104,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
+    if (emModoDemo()) {
+      // Sair da demonstração desliga ela: o próximo login é de verdade.
+      sairDoModoDemo();
+      setAuthToken(null);
+      set({ status: "signedOut", user: null });
+      return;
+    }
     try {
       await authService.logout();
     } catch {

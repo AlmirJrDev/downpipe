@@ -189,7 +189,9 @@ const larguraDoRole = `
   // montar; abrir a moldura já aqui evita a página nascer com 460 px e
   // pular. Se a sessão estiver vencida, o app desfaz ao descobrir.
   try {
-    if (window.innerWidth >= 1024 && window.localStorage.getItem('gearhead_session')) {
+    var demo = /[?&]demo=1/.test(window.location.search) ||
+      (window.localStorage.getItem('downpipe_demo') === '1' && !/[?&]demo=0/.test(window.location.search));
+    if (window.innerWidth >= 1024 && (window.localStorage.getItem('gearhead_session') || demo)) {
       document.documentElement.dataset.app = 'desktop';
     }
   } catch (e) {}
