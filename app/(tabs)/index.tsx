@@ -16,7 +16,9 @@ import { AppHeader } from "@/components/AppHeader";
 import { PostCard } from "@/components/cards/PostCard";
 import { QuemSeguir } from "@/components/QuemSeguir";
 import { GettingStarted } from "@/components/GettingStarted";
-import { FeedEvents } from "@/components/FeedEvents";
+import { FeedEventCard } from "@/components/cards/FeedEventCard";
+import { useEvents } from "@/stores/eventsStore";
+import type { CarEvent, Post } from "@/types";
 import { FeedSkeleton } from "@/components/ui/States";
 import { EmptyState } from "@/components/ui/States";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -30,6 +32,8 @@ import {
   ColunaDaDireita,
   LARGURA_DA_COLUNA_DIREITA,
 } from "@/components/desktop/ColunaDaDireita";
+
+type ItemDoFeed = { tipo: "post"; post: Post } | { tipo: "encontro"; event: CarEvent };
 
 /** O feed no computador tem a largura do feed do Instagram web. */
 const LARGURA_DO_FEED = 600;
@@ -79,7 +83,36 @@ export default function HomeScreen() {
   // likesCount/likedByMe já são atualizados direto no cache dessa query
   // (useToggleLike faz optimistic update aqui) — não precisa mais mesclar
   // com nenhuma store local.
-  const feed = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  const posts = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+
+  /**
+   * Os encontros que vêm aí entram na linha do tempo como publicação, pela
+   * hora em que foram publicados. São de todo mundo, não só de quem a
+   * pessoa segue: encontro é o que o app tem de público, e é o que faz o
+   * feed de quem acabou de chegar não abrir vazio.
+   *
+   * Encontro mais antigo que o último post carregado espera a próxima
+   * página — senão ele pularia pro meio de posts que ainda nem chegaram.
+   */
+  const { data: encontrosData } = useEvents({});
+  const feed = useMemo<ItemDoFeed[]>(() => {
+    const encontros = (encontrosData?.pages.flatMap((p) => p.data) ?? [])
+      .filter((e) => e.visibility === "public")
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const itens: ItemDoFeed[] = [];
+    let i = 0;
+    for (const post of posts) {
+      // Anúncio não tem data de verdade: fica onde a lista pôs.
+      if (post.type !== "ad" && post.type !== "house_ad") {
+        while (i < encontros.length && encontros[i].createdAt > post.createdAt) {
+          itens.push({ tipo: "encontro", event: encontros[i++] });
+        }
+      }
+      itens.push({ tipo: "post", post });
+    }
+    if (!hasNextPage) while (i < encontros.length) itens.push({ tipo: "encontro", event: encontros[i++] });
+    return itens;
+  }, [posts, encontrosData, hasNextPage]);
 
   /**
    * Começa a baixar as fotos das próximas publicações antes de elas entrarem
@@ -103,7 +136,7 @@ export default function HomeScreen() {
 
       const proximas = feedRef.current
         .slice(ultimoVisivel + 1, ultimoVisivel + 1 + ADIANTAR)
-        .map((p) => p.imageUrl)
+        .map((item) => (item.tipo === "post" ? item.post.imageUrl : item.event.photoUrl))
         .filter((url): url is string => !!url && !jaPedidas.current.has(url));
 
       if (proximas.length === 0) return;
@@ -174,8 +207,10 @@ export default function HomeScreen() {
         // novo, que é quem mais precisa dele.
         <FlatList
           data={feed}
-          keyExtractor={(p) => p.id}
-          renderItem={({ item }) => <PostCard post={item} />}
+          keyExtractor={(item) => (item.tipo === "post" ? item.post.id : `encontro-${item.event.id}`)}
+          renderItem={({ item }) =>
+            item.tipo === "post" ? <PostCard post={item.post} /> : <FeedEventCard event={item.event} />
+          }
           // Fundo explícito: é o que aparece na área de overscroll do
           // pull-to-refresh, que não é coberta pelo contentContainer.
           style={{ backgroundColor: colors.surface }}
@@ -195,9 +230,9 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <>
               <GettingStarted />
-              {/* Com a coluna da direita, os dois moram lá. */}
+              {/* Com a coluna da direita, mora lá. Os encontros não têm mais
+                  trilho próprio aqui: entram no feed como publicação. */}
               {!comColunaDireita && <QuemSeguir />}
-              {!comColunaDireita && <FeedEvents />}
             </>
           }
           ListEmptyComponent={
