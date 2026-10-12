@@ -8,7 +8,7 @@
  */
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import { useCameraPermissions } from "expo-camera";
 import { CameraDeQR } from "@/components/CameraDeQR";
 import * as Haptics from "expo-haptics";
@@ -22,6 +22,7 @@ import { useEventById } from "@/stores/eventsStore";
 import { usePortaria, type Conexao } from "@/hooks/usePortaria";
 import { horaDaEntrada, type ResultadoDaLeitura } from "@/services/portaria";
 import { voltarOuIrPara } from "@/utils/navigation";
+import { INGRESSOS_LIGADOS } from "@/utils/ingresso";
 import { colors } from "@/constants/theme";
 import type { CheckinEntry } from "@/types";
 
@@ -35,7 +36,14 @@ const hora = (iso: string) =>
 
 type Aba = "camera" | "lista";
 
-export default function PortariaScreen() {
+/** Desligado (site publicado), o link direto volta pra página do rolê. */
+export default function PortariaRota() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  if (!INGRESSOS_LIGADOS) return <Redirect href={`/event/${id}`} />;
+  return <PortariaScreen />;
+}
+
+function PortariaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: event } = useEventById(id);
   const portaria = usePortaria(id);

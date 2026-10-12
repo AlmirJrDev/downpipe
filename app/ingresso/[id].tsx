@@ -7,7 +7,7 @@
  */
 import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
 import { ArrowLeft, CircleCheck, Sun } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
@@ -15,10 +15,17 @@ import { EmptyState, ErrorState } from "@/components/ui/States";
 import { useEventById, useMyTicket } from "@/stores/eventsStore";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { eventFullDate } from "@/utils/event";
-import { codigoLegivel, montarConteudoDoQr } from "@/utils/ingresso";
+import { codigoLegivel, INGRESSOS_LIGADOS, montarConteudoDoQr } from "@/utils/ingresso";
 import { colors, typography } from "@/constants/theme";
 
-export default function IngressoScreen() {
+/** Desligado (site publicado), o link direto volta pra página do rolê. */
+export default function IngressoRota() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  if (!INGRESSOS_LIGADOS) return <Redirect href={`/event/${id}`} />;
+  return <IngressoScreen />;
+}
+
+function IngressoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { width } = useWindowDimensions();
   const { data: event } = useEventById(id);

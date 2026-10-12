@@ -12,6 +12,13 @@
  */
 const PREFIXO = "DP1";
 
+/**
+ * Ingresso e portaria ainda em teste: aparecem rodando local (expo start)
+ * e somem no site publicado. Pra ligar num build, EXPO_PUBLIC_INGRESSOS=1.
+ * O servidor tem a mesma chave (INGRESSOS_LIGADOS).
+ */
+export const INGRESSOS_LIGADOS = __DEV__ || process.env.EXPO_PUBLIC_INGRESSOS === "1";
+
 export function montarConteudoDoQr(eventId: string, code: string): string {
   return `${PREFIXO}.${eventId}.${code}`;
 }

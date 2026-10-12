@@ -56,6 +56,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { carTitle } from "@/utils/car";
 import { eventEndLine, eventFullDate } from "@/utils/event";
 import { openDirections } from "@/utils/maps";
+import { INGRESSOS_LIGADOS } from "@/utils/ingresso";
 import { postThumbnail } from "@/utils/post";
 import { colors, typography } from "@/constants/theme";
 import {
@@ -434,7 +435,7 @@ export default function EventDetailsScreen() {
           {/* O ingresso é de quem confirmou; a portaria, de quem organiza.
               Os dois ficam colados nas ações porque é aqui que a pessoa abre
               a tela na fila do rolê. */}
-          {attending && (
+          {INGRESSOS_LIGADOS && attending && (
             <Pressable
               onPress={() => router.push(`/ingresso/${event.id}`)}
               className="flex-row items-center justify-center gap-2 mt-2.5 py-4 border border-outline active:bg-white/5"
@@ -445,7 +446,7 @@ export default function EventDetailsScreen() {
               </Text>
             </Pressable>
           )}
-          {isOrganizer && (
+          {INGRESSOS_LIGADOS && isOrganizer && (
             <Pressable
               onPress={() => router.push(`/portaria/${event.id}`)}
               className="flex-row items-center justify-center gap-2 mt-2.5 py-4 border border-outline active:bg-white/5"
