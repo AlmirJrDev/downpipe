@@ -68,6 +68,12 @@ export default function ProfileScreen() {
     enabled: !!me?.isAdmin,
     staleTime: 60_000,
   });
+  const { data: relatosNovos } = useQuery({
+    queryKey: ['relatos-nao-lidos'],
+    queryFn: () => apiService.contarRelatosNaoLidos(),
+    enabled: !!me?.isAdmin,
+    staleTime: 60_000,
+  });
   const { data: myCars } = useMyGarage();
   const logout = useAuthStore((s) => s.logout);
   const [followSheet, setFollowSheet] = useState<FollowTab | null>(null);
@@ -119,8 +125,13 @@ export default function ProfileScreen() {
               text: rolesNaFila ? `Encontros na fila (${rolesNaFila})` : "Encontros na fila",
               onPress: () => router.push("/fila-de-roles"),
             },
+            {
+              text: relatosNovos ? `Relatos (${relatosNovos})` : "Relatos",
+              onPress: () => router.push("/relatos"),
+            },
           ]
         : []),
+      { text: "Contar como tá sendo", onPress: () => router.push("/relato") },
       { text: "Publicações salvas", onPress: () => router.push("/saved") },
       { text: "Pessoas bloqueadas", onPress: () => router.push("/bloqueados") },
       ...(itemNotificacoes ? [itemNotificacoes] : []),

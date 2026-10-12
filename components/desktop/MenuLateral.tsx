@@ -16,6 +16,7 @@ import {
   Compass,
   Flag,
   Home,
+  MessageSquareText,
   SquarePlus,
   User,
   Warehouse,
@@ -124,6 +125,12 @@ export function MenuLateral() {
     enabled: admin,
     staleTime: 60_000,
   });
+  const { data: relatos } = useQuery({
+    queryKey: ["relatos-nao-lidos"],
+    queryFn: () => apiService.contarRelatosNaoLidos(),
+    enabled: admin,
+    staleTime: 60_000,
+  });
 
   const principais: Item[] = [
     { rotulo: "Início", Icone: Home, destino: "/(tabs)", ativoEm: (c) => c === "/" },
@@ -153,8 +160,23 @@ export function MenuLateral() {
           ativoEm: (c) => c.startsWith("/fila-de-roles"),
           contador: fila,
         },
+        {
+          rotulo: "Relatos",
+          Icone: MessageSquareText,
+          destino: "/relatos",
+          ativoEm: (c) => c.startsWith("/relatos"),
+          contador: relatos,
+        },
       ]
     : [];
+
+  // Pra todo mundo, discreto embaixo: não é navegação, é um canal.
+  const relato: Item = {
+    rotulo: "Contar como tá sendo",
+    Icone: MessageSquareText,
+    destino: "/relato",
+    ativoEm: (c) => c === "/relato",
+  };
 
   return (
     <View
@@ -201,6 +223,10 @@ export function MenuLateral() {
           ))}
         </View>
       )}
+
+      <View style={{ marginTop: "auto", marginBottom: 20 }}>
+        <Linha item={relato} ativo={!painelAberto && relato.ativoEm(caminho)} />
+      </View>
     </View>
   );
 }

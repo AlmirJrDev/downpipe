@@ -1106,8 +1106,46 @@ async function descartarRole(id: string): Promise<void> {
   await api.post(`/admin/suggestions/${id}/reject`, {});
 }
 
+// ------------------------------------------------------- Relato de experiência
+
+export interface NovoRelato {
+  rating: number | null;
+  message: string;
+  canContact: boolean;
+}
+
+export interface Relato extends NovoRelato {
+  id: string;
+  device: string | null;
+  readAt: string | null;
+  createdAt: string;
+  username: string | null;
+  avatarUrl: string | null;
+}
+
+async function mandarRelato(input: NovoRelato): Promise<void> {
+  await api.post("/feedback", input);
+}
+
+/** Só quem modera: 404 pros outros, como a fila de encontros. */
+async function getRelatos(): Promise<Relato[]> {
+  return api.get<Relato[]>("/admin/feedback");
+}
+
+async function contarRelatosNaoLidos(): Promise<number> {
+  return api.get<number>("/admin/feedback/count");
+}
+
+async function marcarRelatoLido(id: string): Promise<void> {
+  await api.post(`/admin/feedback/${id}/read`, {});
+}
+
 const apiDeVerdade = {
   sugerirRole,
+  mandarRelato,
+  getRelatos,
+  contarRelatosNaoLidos,
+  marcarRelatoLido,
   getFilaDeRoles,
   contarRolesNaFila,
   aprovarRole,
