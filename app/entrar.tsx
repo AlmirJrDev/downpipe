@@ -1,7 +1,7 @@
 /**
  * A volta do login com Google.
  *
- * O Supabase devolve a pessoa pra cá com a sessão no fragmento do endereço
+ * O servidor (/auth/google/callback) devolve a pessoa pra cá com a sessão no fragmento do endereço
  * (#access_token=...&refresh_token=...). A tela lê, guarda como qualquer
  * sessão de login e apaga o fragmento da barra — token não fica à vista nem
  * no histórico. Daí em diante quem decide pra onde ir é o AuthRedirect:
