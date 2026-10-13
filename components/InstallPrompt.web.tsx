@@ -11,6 +11,7 @@
  */
 import React, { useEffect, useState } from "react";
 import { useModoDesktop } from "@/hooks/useDesktop";
+import { useAuthStore } from "@/stores/authStore";
 import { cartaoNoCanto, fundoNoCanto } from "@/components/desktop/cartaoNoCanto";
 
 type Situacao =
@@ -62,8 +63,18 @@ function detectar(): Situacao {
   return /Android/i.test(ua) ? "android" : "desktop";
 }
 
+/** Qual app abriu o link — "Abra fora do WhatsApp" pra quem veio do Instagram só confunde. */
+function appDoNavegador(): string | null {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (/Instagram/i.test(ua)) return "Instagram";
+  if (/FBAN|FBAV|FB_IAB/i.test(ua)) return "Facebook";
+  if (/WhatsApp/i.test(ua)) return "WhatsApp";
+  return null;
+}
+
 export function InstallPrompt() {
   const desktop = useModoDesktop();
+  const logado = useAuthStore((s) => s.status === "signedIn");
   const [situacao, setSituacao] = useState<Situacao>("nenhuma");
   const [aberto, setAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
@@ -80,7 +91,11 @@ export function InstallPrompt() {
     const avaliar = () => {
       const s = detectar();
       setSituacao(s);
-      setAberto(s !== "nenhuma");
+      // Mandar abrir em outro navegador é pedir muito de quem acabou de
+      // chegar pelo anúncio e nem sabe o que é o app: aí o convite só
+      // aparece pra quem já entrou na conta.
+      const pedeOutroNavegador = s === "navegadorInterno" || s === "iosOutroNavegador";
+      setAberto(s !== "nenhuma" && (!pedeOutroNavegador || logado));
     };
 
     avaliar();
@@ -88,7 +103,7 @@ export function InstallPrompt() {
     window.addEventListener("downpipe:instalavel", avaliar);
     window.addEventListener("downpipe:instalado", () => setAberto(false));
     return () => window.removeEventListener("downpipe:instalavel", avaliar);
-  }, []);
+  }, [logado]);
 
   const dispensar = () => {
     setAberto(false);
@@ -126,7 +141,13 @@ export function InstallPrompt() {
         <div style={estilos.topo}>
           <img src="/icon-192.png" alt="" width={44} height={44} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={estilos.titulo}>{conteudo[situacao].titulo}</div>
+            <div style={estilos.titulo}>
+              {situacao === "navegadorInterno"
+                ? appDoNavegador()
+                  ? `Abra fora do ${appDoNavegador()}`
+                  : "Abra no navegador"
+                : conteudo[situacao].titulo}
+            </div>
             <div style={estilos.texto}>{conteudo[situacao].texto}</div>
           </div>
           <button onClick={dispensar} style={estilos.fechar} aria-label="Agora não">
@@ -174,7 +195,7 @@ const conteudo: Record<Situacao, { titulo: string; texto: string }> = {
     texto: "No iPhone, só o Safari coloca um site na tela inicial.",
   },
   navegadorInterno: {
-    titulo: "Abra fora do WhatsApp",
+    titulo: "Abra no navegador",
     texto: "Este navegador não instala apps. Leva o endereço pro Chrome ou Safari.",
   },
   android: {

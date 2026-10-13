@@ -37,9 +37,52 @@ export function useGoogleLigado(): boolean {
   return !!data?.google;
 }
 
+/**
+ * Navegador embutido do Instagram/Facebook (e WebView do Android). O Google
+ * recusa login ali ("disallowed_useragent") — e quem chega pelo anúncio
+ * está exatamente nele.
+ */
+function navegadorEmbutido(): string | null {
+  if (Platform.OS !== "web" || typeof navigator === "undefined") return null;
+  const ua = navigator.userAgent;
+  if (/Instagram/i.test(ua)) return "Instagram";
+  if (/FBAN|FBAV|FB_IAB/i.test(ua)) return "Facebook";
+  if (/; wv\)/i.test(ua)) return "app";
+  return null;
+}
+
+const Divisor = () => (
+  <View className="flex-row items-center" style={{ gap: 12 }}>
+    <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+    <Text style={{ color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.6 }}>OU COM E-MAIL</Text>
+    <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+  </View>
+);
+
 export function BotaoGoogle() {
   const ligado = useGoogleLigado();
   if (!ligado) return null;
+
+  // Botão que leva pra um erro do Google é pior que nenhum: explica o
+  // caminho e deixa o e-mail, que funciona ali dentro, logo embaixo.
+  const embutido = navegadorEmbutido();
+  if (embutido) {
+    return (
+      <View style={{ gap: 18, marginBottom: 18 }}>
+        <View style={{ borderWidth: 1, borderColor: colors.border, padding: 14, gap: 6 }}>
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <LogoDoGoogle tamanho={16} />
+            <Text style={{ color: colors.onSurface, fontSize: 14, fontWeight: "600" }}>Entrar com Google</Text>
+          </View>
+          <Text style={{ color: colors.onSurfaceVariant, fontSize: 13, lineHeight: 19 }}>
+            {embutido === "app" ? "Dentro deste app" : `Dentro do ${embutido}`} o Google não deixa entrar. Toque nos
+            três pontinhos lá em cima e escolha abrir no navegador — ou crie a conta com e-mail aqui embaixo.
+          </Text>
+        </View>
+        <Divisor />
+      </View>
+    );
+  }
 
   const entrar = () => {
     // O link que a pessoa tinha aberto vai junto, porque a página sai do
@@ -60,11 +103,7 @@ export function BotaoGoogle() {
         <LogoDoGoogle />
         <Text style={{ color: "#1F1F1F", fontSize: 15, fontWeight: "600" }}>Continuar com Google</Text>
       </Pressable>
-      <View className="flex-row items-center" style={{ gap: 12 }}>
-        <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-        <Text style={{ color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.6 }}>OU COM E-MAIL</Text>
-        <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-      </View>
+      <Divisor />
     </View>
   );
 }
