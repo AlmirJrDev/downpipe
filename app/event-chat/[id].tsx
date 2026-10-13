@@ -392,7 +392,7 @@ function Mensagem({
       delayLongPress={350}
       className={`flex-row gap-2 ${minha ? "justify-end" : "justify-start"}`}
     >
-      {!minha && <UserAvatar uri={mensagem.author?.avatarUrl ?? ""} size={28} />}
+      {!minha && <UserAvatar uri={mensagem.author?.avatarUrl ?? ""} nome={mensagem.author?.displayName} usuario={mensagem.author?.username} size={28} />}
       <View style={{ maxWidth: "78%" }}>
         {!minha && (
           <View className="flex-row items-center gap-1.5 mb-1">

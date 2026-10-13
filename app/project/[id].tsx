@@ -222,7 +222,7 @@ export default function ProjectDetailsScreen() {
               <Pencil size={18} color={colors.onSurfaceVariant} />
             </Pressable>
           ) : (
-            <UserAvatar uri={me?.avatarUrl ?? ""} size={28} />
+            <UserAvatar uri={me?.avatarUrl ?? ""} nome={me?.displayName} usuario={me?.username} size={28} />
           )
         }
       />

@@ -74,7 +74,7 @@ export function CarCard({ car }: { car: Car }) {
               className="flex-row items-center gap-2 flex-1"
               hitSlop={6}
             >
-              <UserAvatar uri={car.owner.avatarUrl ?? ""} size={22} />
+              <UserAvatar uri={car.owner.avatarUrl ?? ""} nome={car.owner?.displayName} usuario={car.owner?.username} size={22} />
               <Text className="text-on-surface-variant" style={{ fontSize: 13 }} numberOfLines={1}>
                 @{car.owner.username}
                 {year ? ` · ${year}` : ""}

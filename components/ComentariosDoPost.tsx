@@ -153,7 +153,7 @@ export function ComentariosDoPost({
                   backgroundColor: editing?.id === item.id ? colors.surfaceLow : "transparent",
                 }}
               >
-                <UserAvatar uri={author?.avatarUrl ?? ""} size={32} />
+                <UserAvatar uri={author?.avatarUrl ?? ""} nome={author?.displayName} usuario={author?.username} size={32} />
                 <View className="flex-1">
                   <Text className="text-on-surface" style={{ fontSize: 13 }}>
                     <Text
@@ -205,7 +205,7 @@ export function ComentariosDoPost({
         className="flex-row items-center gap-3 px-5 pt-3 border-t border-border"
         style={painel ? { paddingBottom: 12 } : undefined}
       >
-        <UserAvatar uri={me?.avatarUrl ?? ""} size={32} />
+        <UserAvatar uri={me?.avatarUrl ?? ""} nome={me?.displayName} usuario={me?.username} size={32} />
         <TextInput
           value={text}
           onChangeText={setText}

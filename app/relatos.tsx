@@ -35,7 +35,7 @@ function CartaoDeRelato({ relato }: { relato: Relato }) {
     <View style={{ borderWidth: 1, borderColor: colors.border, padding: 16, gap: 10, opacity: lido ? 0.7 : 1 }}>
       <View className="flex-row items-center" style={{ gap: 10 }}>
         {!lido && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />}
-        <UserAvatar uri={relato.avatarUrl ?? ""} size={32} />
+        <UserAvatar uri={relato.avatarUrl ?? ""} usuario={relato.username} size={32} />
         <View style={{ flex: 1 }}>
           <Pressable
             disabled={!relato.username}

@@ -42,7 +42,7 @@ export function AttendeesSheet({
         disabled={!hasProfile}
         className="flex-row items-center gap-3 px-5 py-3 active:opacity-60"
       >
-        <UserAvatar uri={item.avatarUrl ?? ""} size={38} />
+        <UserAvatar uri={item.avatarUrl ?? ""} nome={item?.displayName} usuario={item?.username} size={38} />
         <View className="flex-1">
           <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
             {hasProfile ? `@${item.username}` : "Perfil removido"}

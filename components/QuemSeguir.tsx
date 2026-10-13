@@ -43,7 +43,7 @@ function Cartao({ sugestao }: { sugestao: Sugestao }) {
       className="border border-border bg-card p-3 mr-2 items-center active:opacity-90"
       style={{ width: 150 }}
     >
-      <UserAvatar uri={sugestao.avatarUrl ?? ""} size={56} />
+      <UserAvatar uri={sugestao.avatarUrl ?? ""} nome={sugestao?.displayName} usuario={sugestao?.username} size={56} />
       <Text
         className="text-on-surface mt-2"
         style={{ fontSize: 13, fontWeight: "600" }}

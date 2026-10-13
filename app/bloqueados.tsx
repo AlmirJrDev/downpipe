@@ -69,7 +69,7 @@ export default function BloqueadosScreen() {
           contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }) => (
             <View className="flex-row items-center gap-3 border-b border-border py-3">
-              <UserAvatar uri={item.avatarUrl ?? ""} size={40} />
+              <UserAvatar uri={item.avatarUrl ?? ""} nome={item?.displayName} usuario={item?.username} size={40} />
               <View className="flex-1 min-w-0">
                 <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
                   {item.displayName}

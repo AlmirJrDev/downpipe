@@ -605,7 +605,7 @@ export function PostHeader({ post }: { post: Post }) {
         className="flex-row items-center gap-3 flex-1"
         hitSlop={4}
       >
-        <UserAvatar uri={author.avatarUrl ?? ""} size={38} />
+        <UserAvatar uri={author.avatarUrl ?? ""} nome={author?.displayName} usuario={author?.username} size={38} />
         <View className="flex-1">
           <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
             @{author.username}

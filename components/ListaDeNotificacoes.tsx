@@ -133,7 +133,7 @@ export function ListaDeNotificacoes({
         style={{ backgroundColor: unread ? colors.surfaceLow : "transparent" }}
       >
         <View>
-          <UserAvatar uri={item.actor?.avatarUrl ?? ""} size={44} />
+          <UserAvatar uri={item.actor?.avatarUrl ?? ""} nome={item.actor?.displayName} usuario={item.actor?.username} size={44} />
           <View
             className="absolute items-center justify-center"
             style={{

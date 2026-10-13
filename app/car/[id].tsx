@@ -260,7 +260,7 @@ export default function CarDetailsScreen() {
               className="flex-row items-center gap-2 mt-3"
               hitSlop={6}
             >
-              <UserAvatar uri={resolvedCar.owner.avatarUrl ?? ""} size={26} />
+              <UserAvatar uri={resolvedCar.owner.avatarUrl ?? ""} nome={resolvedCar.owner?.displayName} usuario={resolvedCar.owner?.username} size={26} />
               <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
                 de <Text style={{ fontWeight: "600" }}>@{resolvedCar.owner.username}</Text>
               </Text>

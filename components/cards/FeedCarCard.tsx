@@ -44,7 +44,7 @@ export function FeedCarCard({ car }: { car: Car }) {
           className="flex-row items-center gap-3 flex-1"
           hitSlop={4}
         >
-          <UserAvatar uri={dono?.avatarUrl ?? ""} size={38} />
+          <UserAvatar uri={dono?.avatarUrl ?? ""} nome={dono?.displayName} usuario={dono?.username} size={38} />
           <View className="flex-1">
             <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
               {dono ? `@${dono.username}` : "Garagem"}

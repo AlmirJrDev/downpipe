@@ -293,7 +293,7 @@ export default function ProfileScreen() {
         ) : (
         <View className="px-4 mt-2">
           <UserAvatar
-            uri={me.avatarUrl ?? ""}
+            uri={me.avatarUrl ?? ""} nome={me?.displayName} usuario={me?.username}
             size={96}
             ringColor={colors.primaryContainer}
           />

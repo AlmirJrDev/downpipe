@@ -116,7 +116,7 @@ export default function ExploreScreen() {
             // só repetiria.
             desktop ? undefined : (
               <Pressable hitSlop={8} onPress={() => router.push("/(tabs)/profile")}>
-                <UserAvatar uri={me?.avatarUrl ?? ""} size={28} />
+                <UserAvatar uri={me?.avatarUrl ?? ""} nome={me?.displayName} usuario={me?.username} size={28} />
               </Pressable>
             )
           }
@@ -211,7 +211,7 @@ export default function ExploreScreen() {
                     onPress={() => router.push(`/user/${p.username}`)}
                     className="flex-row items-center gap-3 py-2.5 active:opacity-70"
                   >
-                    <UserAvatar uri={p.avatarUrl ?? ""} size={38} />
+                    <UserAvatar uri={p.avatarUrl ?? ""} nome={p?.displayName} usuario={p?.username} size={38} />
                     <View className="flex-1">
                       <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
                         @{p.username}

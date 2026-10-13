@@ -143,7 +143,7 @@ export default function EditProfileScreen() {
         )}
 
         <Pressable onPress={pickPhoto} className="items-center mb-6">
-          <UserAvatar uri={photoUri ?? me.avatarUrl ?? ""} size={96} ringColor={colors.primaryContainer} />
+          <UserAvatar uri={photoUri ?? me.avatarUrl ?? ""} nome={me?.displayName} usuario={me?.username} size={96} ringColor={colors.primaryContainer} />
           <View className="flex-row items-center gap-1.5 mt-2">
             <Camera size={13} color={colors.primary} />
             <Text className="text-primary" style={{ fontSize: 13, fontWeight: "600" }}>

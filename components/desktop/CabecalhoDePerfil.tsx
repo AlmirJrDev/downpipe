@@ -61,7 +61,7 @@ export function CabecalhoDePerfil({
       }}
     >
       <View style={{ width: 290, alignItems: "center" }}>
-        <UserAvatar uri={avatarUrl} size={150} ringColor={colors.primaryContainer} />
+        <UserAvatar uri={avatarUrl} size={150} ringColor={colors.primaryContainer} nome={nome} usuario={username} />
       </View>
 
       <View style={{ flex: 1, gap: 18, paddingTop: 6 }}>

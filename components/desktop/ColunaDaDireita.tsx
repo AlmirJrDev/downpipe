@@ -90,7 +90,7 @@ function Pessoa({ sugestao }: { sugestao: Sugestao }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 7 }}>
       <Pressable onPress={() => router.push(`/user/${sugestao.username}`)}>
-        <UserAvatar uri={sugestao.avatarUrl ?? ""} size={40} />
+        <UserAvatar uri={sugestao.avatarUrl ?? ""} nome={sugestao?.displayName} usuario={sugestao?.username} size={40} />
       </Pressable>
       <Pressable onPress={() => router.push(`/user/${sugestao.username}`)} style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ color: colors.onSurface, fontSize: 13.5, fontWeight: "600" }} numberOfLines={1}>
@@ -143,7 +143,7 @@ export function ColunaDaDireita() {
           onPress={() => router.navigate("/(tabs)/profile" as never)}
           style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
         >
-          <UserAvatar uri={me.avatarUrl ?? ""} size={48} />
+          <UserAvatar uri={me.avatarUrl ?? ""} nome={me?.displayName} usuario={me?.username} size={48} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={{ color: colors.onSurface, fontSize: 14, fontWeight: "700" }} numberOfLines={1}>
               @{me.username}

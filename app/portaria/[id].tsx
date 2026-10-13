@@ -318,7 +318,7 @@ function CartaoDeResultado({
 
       {ingresso && (
         <View className="items-center mt-8">
-          <UserAvatar uri={ingresso.avatarUrl ?? ""} size={72} />
+          <UserAvatar uri={ingresso.avatarUrl ?? ""} nome={ingresso?.displayName} usuario={ingresso?.username} size={72} />
           <Text style={{ color: visual.texto, fontSize: 22, fontWeight: "700", marginTop: 12, textAlign: "center" }}>
             {ingresso.displayName ?? ingresso.username ?? "Sem nome"}
           </Text>
@@ -417,7 +417,7 @@ function ListaDaPortaria({ portaria }: { portaria: ReturnType<typeof usePortaria
           const entrada = horaDaEntrada(estado, item.code);
           return (
             <View className="flex-row items-center gap-3 px-5 py-3 border-b border-outline-variant">
-              <UserAvatar uri={item.avatarUrl ?? ""} size={40} />
+              <UserAvatar uri={item.avatarUrl ?? ""} nome={item?.displayName} usuario={item?.username} size={40} />
               <View className="flex-1">
                 <Text className="text-on-surface" style={{ fontSize: 15, fontWeight: "600" }} numberOfLines={1}>
                   {nomeDe(item)}

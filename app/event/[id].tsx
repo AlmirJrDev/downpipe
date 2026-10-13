@@ -691,7 +691,7 @@ export default function EventDetailsScreen() {
                     style={{ marginLeft: i === 0 ? 0 : -10 }}
                   >
                     <UserAvatar
-                      uri={pessoa.avatarUrl ?? ""}
+                      uri={pessoa.avatarUrl ?? ""} nome={pessoa?.displayName} usuario={pessoa?.username}
                       size={40}
                       ringColor={colors.surface}
                     />
@@ -795,7 +795,7 @@ export default function EventDetailsScreen() {
                 className="flex-row items-center gap-2 mt-7"
                 hitSlop={6}
               >
-                <UserAvatar uri={event.organizer.avatarUrl ?? ""} size={30} />
+                <UserAvatar uri={event.organizer.avatarUrl ?? ""} nome={event.organizer?.displayName} usuario={event.organizer?.username} size={30} />
                 <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
                   organizado por{" "}
                   <Text className="text-on-surface" style={{ fontWeight: "600" }}>

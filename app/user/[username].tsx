@@ -205,7 +205,7 @@ export default function UserProfileScreen() {
           />
         ) : (
         <View className="px-4 mt-2">
-          <UserAvatar uri={user.avatarUrl ?? ""} size={96} ringColor={colors.primaryContainer} />
+          <UserAvatar uri={user.avatarUrl ?? ""} nome={user?.displayName} usuario={user?.username} size={96} ringColor={colors.primaryContainer} />
           <Text className="text-on-surface mt-4" style={typography.headlineSm}>
             {user.displayName}
           </Text>

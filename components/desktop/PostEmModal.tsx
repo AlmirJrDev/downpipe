@@ -295,7 +295,7 @@ function Legenda({ post, onSair }: { post: Post; onSair: () => void }) {
   return (
     <View className="px-5 pt-4 pb-3" style={{ gap: 10 }}>
       <View className="flex-row gap-3">
-        <UserAvatar uri={autor?.avatarUrl ?? ""} size={32} />
+        <UserAvatar uri={autor?.avatarUrl ?? ""} nome={autor?.displayName} usuario={autor?.username} size={32} />
         <View className="flex-1" style={{ gap: 4 }}>
           {projeto && post.title && (
             <Text className="text-on-surface" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1 }}>
