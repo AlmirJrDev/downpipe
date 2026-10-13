@@ -119,8 +119,11 @@ export default function HomeScreen() {
     staleTime: 60_000,
   });
   const feed = useMemo<ItemDoFeed[]>(() => {
+    // "Da própria pessoa" é o encontro que ela organiza. O que ela só
+    // cadastrou pra outro organizador (tem o @ dele) continua sugestão —
+    // senão quem alimenta a agenda nunca vê encontro nenhum no feed.
     const encontros: ItemDoFeed[] = (encontrosData?.pages.flatMap((p) => p.data) ?? [])
-      .filter((e) => e.visibility === "public" && e.organizerId !== me?.id)
+      .filter((e) => e.visibility === "public" && (e.organizerId !== me?.id || !!e.organizerInstagram))
       .map((event) => ({ tipo: "encontro", event }));
     // Carro sem foto não tem o que mostrar num cartão de feed.
     const carros: ItemDoFeed[] = (carrosData?.data ?? [])
