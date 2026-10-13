@@ -1,0 +1,537 @@
+{
+  "referencia": "outubro de 2026",
+  "geradoEm": "2026-10-13T14:53:24.117Z",
+  "carros": [
+    {
+      "id": "001461-3-2024",
+      "nome": "Fiat Mobi Like 1.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 55696,
+      "codigoFipe": "001461-3",
+      "modeloFipe": "MOBI LIKE 1.0 Fire Flex 5p."
+    },
+    {
+      "id": "025266-2-2024",
+      "nome": "Renault Kwid Zen 1.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 50739,
+      "codigoFipe": "025266-2",
+      "modeloFipe": "KWID Zen 1.0 Flex 12V 5p Mec."
+    },
+    {
+      "id": "004517-9-2024",
+      "nome": "Chevrolet Onix LT 1.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 68697,
+      "codigoFipe": "004517-9",
+      "modeloFipe": "ONIX HATCH LT 1.0 12V Flex 5p Mec."
+    },
+    {
+      "id": "015215-3-2024",
+      "nome": "Hyundai HB20 Comfort 1.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 69801,
+      "codigoFipe": "015215-3",
+      "modeloFipe": "HB20 Comfort 1.0 Flex 12V Mec."
+    },
+    {
+      "id": "005540-9-2024",
+      "nome": "VW Polo Track 1.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 68251,
+      "codigoFipe": "005540-9",
+      "modeloFipe": "Polo Track 1.0 Flex 12V 5p"
+    },
+    {
+      "id": "001494-0-2024",
+      "nome": "Fiat Argo Drive 1.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 67386,
+      "codigoFipe": "001494-0",
+      "modeloFipe": "ARGO DRIVE 1.0 6V Flex"
+    },
+    {
+      "id": "001527-0-2024",
+      "nome": "Fiat Strada Freedom 1.3",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 86972,
+      "codigoFipe": "001527-0",
+      "modeloFipe": "Strada Freedom 1.3 Flex 8V  CS Plus"
+    },
+    {
+      "id": "005526-3-2024",
+      "nome": "VW Nivus Highline 1.0 TSI",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 114093,
+      "codigoFipe": "005526-3",
+      "modeloFipe": "Nivus Highline 1.0 200 TSI Flex Aut."
+    },
+    {
+      "id": "004525-0-2024",
+      "nome": "Chevrolet Tracker Premier 1.2 Turbo",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 113373,
+      "codigoFipe": "004525-0",
+      "modeloFipe": "TRACKER Premier 1.2 Turbo 12V Flex Aut."
+    },
+    {
+      "id": "023180-0-2024",
+      "nome": "Nissan Kicks Advance 1.6",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 104964,
+      "codigoFipe": "023180-0",
+      "modeloFipe": "KICKS Advance 1.6 16V Flex Aut."
+    },
+    {
+      "id": "014110-0-2024",
+      "nome": "Honda HR-V EXL 1.5",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 136731,
+      "codigoFipe": "014110-0",
+      "modeloFipe": "HR-V EXL 1.5 Flex Sensing 16V 5p Aut."
+    },
+    {
+      "id": "015203-0-2024",
+      "nome": "Hyundai Creta Limited 1.0 Turbo",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 113327,
+      "codigoFipe": "015203-0",
+      "modeloFipe": "Creta Limited 1.0 TB 12V Flex Aut."
+    },
+    {
+      "id": "002111-3-2024",
+      "nome": "Toyota Corolla XEi 2.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 137005,
+      "codigoFipe": "002111-3",
+      "modeloFipe": "Corolla XEi 2.0 Flex 16V Aut."
+    },
+    {
+      "id": "002203-9-2024",
+      "nome": "Toyota Corolla Cross XRE 2.0",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 142393,
+      "codigoFipe": "002203-9",
+      "modeloFipe": "Corolla Cross XRE 2.0 16V Flex Aut."
+    },
+    {
+      "id": "002168-7-2024",
+      "nome": "Toyota Yaris Sedan XL",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 88665,
+      "codigoFipe": "002168-7",
+      "modeloFipe": "YARIS XL Sedan 1.5 Flex 16V 4p Aut."
+    },
+    {
+      "id": "014063-5-2024",
+      "nome": "Honda City Sedan EXL",
+      "ano": 2024,
+      "combustivel": "Flex",
+      "preco": 111500,
+      "codigoFipe": "014063-5",
+      "modeloFipe": "CITY Sedan EXL 1.5 Flex  16V 4p Aut."
+    },
+    {
+      "id": "001453-2-2024",
+      "nome": "Fiat Toro Volcano 2.0 Diesel",
+      "ano": 2024,
+      "combustivel": "Diesel",
+      "preco": 137880,
+      "codigoFipe": "001453-2",
+      "modeloFipe": "Toro Volcano 2.0 16V 4x4 TB Diesel Aut."
+    },
+    {
+      "id": "003497-5-2024",
+      "nome": "Ford Ranger Limited V6 Diesel",
+      "ano": 2024,
+      "combustivel": "Diesel",
+      "preco": 259513,
+      "codigoFipe": "003497-5",
+      "modeloFipe": "Ranger Limited 3.0 V6 4x4 CD TB Die. Aut"
+    },
+    {
+      "id": "083017-8-2024",
+      "nome": "RAM Rampage Laramie",
+      "ano": 2024,
+      "combustivel": "Diesel",
+      "preco": 181132,
+      "codigoFipe": "083017-8",
+      "modeloFipe": "RAMPAGE LARAMIE 2.0 TB CD 4X4 Die. Aut."
+    },
+    {
+      "id": "095008-4-2024",
+      "nome": "BYD Seal",
+      "ano": 2024,
+      "combustivel": "Elétrico",
+      "preco": 204101,
+      "codigoFipe": "095008-4",
+      "modeloFipe": "Seal (Elétrico)"
+    },
+    {
+      "id": "017068-2-2024",
+      "nome": "Jeep Wrangler Rubicon",
+      "ano": 2024,
+      "combustivel": "Gasolina",
+      "preco": 442767,
+      "codigoFipe": "017068-2",
+      "modeloFipe": "Wrangler RUBICON 2.0 Turbo 4x4 4p Aut."
+    },
+    {
+      "id": "003507-6-2024",
+      "nome": "Ford Mustang GT V8",
+      "ano": 2024,
+      "combustivel": "Gasolina",
+      "preco": 483273,
+      "codigoFipe": "003507-6",
+      "modeloFipe": "Mustang GT Performance 5.0 V8 Aut."
+    },
+    {
+      "id": "071030-0-2024",
+      "nome": "Mini Cooper S",
+      "ano": 2024,
+      "combustivel": "Gasolina",
+      "preco": 180059,
+      "codigoFipe": "071030-0",
+      "modeloFipe": "COOPER S 2.0 Turbo 16v 3p Aut."
+    },
+    {
+      "id": "009280-0-2023",
+      "nome": "BMW M3 Competition",
+      "ano": 2023,
+      "combustivel": "Gasolina",
+      "preco": 594612,
+      "codigoFipe": "009280-0",
+      "modeloFipe": "M3 Competition M 3.0 Bi-TB 510cv"
+    },
+    {
+      "id": "021468-0-2024",
+      "nome": "Mercedes-Benz C 200",
+      "ano": 2024,
+      "combustivel": "Híbrido",
+      "preco": 280321,
+      "codigoFipe": "021468-0",
+      "modeloFipe": "C-200 AMG Line EQ Boost 1.5 TB (Hib.)"
+    },
+    {
+      "id": "035060-5-2024",
+      "nome": "Porsche Macan",
+      "ano": 2024,
+      "combustivel": "Gasolina",
+      "preco": 446005,
+      "codigoFipe": "035060-5",
+      "modeloFipe": "Macan 2.0 Turbo"
+    },
+    {
+      "id": "035120-2-2024",
+      "nome": "Porsche Cayenne",
+      "ano": 2024,
+      "combustivel": "Híbrido",
+      "preco": 681637,
+      "codigoFipe": "035120-2",
+      "modeloFipe": "Cayenne 3.0 V6 (Híbrido)"
+    },
+    {
+      "id": "031051-4-2023",
+      "nome": "Ferrari Roma",
+      "ano": 2023,
+      "combustivel": "Gasolina",
+      "preco": 2924094,
+      "codigoFipe": "031051-4",
+      "modeloFipe": "Roma 3.9 V8 620cv"
+    },
+    {
+      "id": "078015-4-2023",
+      "nome": "Lamborghini Urus",
+      "ano": 2023,
+      "combustivel": "Gasolina",
+      "preco": 3599941,
+      "codigoFipe": "078015-4",
+      "modeloFipe": "URUS 650-4"
+    },
+    {
+      "id": "005040-7-1995",
+      "nome": "VW Gol GTI 2.0",
+      "ano": 1995,
+      "combustivel": "Gasolina",
+      "preco": 30588,
+      "codigoFipe": "005040-7",
+      "modeloFipe": "Gol GTi 2.0"
+    },
+    {
+      "id": "005241-8-2013",
+      "nome": "VW Kombi",
+      "ano": 2013,
+      "combustivel": "Flex",
+      "preco": 54869,
+      "codigoFipe": "005241-8",
+      "modeloFipe": "Kombi Escolar/50 anos 1.4 Mi Total Flex"
+    },
+    {
+      "id": "005018-0-1995",
+      "nome": "VW Santana",
+      "ano": 1995,
+      "combustivel": "Gasolina",
+      "preco": 12178,
+      "codigoFipe": "005018-0",
+      "modeloFipe": "Santana 2.0 Mi 2p e 4p"
+    },
+    {
+      "id": "005171-3-2003",
+      "nome": "VW Golf GTI 1.8 Turbo (MK4)",
+      "ano": 2003,
+      "combustivel": "Gasolina",
+      "preco": 44149,
+      "codigoFipe": "005171-3",
+      "modeloFipe": "Golf GTi 1.8 Mi 180/193cv Turbo 4p Mec."
+    },
+    {
+      "id": "005298-1-2010",
+      "nome": "VW Saveiro",
+      "ano": 2010,
+      "combustivel": "Flex",
+      "preco": 37401,
+      "codigoFipe": "005298-1",
+      "modeloFipe": "Saveiro 1.6 Mi Total Flex 8V CE"
+    },
+    {
+      "id": "001161-4-2005",
+      "nome": "Fiat Uno Mille",
+      "ano": 2005,
+      "combustivel": "Gasolina",
+      "preco": 13761,
+      "codigoFipe": "001161-4",
+      "modeloFipe": "Uno Mille 1.0 Fire/ F.Flex/ ECONOMY 2p"
+    },
+    {
+      "id": "001056-1-1995",
+      "nome": "Fiat Uno Turbo",
+      "ano": 1995,
+      "combustivel": "Gasolina",
+      "preco": 28562,
+      "codigoFipe": "001056-1",
+      "modeloFipe": "Uno Turbo 1.4 i.e. 2p"
+    },
+    {
+      "id": "001269-6-2010",
+      "nome": "Fiat Palio",
+      "ano": 2010,
+      "combustivel": "Flex",
+      "preco": 27453,
+      "codigoFipe": "001269-6",
+      "modeloFipe": "Palio 1.0 Cel. ECON./ITALIA F.Flex 8V 4p"
+    },
+    {
+      "id": "001044-8-1995",
+      "nome": "Fiat Tempra Turbo",
+      "ano": 1995,
+      "combustivel": "Gasolina",
+      "preco": 14359,
+      "codigoFipe": "001044-8",
+      "modeloFipe": "Tempra Stile 2.0 i.e. Turbo 4p"
+    },
+    {
+      "id": "004044-4-1993",
+      "nome": "Chevrolet Kadett GSi",
+      "ano": 1993,
+      "combustivel": "Gasolina",
+      "preco": 24450,
+      "codigoFipe": "004044-4",
+      "modeloFipe": "Kadett GSi / GS 2.0"
+    },
+    {
+      "id": "004054-1-1992",
+      "nome": "Chevrolet Opala Comodoro",
+      "ano": 1992,
+      "combustivel": "Gasolina",
+      "preco": 73707,
+      "codigoFipe": "004054-1",
+      "modeloFipe": "Opala Comodoro/Comod. SLE  4.1/2.5"
+    },
+    {
+      "id": "004011-8-1995",
+      "nome": "Chevrolet Omega CD",
+      "ano": 1995,
+      "combustivel": "Gasolina",
+      "preco": 39854,
+      "codigoFipe": "004011-8",
+      "modeloFipe": "Omega CD 4.1 / 3.0"
+    },
+    {
+      "id": "004047-9-1995",
+      "nome": "Chevrolet Monza",
+      "ano": 1995,
+      "combustivel": "Gasolina",
+      "preco": 11219,
+      "codigoFipe": "004047-9",
+      "modeloFipe": "Monza GL 1.8 EFI/ SL/ L/ 650/Barc. 2e4p"
+    },
+    {
+      "id": "004371-0-2012",
+      "nome": "Chevrolet Camaro SS",
+      "ano": 2012,
+      "combustivel": "Gasolina",
+      "preco": 200535,
+      "codigoFipe": "004371-0",
+      "modeloFipe": "Camaro SS 6.2 V8 16V"
+    },
+    {
+      "id": "003040-6-1993",
+      "nome": "Ford Escort XR3",
+      "ano": 1993,
+      "combustivel": "Gasolina",
+      "preco": 20468,
+      "codigoFipe": "003040-6",
+      "modeloFipe": "Escort XR3 2.0i"
+    },
+    {
+      "id": "003310-3-2010",
+      "nome": "Ford Fiesta",
+      "ano": 2010,
+      "combustivel": "Flex",
+      "preco": 22997,
+      "codigoFipe": "003310-3",
+      "modeloFipe": "Fiesta 1.0 8V Flex/Class 1.0 8V Flex 5p"
+    },
+    {
+      "id": "003473-8-2020",
+      "nome": "Ford Ka",
+      "ano": 2020,
+      "combustivel": "Flex",
+      "preco": 50356,
+      "codigoFipe": "003473-8",
+      "modeloFipe": "Ka 1.0 FREESTYLE 12V Flex 5p Mec."
+    },
+    {
+      "id": "003367-7-2015",
+      "nome": "Ford EcoSport",
+      "ano": 2015,
+      "combustivel": "Flex",
+      "preco": 53501,
+      "codigoFipe": "003367-7",
+      "modeloFipe": "EcoSport FREESTYLE 1.6 16V Flex 5p"
+    },
+    {
+      "id": "003453-3-2018",
+      "nome": "Ford Mustang GT V8",
+      "ano": 2018,
+      "combustivel": "Gasolina",
+      "preco": 352340,
+      "codigoFipe": "003453-3",
+      "modeloFipe": "Mustang GT Premium 5.0 V8"
+    },
+    {
+      "id": "014049-0-2012",
+      "nome": "Honda Civic LXS",
+      "ano": 2012,
+      "combustivel": "Gasolina",
+      "preco": 61895,
+      "codigoFipe": "014049-0",
+      "modeloFipe": "Civic Sedan LXS 1.8/1.8 Flex 16V Aut. 4p"
+    },
+    {
+      "id": "002061-3-2010",
+      "nome": "Toyota Corolla XEi",
+      "ano": 2010,
+      "combustivel": "Gasolina",
+      "preco": 54582,
+      "codigoFipe": "002061-3",
+      "modeloFipe": "Corolla XEi 1.8/1.8 Flex 16V Aut."
+    },
+    {
+      "id": "002114-8-2012",
+      "nome": "Toyota Hilux SRV",
+      "ano": 2012,
+      "combustivel": "Flex",
+      "preco": 109927,
+      "codigoFipe": "002114-8",
+      "modeloFipe": "Hilux CD SRV 4x4 2.7 Flex 16V Aut."
+    },
+    {
+      "id": "022112-0-2012",
+      "nome": "Mitsubishi Lancer Evolution X",
+      "ano": 2012,
+      "combustivel": "Gasolina",
+      "preco": 218673,
+      "codigoFipe": "022112-0",
+      "modeloFipe": "Lancer Evolution X 2.0 16V 295cv TB Int."
+    },
+    {
+      "id": "027048-2-2012",
+      "nome": "Subaru Impreza WRX",
+      "ano": 2012,
+      "combustivel": "Gasolina",
+      "preco": 146777,
+      "codigoFipe": "027048-2",
+      "modeloFipe": "Impreza SD WRX 2.5 16V TB 4x4 4p"
+    },
+    {
+      "id": "009134-0-2010",
+      "nome": "BMW M3 Cabrio V8",
+      "ano": 2010,
+      "combustivel": "Gasolina",
+      "preco": 294893,
+      "codigoFipe": "009134-0",
+      "modeloFipe": "M3 Cabrio 4.0 32V"
+    },
+    {
+      "id": "021239-3-2012",
+      "nome": "Mercedes-Benz C 180",
+      "ano": 2012,
+      "combustivel": "Gasolina",
+      "preco": 62376,
+      "codigoFipe": "021239-3",
+      "modeloFipe": "C-180 CGI Classic 1.8 16V 156cv Aut."
+    },
+    {
+      "id": "015089-4-2015",
+      "nome": "Hyundai HB20",
+      "ano": 2015,
+      "combustivel": "Flex",
+      "preco": 49701,
+      "codigoFipe": "015089-4",
+      "modeloFipe": "HB20 C./C.Plus/C.Style 1.6 Flex 16V Mec."
+    },
+    {
+      "id": "025141-0-2014",
+      "nome": "Renault Sandero",
+      "ano": 2014,
+      "combustivel": "Flex",
+      "preco": 29858,
+      "codigoFipe": "025141-0",
+      "modeloFipe": "SANDERO Authentique Hi-Flex 1.0 16V 5p"
+    },
+    {
+      "id": "024132-6-2008",
+      "nome": "Peugeot 206",
+      "ano": 2008,
+      "combustivel": "Flex",
+      "preco": 14812,
+      "codigoFipe": "024132-6",
+      "modeloFipe": "206 Allure 1.6 Flex 16V 3p"
+    },
+    {
+      "id": "056012-0-2015",
+      "nome": "Troller T4",
+      "ano": 2015,
+      "combustivel": "Diesel",
+      "preco": 150550,
+      "codigoFipe": "056012-0",
+      "modeloFipe": "T-4 4x4 3.2 20V Tdi Cap. Rígida Diesel"
+    }
+  ]
+}

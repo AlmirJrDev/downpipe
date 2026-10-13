@@ -150,7 +150,13 @@ export function MenuLateral() {
     },
     { rotulo: "Criar", Icone: SquarePlus, destino: "/add-action", ativoEm: () => false, empilhar: true },
     { rotulo: "Perfil", Icone: User, destino: "/(tabs)/profile", ativoEm: (c) => c.startsWith("/profile") },
-    { rotulo: "Nave do Dia", Icone: Gamepad2, destino: "/nave-do-dia", ativoEm: (c) => c.startsWith("/nave-do-dia"), empilhar: true },
+    {
+      rotulo: "Jogos",
+      Icone: Gamepad2,
+      destino: "/jogos",
+      ativoEm: (c) => c.startsWith("/jogos") || c.startsWith("/nave-do-dia") || c.startsWith("/mais-caro"),
+      empilhar: true,
+    },
   ];
 
   const deAdmin: Item[] = admin
