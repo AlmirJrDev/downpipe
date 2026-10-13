@@ -26,7 +26,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { colors, spacing } from "@/constants/theme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadCount } from "@/stores/notificationsStore";
-import { Bell } from "lucide-react-native";
+import { ArrowUp, Bell, CalendarDays, Car as IconeCarro, Check } from "lucide-react-native";
 import { useLarguraDoConteudo, useModoDesktop } from "@/hooks/useDesktop";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import {
@@ -49,6 +49,60 @@ const chaveDe = (item: ItemDoFeed) =>
 
 const fotoDe = (item: ItemDoFeed) =>
   item.tipo === "post" ? item.post.imageUrl : item.tipo === "encontro" ? item.event.photoUrl : item.car.photoUrl;
+
+/**
+ * O fim do feed. Sem ele a lista só parava, e quem rolou até o fim ficava
+ * sem saber se acabou ou se travou. Diz que acabou e aponta pra onde tem
+ * mais: os encontros e os carros do pessoal, no Explorar.
+ */
+function FimDoFeed({ onTopo }: { onTopo: () => void }) {
+  return (
+    <View className="items-center px-6 pt-4 pb-10" style={{ gap: 14 }}>
+      <View
+        className="items-center justify-center"
+        style={{ width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: colors.primary }}
+      >
+        <Check size={24} color={colors.primary} />
+      </View>
+      <View className="items-center" style={{ gap: 4 }}>
+        <Text className="text-on-surface" style={{ fontSize: 17, fontWeight: "700" }}>
+          Você viu tudo por aqui
+        </Text>
+        <Text className="text-on-surface-variant text-center" style={{ fontSize: 13.5, lineHeight: 19 }}>
+          Siga mais gente pra ter mais no feed, ou veja o que tá rolando por aí.
+        </Text>
+      </View>
+      <View className="flex-row w-full" style={{ gap: 10, maxWidth: 420 }}>
+        <Pressable
+          onPress={() => router.push("/(tabs)/explore?aba=roles")}
+          className="flex-1 flex-row items-center justify-center py-3.5 border border-outline active:bg-white/5"
+          style={{ gap: 8 }}
+        >
+          <CalendarDays size={15} color={colors.onSurface} />
+          <Text className="text-on-surface" style={{ fontSize: 12.5, fontWeight: "700", letterSpacing: 1.1 }}>
+            ENCONTROS
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/(tabs)/explore?aba=carros")}
+          className="flex-1 flex-row items-center justify-center py-3.5 border border-outline active:bg-white/5"
+          style={{ gap: 8 }}
+        >
+          <IconeCarro size={15} color={colors.onSurface} />
+          <Text className="text-on-surface" style={{ fontSize: 12.5, fontWeight: "700", letterSpacing: 1.1 }}>
+            CARROS
+          </Text>
+        </Pressable>
+      </View>
+      <Pressable onPress={onTopo} hitSlop={8} className="flex-row items-center" style={{ gap: 6 }}>
+        <ArrowUp size={14} color={colors.onSurfaceVariant} />
+        <Text className="text-on-surface-variant" style={{ fontSize: 13, fontWeight: "600" }}>
+          Voltar pro topo
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
 
 /** O feed no computador tem a largura do feed do Instagram web. */
 const LARGURA_DO_FEED = 600;
@@ -171,6 +225,7 @@ export default function HomeScreen() {
    * Só as ADIANTAR seguintes, e cada uma uma vez só, pra não puxar o feed
    * inteiro no plano de dados de quem parou de rolar.
    */
+  const listaRef = useRef<FlatList<ItemDoFeed>>(null);
   const feedRef = useRef(feed);
   feedRef.current = feed;
   const jaPedidas = useRef(new Set<string>());
@@ -252,6 +307,7 @@ export default function HomeScreen() {
         // também pra quem ainda não tem nada no feed — justamente o usuário
         // novo, que é quem mais precisa dele.
         <FlatList
+          ref={listaRef}
           data={feed}
           keyExtractor={chaveDe}
           renderItem={({ item }) =>
@@ -304,6 +360,8 @@ export default function HomeScreen() {
               <View className="py-6">
                 <ActivityIndicator color={colors.primary} />
               </View>
+            ) : !hasNextPage && feed.length > 0 ? (
+              <FimDoFeed onTopo={() => listaRef.current?.scrollToOffset({ offset: 0, animated: true })} />
             ) : null
           }
         />
