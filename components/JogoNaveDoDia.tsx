@@ -5,12 +5,16 @@
  * Aberta pra quem não tem conta, como a página de um encontro: é o tipo de
  * coisa que se manda no grupo do WhatsApp, e quem chega pelo link joga
  * antes de saber o que é o Downpipe. O progresso do dia fica no aparelho.
+ *
+ * Cada palpite se revela peça por peça; o acerto solta confete e o cartão
+ * da vitória (ver components/jogos/Animacoes).
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ArrowDown, ArrowLeft, ArrowUp, Share2 } from "lucide-react-native";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Flame, Share2, Trophy } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
+import { Confete, Surgir, Virar, vibrar } from "@/components/jogos/Animacoes";
 import { Share } from "@/utils/share";
 import { router } from "expo-router";
 import { voltarOuIrPara } from "@/utils/navigation";
@@ -47,29 +51,66 @@ function medidasPara(larga: boolean, espaco: number): Medidas {
 }
 const COLUNAS = ["Marca", "País", "Carroceria", "Motor", "Tração", "Cilindros", "Ano", "Potência"];
 
+/** Intervalo entre uma peça e a próxima na revelação. */
+const PASSO = 140;
+/** Quanto a linha leva pra se revelar inteira (nome + 8 pistas). */
+const REVELACAO = PASSO * 8 + 380;
+
+const lerJson = <T,>(chave: string): T | null => {
+  try {
+    const t = Platform.OS === "web" ? localStorage.getItem(chave) : null;
+    return t ? (JSON.parse(t) as T) : null;
+  } catch {
+    // Sem storage (aba anônima): joga do mesmo jeito, só não lembra.
+    return null;
+  }
+};
+const gravarJson = (chave: string, valor: unknown) => {
+  try {
+    if (Platform.OS === "web") localStorage.setItem(chave, JSON.stringify(valor));
+  } catch {
+    // idem
+  }
+};
+
 /** O que já se jogou hoje, guardado no aparelho (some sozinho no dia seguinte). */
-function useProgresso(dia: string, modo: Modo) {
-  const chave = `${modo === "geral" ? "nave-do-dia" : `nave-do-dia-${modo}`}:${dia}`;
+function useProgresso(prefixo: string, dia: string) {
+  const chave = `${prefixo}:${dia}`;
   const [ids, setIds] = useState<string[]>([]);
   useEffect(() => {
-    try {
-      const salvo = Platform.OS === "web" ? localStorage.getItem(chave) : null;
-      if (salvo) setIds(JSON.parse(salvo));
-    } catch {
-      // Sem storage (aba anônima): joga do mesmo jeito, só não lembra.
-    }
+    const salvo = lerJson<string[]>(chave);
+    if (salvo) setIds(salvo);
   }, [chave]);
   const adicionar = (id: string) =>
     setIds((atual) => {
       const novo = [...atual, id];
-      try {
-        if (Platform.OS === "web") localStorage.setItem(chave, JSON.stringify(novo));
-      } catch {
-        // idem
-      }
+      gravarJson(chave, novo);
       return novo;
     });
   return { ids, adicionar };
+}
+
+const diaAnterior = (dia: string) => new Date(Date.parse(`${dia}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+
+/**
+ * Dias seguidos acertando: o motivo pra voltar amanhã. Vale enquanto o
+ * último acerto foi hoje ou ontem; registrar duas vezes no mesmo dia não soma.
+ */
+function useSequencia(prefixo: string, dia: string) {
+  const chave = `${prefixo}:sequencia`;
+  const [dias, setDias] = useState(0);
+  useEffect(() => {
+    const s = lerJson<{ ultimo: string; dias: number }>(chave);
+    setDias(s && (s.ultimo === dia || s.ultimo === diaAnterior(dia)) ? s.dias : 0);
+  }, [chave, dia]);
+  const registrar = () => {
+    const s = lerJson<{ ultimo: string; dias: number }>(chave);
+    if (s?.ultimo === dia) return;
+    const novo = s?.ultimo === diaAnterior(dia) ? s.dias + 1 : 1;
+    gravarJson(chave, { ultimo: dia, dias: novo });
+    setDias(novo);
+  };
+  return { dias, registrar };
 }
 
 /** "Próxima nave em 05:12:40" — meia-noite de Brasília. */
@@ -85,37 +126,53 @@ function useContagem() {
   return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
 }
 
-function Linha({ chute, alvo, m }: { chute: Nave; alvo: Nave; m: Medidas }) {
+/** Um palpite. O recém-chutado vira peça por peça; os de antes já aparecem prontos. */
+function Linha({ chute, alvo, m, animar }: { chute: Nave; alvo: Nave; m: Medidas; animar: boolean }) {
   const pistas = comparar(chute, alvo);
   const acertou = chute.id === alvo.id;
+  // Na linha da vitória, depois de virar tudo, as peças pulam em onda.
+  const pulo = (i: number) => (acertou && animar ? REVELACAO + i * 70 : undefined);
   return (
     <View className="flex-row" style={{ gap: VAO }}>
-      <View
-        className="justify-center px-2"
+      <Virar
+        animar={animar}
+        atraso={0}
+        pulo={pulo(0)}
         style={{
           width: m.nome,
           height: m.altura,
+          justifyContent: "center",
+          paddingHorizontal: 8,
           borderWidth: 1,
           borderColor: acertou ? FUNDO.verde : colors.border,
-          backgroundColor: colors.surfaceHigh,
+          backgroundColor: acertou ? FUNDO.verde : colors.surfaceHigh,
         }}
       >
-        <Text className="text-on-surface" style={{ fontSize: m.fonte, fontWeight: "700" }} numberOfLines={3}>
+        <Text style={{ color: acertou ? "#fff" : colors.onSurface, fontSize: m.fonte, fontWeight: "700" }} numberOfLines={3}>
           {chute.nome}
         </Text>
-      </View>
-      {pistas.map((p) => (
-        <View
-          key={p.chave}
-          className="items-center justify-center px-1"
-          style={{ width: m.pista, height: m.altura, backgroundColor: FUNDO[p.cor] }}
-          accessibilityLabel={`${p.rotulo}: ${p.valor}, ${p.cor}${p.seta ? `, o carro do dia é ${p.seta === "cima" ? "maior" : "menor"}` : ""}`}
-        >
-          <Text style={{ color: "#fff", fontSize: m.fonte, fontWeight: "700", textAlign: "center" }} numberOfLines={2}>
-            {p.valor}
-          </Text>
-          {p.seta === "cima" && <ArrowUp size={m.fonte + 2} color="#fff" />}
-          {p.seta === "baixo" && <ArrowDown size={m.fonte + 2} color="#fff" />}
+      </Virar>
+      {pistas.map((p, i) => (
+        // O fundo neutro marca o lugar da peça enquanto ela ainda não virou.
+        <View key={p.chave} style={{ width: m.pista, height: m.altura, backgroundColor: animar ? colors.surfaceHigh : undefined }}>
+          <Virar
+            animar={animar}
+            atraso={(i + 1) * PASSO}
+            pulo={pulo(i + 1)}
+            style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 4, backgroundColor: FUNDO[p.cor] }}
+          >
+            <View
+              accessible
+              accessibilityLabel={`${p.rotulo}: ${p.valor}, ${p.cor}${p.seta ? `, o carro do dia é ${p.seta === "cima" ? "maior" : "menor"}` : ""}`}
+              style={{ alignItems: "center" }}
+            >
+              <Text style={{ color: "#fff", fontSize: m.fonte, fontWeight: "700", textAlign: "center" }} numberOfLines={2}>
+                {p.valor}
+              </Text>
+              {p.seta === "cima" && <ArrowUp size={m.fonte + 2} color="#fff" />}
+              {p.seta === "baixo" && <ArrowDown size={m.fonte + 2} color="#fff" />}
+            </View>
+          </Virar>
         </View>
       ))}
     </View>
@@ -152,13 +209,109 @@ function TrocaDeModo({ modo }: { modo: Modo }) {
   );
 }
 
+/** O cartão de quando acerta: grande, verde, impossível de não ver. */
+function CartaoDaVitoria({
+  alvo,
+  palpites,
+  dias,
+  contagem,
+  outroModo,
+  aoCompartilhar,
+  aviso,
+  larga,
+}: {
+  alvo: Nave;
+  palpites: number;
+  dias: number;
+  contagem: string;
+  outroModo: Modo;
+  aoCompartilhar: () => void;
+  aviso: string | null;
+  larga: boolean;
+}) {
+  return (
+    <Surgir>
+      <View style={{ borderWidth: 2, borderColor: FUNDO.verde, backgroundColor: "rgba(21,128,61,0.12)", padding: larga ? 24 : 18, gap: 14 }}>
+        <View className="flex-row items-center" style={{ gap: 14 }}>
+          <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center", backgroundColor: FUNDO.verde }}>
+            <Trophy size={28} color="#fff" />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ color: "#4ade80", fontSize: larga ? 30 : 24, fontWeight: "900", letterSpacing: 1 }}>ACERTOU!</Text>
+            <Text className="text-on-surface-variant" style={{ fontSize: 13.5 }}>
+              {palpites === 1 ? "De primeira. Isso é raro." : `Em ${palpites} palpites.`}
+            </Text>
+          </View>
+        </View>
+
+        <View style={{ gap: 2 }}>
+          <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.4 }}>
+            A NAVE DE HOJE ERA
+          </Text>
+          <Text className="text-on-surface" style={{ fontSize: larga ? 26 : 21, fontWeight: "800" }}>
+            {alvo.nome}
+          </Text>
+        </View>
+
+        <View className="flex-row" style={{ gap: 10 }}>
+          <View className="border border-border" style={{ flex: 1, padding: 12, gap: 2 }}>
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Flame size={18} color={colors.primary} />
+              <Text className="text-on-surface" style={{ fontSize: 22, fontWeight: "900", fontVariant: ["tabular-nums"] }}>
+                {dias}
+              </Text>
+            </View>
+            <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 0.8 }}>
+              {dias === 1 ? "DIA SEGUIDO" : "DIAS SEGUIDOS"}
+            </Text>
+          </View>
+          <View className="border border-border" style={{ flex: 1, padding: 12, gap: 2 }}>
+            <Text className="text-on-surface" style={{ fontSize: 22, fontWeight: "900", fontVariant: ["tabular-nums"] }}>
+              {contagem}
+            </Text>
+            <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 0.8 }}>
+              PRÓXIMA NAVE
+            </Text>
+          </View>
+        </View>
+
+        <PrimaryButton label="Compartilhar resultado" onPress={aoCompartilhar} icon={<Share2 size={15} color={colors.onPrimaryContainer} />} />
+        <Pressable
+          onPress={() => router.replace(MODOS[outroModo].caminho as never)}
+          className="flex-row items-center justify-center border border-outline active:bg-white/5"
+          style={{ gap: 8, paddingVertical: 13 }}
+          accessibilityRole="link"
+        >
+          <Text className="text-on-surface" style={{ fontWeight: "700", letterSpacing: 1 }}>
+            {outroModo === "brasil" ? "AGORA A NAVE DO DIA BRASIL" : "AGORA COM TODOS OS CARROS"}
+          </Text>
+          <ArrowRight size={16} color={colors.onSurface} />
+        </Pressable>
+        {aviso && (
+          <Text className="text-muted" style={{ fontSize: 12 }}>
+            {aviso}
+          </Text>
+        )}
+      </View>
+    </Surgir>
+  );
+}
+
 export function JogoNaveDoDia({ modo }: { modo: Modo }) {
   const dia = hojeEmBrasilia();
   const { lista, titulo } = MODOS[modo];
+  const prefixo = modo === "geral" ? "nave-do-dia" : `nave-do-dia-${modo}`;
   const alvo = useMemo(() => naveDoDia(dia, modo), [dia, modo]);
-  const { ids, adicionar } = useProgresso(dia, modo);
+  const { ids, adicionar } = useProgresso(prefixo, dia);
+  const { dias, registrar } = useSequencia(prefixo, dia);
   const [busca, setBusca] = useState("");
   const [aviso, setAviso] = useState<string | null>(null);
+  /** O palpite que acabou de entrar: só ele vira peça por peça. */
+  const [novo, setNovo] = useState<string | null>(null);
+  /** Acertou agora e a linha ainda está virando: o cartão espera. */
+  const [revelando, setRevelando] = useState(false);
+  const [confete, setConfete] = useState(0);
+  const rolagem = useRef<ScrollView>(null);
   const contagem = useContagem();
   // No computador a tela sai da coluna estreita (ver useLarguraAmpla) e as
   // peças crescem até encher a linha: a galera joga muito pelo PC.
@@ -168,6 +321,12 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
 
   const palpites = ids.map((id) => lista.find((n) => n.id === id)).filter((n): n is Nave => !!n);
   const venceu = palpites.some((p) => p.id === alvo.id);
+
+  // Inclui quem já tinha ganhado hoje antes da sequência existir.
+  useEffect(() => {
+    if (venceu) registrar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venceu]);
 
   const sugestoes = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -185,7 +344,18 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
 
   const chutar = (n: Nave) => {
     adicionar(n.id);
+    setNovo(n.id);
     setBusca("");
+    vibrar();
+    if (n.id === alvo.id) {
+      setRevelando(true);
+      setTimeout(() => {
+        setRevelando(false);
+        setConfete(Date.now());
+        vibrar("acerto");
+        rolagem.current?.scrollTo({ y: 0, animated: true });
+      }, REVELACAO);
+    }
   };
 
   const compartilhar = async () => {
@@ -208,6 +378,7 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
         }
       />
       <ScrollView
+        ref={rolagem}
         className="flex-1"
         contentContainerStyle={{
           padding: larga ? 32 : 16,
@@ -222,9 +393,24 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
         <View onLayout={(e) => setEspaco(e.nativeEvent.layout.width)} style={{ width: "100%", height: 0 }} />
         <TrocaDeModo modo={modo} />
         <View style={{ gap: 6 }}>
-          <Text className="text-primary" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.4 }}>
-            #{numeroDoDia(dia)}
-          </Text>
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <Text className="text-primary" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.4 }}>
+              #{numeroDoDia(dia)}
+            </Text>
+            {palpites.length > 0 && !venceu && (
+              <Text className="text-muted" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1 }}>
+                {palpites.length} {palpites.length === 1 ? "PALPITE" : "PALPITES"}
+              </Text>
+            )}
+            {dias > 0 && !venceu && (
+              <View className="flex-row items-center" style={{ gap: 3 }}>
+                <Flame size={13} color={colors.primary} />
+                <Text className="text-muted" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1 }}>
+                  {dias} {dias === 1 ? "DIA" : "DIAS"}
+                </Text>
+              </View>
+            )}
+          </View>
           <Text className="text-on-surface" style={{ fontSize: larga ? 30 : 22, fontWeight: "800" }}>
             {modo === "brasil" ? "Qual é a nave brasileira de hoje?" : "Qual é a nave de hoje?"}
           </Text>
@@ -235,25 +421,18 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
         </View>
 
         {venceu ? (
-          <View className="border border-border p-4" style={{ gap: 10, backgroundColor: colors.surfaceHigh }}>
-            <Text style={{ color: colors.success, fontSize: 12, fontWeight: "700", letterSpacing: 1.4 }}>ACERTOU</Text>
-            <Text className="text-on-surface" style={{ fontSize: 19, fontWeight: "800" }}>
-              {alvo.nome}
-            </Text>
-            <Text className="text-on-surface-variant" style={{ fontSize: 13.5 }}>
-              {palpites.length === 1 ? "De primeira!" : `Em ${palpites.length} palpites.`} Próxima nave em {contagem}.
-            </Text>
-            <PrimaryButton
-              label="Compartilhar resultado"
-              onPress={compartilhar}
-              icon={<Share2 size={15} color={colors.onPrimaryContainer} />}
+          !revelando && (
+            <CartaoDaVitoria
+              alvo={alvo}
+              palpites={palpites.length}
+              dias={dias}
+              contagem={contagem}
+              outroModo={modo === "geral" ? "brasil" : "geral"}
+              aoCompartilhar={compartilhar}
+              aviso={aviso}
+              larga={larga}
             />
-            {aviso && (
-              <Text className="text-muted" style={{ fontSize: 12 }}>
-                {aviso}
-              </Text>
-            )}
-          </View>
+          )
         ) : (
           <View style={{ gap: 6 }}>
             <TextInput
@@ -319,7 +498,7 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
               </View>
               {/* O palpite mais novo em cima: é o que a pessoa quer ver. */}
               {[...palpites].reverse().map((p) => (
-                <Linha key={p.id} chute={p} alvo={alvo} m={m} />
+                <Linha key={p.id} chute={p} alvo={alvo} m={m} animar={p.id === novo} />
               ))}
             </View>
           </ScrollView>
@@ -330,6 +509,7 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
           diferença entre fontes. Um carro novo todo dia à meia-noite.
         </Text>
       </ScrollView>
+      <Confete disparo={confete} />
     </View>
   );
 }

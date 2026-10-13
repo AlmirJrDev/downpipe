@@ -10,6 +10,8 @@ import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { ArrowDown, ArrowLeft, ArrowUp, RotateCcw, Share2 } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
+import Animated from "react-native-reanimated";
+import { Confete, MaisUm, Surgir, usePulo, useTremor, vibrar } from "@/components/jogos/Animacoes";
 import { Share } from "@/utils/share";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
@@ -141,19 +143,43 @@ export default function MaisCaroScreen() {
   const [certo, setCerto] = useState<boolean | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const recentes = useRef<string[]>([]);
+  // Animações: tremida no erro, placar que pula, confete no recorde.
+  const tremor = useTremor();
+  const placar = usePulo();
+  const [maisUm, setMaisUm] = useState(0);
+  const [confete, setConfete] = useState(0);
+  const [bateuRecorde, setBateuRecorde] = useState(false);
+  /** O recorde de quando a partida começou: passar dele é o que comemora. */
+  const recordeDaPartida = useRef(0);
   const precoRevelado = usePrecoAnimado(fase === "jogando" ? null : escondido.preco);
 
-  useEffect(() => setRecorde(lerRecorde()), []);
+  useEffect(() => {
+    const r = lerRecorde();
+    setRecorde(r);
+    recordeDaPartida.current = r;
+  }, []);
 
   const chutar = (chute: Chute) => {
     if (fase !== "jogando") return;
     const ok = acertou(chute, mostrado, escondido);
     setCerto(ok);
     setFase("revelando");
+    if (ok) vibrar("acerto");
+    else {
+      vibrar("erro");
+      // Espera o preço aparecer pra tremer: é aí que a ficha cai.
+      setTimeout(tremor.tremer, 450);
+    }
     setTimeout(() => {
       if (ok) {
         const nova = sequencia + 1;
         setSequencia(nova);
+        placar.pular();
+        setMaisUm(Date.now());
+        // Confete ao passar o recorde (uma vez por partida) e a cada 10.
+        const primeiroRecorde = !bateuRecorde && recordeDaPartida.current > 0 && nova > recordeDaPartida.current;
+        if (primeiroRecorde) setBateuRecorde(true);
+        if (primeiroRecorde || nova % 10 === 0) setConfete(Date.now());
         if (nova > recorde) {
           setRecorde(nova);
           salvarRecorde(nova);
@@ -177,6 +203,8 @@ export default function MaisCaroScreen() {
     setSequencia(0);
     setCerto(null);
     setAviso(null);
+    setBateuRecorde(false);
+    recordeDaPartida.current = recorde;
     setFase("jogando");
   };
 
@@ -239,9 +267,15 @@ export default function MaisCaroScreen() {
             </Text>
           </View>
           <View className="items-end">
-            <Text style={{ color: colors.primary, fontSize: largo ? 34 : 26, fontWeight: "900", fontVariant: ["tabular-nums"] }}>
+            <Animated.Text
+              style={[{ color: colors.primary, fontSize: largo ? 34 : 26, fontWeight: "900", fontVariant: ["tabular-nums"] }, placar.estilo]}
+            >
               {sequencia}
-            </Text>
+            </Animated.Text>
+            <MaisUm disparo={maisUm} cor="#4ade80" />
+            {bateuRecorde && fase !== "fim" && (
+              <Text style={{ color: "#facc15", fontSize: 11, fontWeight: "800", letterSpacing: 1 }}>NOVO RECORDE!</Text>
+            )}
             <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>
               RECORDE {recorde}
             </Text>
@@ -249,28 +283,37 @@ export default function MaisCaroScreen() {
         </View>
 
         <View style={{ flexDirection: largo ? "row" : "column", gap: largo ? 20 : 10, alignItems: largo ? "center" : "stretch" }}>
-          <Cartao carro={mostrado} mostrarPreco={mostrado.preco} largo={largo} />
+          <Surgir key={`m-${mostrado.id}-${sequencia}`} style={{ flex: largo ? 1 : undefined }}>
+            <Cartao carro={mostrado} mostrarPreco={mostrado.preco} largo={largo} />
+          </Surgir>
           <View className="items-center justify-center" style={{ gap: 10 }}>
             <Text style={{ color: colors.muted, fontWeight: "900", fontSize: 14, letterSpacing: 2 }}>VS</Text>
             {largo && fase === "jogando" && botoes}
           </View>
-          <Cartao
-            carro={escondido}
-            mostrarPreco={fase === "jogando" ? null : precoRevelado}
-            resultado={certo == null ? null : certo ? "certo" : "errado"}
-            largo={largo}
-          />
+          <Animated.View style={[{ flex: largo ? 1 : undefined }, tremor.estilo]}>
+            <Surgir key={`e-${escondido.id}-${sequencia}`} atraso={120} style={{ flex: largo ? 1 : undefined }}>
+              <Cartao
+                carro={escondido}
+                mostrarPreco={fase === "jogando" ? null : precoRevelado}
+                resultado={certo == null ? null : certo ? "certo" : "errado"}
+                largo={largo}
+              />
+            </Surgir>
+          </Animated.View>
         </View>
 
         {!largo && fase === "jogando" && botoes}
 
         {fase === "revelando" && (
-          <Text style={{ textAlign: "center", fontWeight: "800", fontSize: 16, color: certo ? VERDE : VERMELHO }}>
-            {certo ? "Acertou!" : "Errou…"}
-          </Text>
+          <Surgir>
+            <Text style={{ textAlign: "center", fontWeight: "900", fontSize: 22, letterSpacing: 1, color: certo ? "#4ade80" : "#f87171" }}>
+              {certo ? "ACERTOU!" : "ERROU…"}
+            </Text>
+          </Surgir>
         )}
 
         {fase === "fim" && (
+          <Surgir>
           <View className="border border-border p-4" style={{ gap: 10, backgroundColor: colors.surfaceHigh }}>
             <Text style={{ color: VERMELHO, fontSize: 12, fontWeight: "700", letterSpacing: 1.4 }}>FIM DE JOGO</Text>
             <Text className="text-on-surface" style={{ fontSize: 20, fontWeight: "800" }}>
@@ -301,12 +344,14 @@ export default function MaisCaroScreen() {
               </Text>
             )}
           </View>
+          </Surgir>
         )}
 
         <Text className="text-muted" style={{ fontSize: 11.5, lineHeight: 16 }}>
           Preço médio da Tabela FIPE pro ano e versão mostrados. A FIPE é referência de mercado, não preço de anúncio.
         </Text>
       </ScrollView>
+      <Confete disparo={confete} quantidade={50} />
     </View>
   );
 }
