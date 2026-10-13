@@ -5,7 +5,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { ArrowLeft, ChevronRight, Gamepad2, TrendingUp } from "lucide-react-native";
+import { ArrowLeft, ChevronRight, Flag, Gamepad2, TrendingUp } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { numeroDoDia } from "@/utils/naveDoDia";
@@ -19,6 +19,13 @@ const JOGOS = [
     selo: () => `DIÁRIO · #${numeroDoDia()}`,
     nome: "Nave do Dia",
     texto: "Adivinhe o carro do dia pelas pistas de marca, país, motor, ano e potência.",
+  },
+  {
+    rota: "/nave-do-dia-brasil",
+    Icone: Flag,
+    selo: () => `DIÁRIO · #${numeroDoDia()}`,
+    nome: "Nave do Dia Brasil",
+    texto: "Só carro que rodou muito por aqui: Gol, Opala, Uno, Corolla, Hilux. Outro carro por dia.",
   },
   {
     rota: "/mais-caro",

@@ -12,7 +12,9 @@
  * estilos e épocas, pra dar pra raciocinar pelas pistas.
  */
 
-export type Carroceria = "Hatch" | "Sedã" | "Cupê" | "Perua" | "Conversível";
+import { BRASILEIROS, NAVES_EXTRAS } from "./navesExtras";
+
+export type Carroceria = "Hatch" | "Sedã" | "Cupê" | "Perua" | "Conversível" | "SUV" | "Picape" | "Van";
 export type Aspiracao = "Aspirado" | "Turbo" | "Biturbo" | "Compressor";
 export type Tracao = "Dianteira" | "Traseira" | "Integral";
 
@@ -35,11 +37,14 @@ const CONTINENTE: Record<string, string> = {
   Itália: "Europa",
   França: "Europa",
   Inglaterra: "Europa",
+  "Coreia do Sul": "Ásia",
+  Suécia: "Europa",
   EUA: "América",
+  Brasil: "América",
 };
 
 // prettier-ignore
-export const NAVES: Nave[] = [
+const NAVES_BASE: Nave[] = [
   // Japão
   { id: "supra-a80", nome: "Toyota Supra (A80)", marca: "Toyota", pais: "Japão", carroceria: "Cupê", aspiracao: "Biturbo", tracao: "Traseira", cilindros: 6, ano: 1993, cv: 330 },
   { id: "gtr-r34", nome: "Nissan Skyline GT-R (R34)", marca: "Nissan", pais: "Japão", carroceria: "Cupê", aspiracao: "Biturbo", tracao: "Integral", cilindros: 6, ano: 1999, cv: 280 },
@@ -94,6 +99,37 @@ export const NAVES: Nave[] = [
   { id: "challenger-hellcat", nome: "Dodge Challenger SRT Hellcat", marca: "Dodge", pais: "EUA", carroceria: "Cupê", aspiracao: "Compressor", tracao: "Traseira", cilindros: 8, ano: 2015, cv: 717 },
 ];
 
+export const NAVES: Nave[] = [...NAVES_BASE, ...NAVES_EXTRAS];
+
+// ---------------------------------------------------------------- os modos
+
+/**
+ * "geral" é o jogo de sempre; "brasil", só com carro que veio e foi popular
+ * aqui. Cada modo tem a sua ordem (semente própria) e o seu carro do dia.
+ */
+export type Modo = "geral" | "brasil";
+
+interface ConfigDoModo {
+  titulo: string;
+  /** Endereço no app, sem o /app. */
+  caminho: string;
+  semente: number;
+  /** Carros que já saíram, na ordem: a lista cresceu depois da estreia e o passado não pode mudar. */
+  jaJogados: string[];
+  lista: Nave[];
+}
+
+export const MODOS: Record<Modo, ConfigDoModo> = {
+  geral: { titulo: "Nave do Dia", caminho: "/nave-do-dia", semente: 20261013, jaJogados: ["m3-e30"], lista: NAVES },
+  brasil: {
+    titulo: "Nave do Dia Brasil",
+    caminho: "/nave-do-dia-brasil",
+    semente: 55011500,
+    jaJogados: ["opala-ss-250s"],
+    lista: NAVES.filter((n) => BRASILEIROS.has(n.id)),
+  },
+};
+
 // ------------------------------------------------------------------ o dia
 
 /** Dia em Brasília, "2026-10-13": todo mundo troca de carro à meia-noite daqui. */
@@ -109,26 +145,32 @@ export function numeroDoDia(dia = hojeEmBrasilia()): number {
 }
 
 /** Embaralha a lista sempre do mesmo jeito: a ordem dos carros é fixa e ninguém adivinha pelo alfabeto. */
-function ordemFixa(): Nave[] {
-  let s = 20261013;
+function ordemFixa({ semente, lista: original, jaJogados }: ConfigDoModo): Nave[] {
+  let s = semente;
   const aleatorio = () => {
     s = (s + 0x6d2b79f5) | 0;
     let t = Math.imul(s ^ (s >>> 15), 1 | s);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-  const lista = [...NAVES];
+  const lista = [...original];
   for (let i = lista.length - 1; i > 0; i--) {
     const j = Math.floor(aleatorio() * (i + 1));
     [lista[i], lista[j]] = [lista[j], lista[i]];
   }
+  // Os que já saíram voltam pros primeiros dias, cada um no seu.
+  jaJogados.forEach((id, dia) => {
+    const i = lista.findIndex((n) => n.id === id);
+    if (i >= 0) [lista[dia], lista[i]] = [lista[i], lista[dia]];
+  });
   return lista;
 }
-const ORDEM = ordemFixa();
+const ORDEM: Record<Modo, Nave[]> = { geral: ordemFixa(MODOS.geral), brasil: ordemFixa(MODOS.brasil) };
 
-export function naveDoDia(dia = hojeEmBrasilia()): Nave {
+export function naveDoDia(dia = hojeEmBrasilia(), modo: Modo = "geral"): Nave {
   const n = numeroDoDia(dia) - 1;
-  return ORDEM[((n % ORDEM.length) + ORDEM.length) % ORDEM.length];
+  const ordem = ORDEM[modo];
+  return ordem[((n % ordem.length) + ordem.length) % ordem.length];
 }
 
 // --------------------------------------------------------------- comparar
@@ -193,9 +235,13 @@ export function comparar(chute: Nave, alvo: Nave): Pista[] {
 }
 
 /** Quadradinhos pra compartilhar: 🟩🟨🟥 por palpite, como os "dle" fazem. */
-export function textoDeCompartilhar(palpites: Nave[], alvo: Nave, dia = hojeEmBrasilia()): string {
+export function textoDeCompartilhar(palpites: Nave[], alvo: Nave, dia = hojeEmBrasilia(), modo: Modo = "geral"): string {
   const emoji: Record<Cor, string> = { verde: "🟩", amarelo: "🟨", vermelho: "🟥" };
   const linhas = palpites.map((p) => comparar(p, alvo).map((x) => emoji[x.cor]).join(""));
   const resumo = palpites.length === 1 ? "de primeira" : `em ${palpites.length} palpites`;
-  return [`Nave do Dia #${numeroDoDia(dia)} · acertei ${resumo}`, ...linhas.slice(-6), "downpipe.com.br/app/nave-do-dia"].join("\n");
+  return [
+    `${MODOS[modo].titulo} #${numeroDoDia(dia)} · acertei ${resumo}`,
+    ...linhas.slice(-6),
+    `downpipe.com.br/app${MODOS[modo].caminho}`,
+  ].join("\n");
 }
