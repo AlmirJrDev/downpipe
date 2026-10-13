@@ -36,20 +36,36 @@ export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
+  // Largura de verdade do carrossel, medida na tela. A da janela errava no
+  // computador, onde o app fica numa coluna mais estreita que a janela.
+  const [largura, setLargura] = useState(SCREEN_WIDTH);
   const isLast = index === SLIDES.length - 1;
 
   const goToProfile = () => router.replace("/edit-profile?onboarding=1");
 
+  const irPara = (i: number) => {
+    setIndex(i);
+    scrollRef.current?.scrollTo({ x: i * largura, animated: true });
+  };
+
+  /**
+   * O "Próximo" anda pelo índice que ele mesmo guarda. Antes o índice só
+   * mudava no fim da rolagem (onMomentumScrollEnd) — evento que o
+   * navegador não dispara: o primeiro toque ia pro slide 2 e os outros
+   * mandavam ir pro 2 de novo, e o botão nunca chegava em "Vamos começar".
+   */
   const goNext = () => {
     if (isLast) {
       goToProfile();
       return;
     }
-    scrollRef.current?.scrollTo({ x: (index + 1) * SCREEN_WIDTH, animated: true });
+    irPara(index + 1);
   };
 
-  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH));
+  // Arrastar com o dedo também troca o slide (e o pontinho embaixo).
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const atual = Math.round(e.nativeEvent.contentOffset.x / largura);
+    if (atual !== index && atual >= 0 && atual < SLIDES.length) setIndex(atual);
   };
 
   return (
@@ -85,7 +101,9 @@ export default function WelcomeScreen() {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={onScrollEnd}
+        onScroll={onScroll}
+        scrollEventThrottle={32}
+        onLayout={(e) => setLargura(e.nativeEvent.layout.width)}
         style={{ flex: 1 }}
       >
         {SLIDES.map((slide, i) => {
@@ -93,7 +111,7 @@ export default function WelcomeScreen() {
           return (
             <View
               key={i}
-              style={{ width: SCREEN_WIDTH, paddingHorizontal: 32 }}
+              style={{ width: largura, paddingHorizontal: 32 }}
               className="items-center justify-center"
             >
               <View

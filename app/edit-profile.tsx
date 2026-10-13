@@ -69,7 +69,9 @@ export default function EditProfileScreen() {
     mutationFn: async () => {
       const updated = await apiService.updateMyProfile({
         username: username.trim(),
-        displayName: displayName.trim(),
+        // Nome em branco vira o próprio @: travar o cadastro por um campo
+        // que dá pra preencher depois fazia gente desistir aqui.
+        displayName: displayName.trim() || username.trim(),
         bio: bio.trim() || null,
         gearheadSince: gearheadSince.trim() ? Number(gearheadSince) : null,
         instagram: instagram.trim() || null,
@@ -97,7 +99,13 @@ export default function EditProfileScreen() {
     },
   });
 
-  const isValid = username.trim().length >= 3 && displayName.trim().length > 0;
+  const isValid = username.trim().length >= 3;
+  // Botão cinza sem explicação parece app travado: diz o que falta.
+  const falta = !username.trim()
+    ? "Escolha um @ pra continuar."
+    : username.trim().length < 3
+      ? "O @ precisa de pelo menos 3 letras."
+      : null;
 
   if (isLoading || !me) {
     return (
@@ -151,7 +159,12 @@ export default function EditProfileScreen() {
           onChangeText={(t) => setUsername(t.toLowerCase().replace(/[^a-z0-9_.]/g, ""))}
           autoCapitalize="none"
         />
-        <FormField label="Nome de exibição" placeholder="Seu nome" value={displayName} onChangeText={setDisplayName} />
+        <FormField
+          label={isOnboarding ? "Nome de exibição (opcional)" : "Nome de exibição"}
+          placeholder="Seu nome"
+          value={displayName}
+          onChangeText={setDisplayName}
+        />
         <FormField
           label="Bio"
           placeholder="Fale sobre você e seus carros..."
@@ -219,6 +232,11 @@ export default function EditProfileScreen() {
           loading={saveProfile.isPending}
           disabled={!isValid}
         />
+        {falta && (
+          <Text className="text-muted text-center mt-3" style={{ fontSize: 12.5 }}>
+            {falta}
+          </Text>
+        )}
 
         {/* Sem "pular" aqui de propósito: enquanto o @ for o placeholder do
             signup, o redirect de onboarding em _layout.tsx traz o usuário de
