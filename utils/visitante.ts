@@ -19,7 +19,9 @@ import { useAuthStore } from "@/stores/authStore";
  * O resto do app (feed, garagem, notificações, criar coisas) continua
  * exigindo conta: sem uma, não há o que mostrar lá.
  */
-const TELAS_DE_CONTEUDO = ["post", "car", "event", "user", "user-posts", "event-posts"];
+// "nave-do-dia" (o jogo) também: é o que se manda no grupo, e quem chega
+// pelo link joga antes de ter conta.
+const TELAS_DE_CONTEUDO = ["post", "car", "event", "user", "user-posts", "event-posts", "nave-do-dia"];
 
 /**
  * Formulário que abre sem conta: a conta é pedida só no fim, na hora de

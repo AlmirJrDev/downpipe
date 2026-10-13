@@ -211,6 +211,7 @@ export default function RootLayout() {
                   <Stack.Screen name="relato" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="relatos" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="trafego" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="nave-do-dia" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="excluir-minha-conta" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-chat/[id]" options={{ animation: "slide_from_right" }} />

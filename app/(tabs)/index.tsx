@@ -16,6 +16,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { PostCard } from "@/components/cards/PostCard";
 import { QuemSeguir } from "@/components/QuemSeguir";
 import { GettingStarted } from "@/components/GettingStarted";
+import { ChamadaNaveDoDia } from "@/components/ChamadaNaveDoDia";
 import { FeedEventCard } from "@/components/cards/FeedEventCard";
 import { FeedCarCard } from "@/components/cards/FeedCarCard";
 import { useEvents } from "@/stores/eventsStore";
@@ -338,6 +339,7 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <>
               <GettingStarted />
+              <ChamadaNaveDoDia />
               {/* Com a coluna da direita, mora lá. Os encontros não têm mais
                   trilho próprio aqui: entram no feed como publicação. */}
               {!comColunaDireita && <QuemSeguir />}
