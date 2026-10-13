@@ -12,6 +12,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { Share } from "@/utils/share";
 import { voltarOuIrPara } from "@/utils/navigation";
+import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import {
   NAVES,
   comparar,
@@ -25,8 +26,22 @@ import {
 import { colors } from "@/constants/theme";
 
 const FUNDO: Record<Cor, string> = { verde: "#15803d", amarelo: "#a16207", vermelho: "#7f1d1d" };
-const LARGURA_DA_PISTA = 78;
-const LARGURA_DO_NOME = 132;
+/** Tamanho das peças: no celular, fixo e rola de lado; no computador, cresce até encher a linha. */
+interface Medidas {
+  pista: number;
+  nome: number;
+  altura: number;
+  fonte: number;
+}
+const CELULAR: Medidas = { pista: 78, nome: 132, altura: 58, fonte: 12 };
+const VAO = 4;
+
+function medidasPara(larga: boolean, espaco: number): Medidas {
+  if (!larga || espaco <= 0) return CELULAR;
+  const nome = 190;
+  const pista = Math.max(CELULAR.pista, Math.min(132, Math.floor((espaco - nome - VAO * 8) / 8)));
+  return { pista, nome, altura: 76, fonte: 14 };
+}
 const COLUNAS = ["Marca", "País", "Carroceria", "Motor", "Tração", "Cilindros", "Ano", "Potência"];
 
 /** O que já se jogou hoje, guardado no aparelho (some sozinho no dia seguinte). */
@@ -67,22 +82,22 @@ function useContagem() {
   return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
 }
 
-function Linha({ chute, alvo }: { chute: Nave; alvo: Nave }) {
+function Linha({ chute, alvo, m }: { chute: Nave; alvo: Nave; m: Medidas }) {
   const pistas = comparar(chute, alvo);
   const acertou = chute.id === alvo.id;
   return (
-    <View className="flex-row" style={{ gap: 4 }}>
+    <View className="flex-row" style={{ gap: VAO }}>
       <View
         className="justify-center px-2"
         style={{
-          width: LARGURA_DO_NOME,
-          height: 58,
+          width: m.nome,
+          height: m.altura,
           borderWidth: 1,
           borderColor: acertou ? FUNDO.verde : colors.border,
           backgroundColor: colors.surfaceHigh,
         }}
       >
-        <Text className="text-on-surface" style={{ fontSize: 12, fontWeight: "700" }} numberOfLines={3}>
+        <Text className="text-on-surface" style={{ fontSize: m.fonte, fontWeight: "700" }} numberOfLines={3}>
           {chute.nome}
         </Text>
       </View>
@@ -90,14 +105,14 @@ function Linha({ chute, alvo }: { chute: Nave; alvo: Nave }) {
         <View
           key={p.chave}
           className="items-center justify-center px-1"
-          style={{ width: LARGURA_DA_PISTA, height: 58, backgroundColor: FUNDO[p.cor] }}
+          style={{ width: m.pista, height: m.altura, backgroundColor: FUNDO[p.cor] }}
           accessibilityLabel={`${p.rotulo}: ${p.valor}, ${p.cor}${p.seta ? `, o carro do dia é ${p.seta === "cima" ? "maior" : "menor"}` : ""}`}
         >
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", textAlign: "center" }} numberOfLines={2}>
+          <Text style={{ color: "#fff", fontSize: m.fonte, fontWeight: "700", textAlign: "center" }} numberOfLines={2}>
             {p.valor}
           </Text>
-          {p.seta === "cima" && <ArrowUp size={14} color="#fff" />}
-          {p.seta === "baixo" && <ArrowDown size={14} color="#fff" />}
+          {p.seta === "cima" && <ArrowUp size={m.fonte + 2} color="#fff" />}
+          {p.seta === "baixo" && <ArrowDown size={m.fonte + 2} color="#fff" />}
         </View>
       ))}
     </View>
@@ -111,6 +126,11 @@ export default function NaveDoDiaScreen() {
   const [busca, setBusca] = useState("");
   const [aviso, setAviso] = useState<string | null>(null);
   const contagem = useContagem();
+  // No computador a tela sai da coluna estreita (ver useLarguraAmpla) e as
+  // peças crescem até encher a linha: a galera joga muito pelo PC.
+  const larga = useLarguraAmpla();
+  const [espaco, setEspaco] = useState(0);
+  const m = medidasPara(larga, espaco);
 
   const palpites = ids.map((id) => NAVES.find((n) => n.id === id)).filter((n): n is Nave => !!n);
   const venceu = palpites.some((p) => p.id === alvo.id);
@@ -149,14 +169,22 @@ export default function NaveDoDiaScreen() {
       />
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 48, maxWidth: 860, width: "100%", alignSelf: "center", gap: 16 }}
+        contentContainerStyle={{
+          padding: larga ? 32 : 16,
+          paddingBottom: 48,
+          maxWidth: 1120,
+          width: "100%",
+          alignSelf: "center",
+          gap: larga ? 20 : 16,
+        }}
         keyboardShouldPersistTaps="handled"
       >
+        <View onLayout={(e) => setEspaco(e.nativeEvent.layout.width)} style={{ width: "100%", height: 0 }} />
         <View style={{ gap: 6 }}>
           <Text className="text-primary" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.4 }}>
             #{numeroDoDia(dia)}
           </Text>
-          <Text className="text-on-surface" style={{ fontSize: 22, fontWeight: "800" }}>
+          <Text className="text-on-surface" style={{ fontSize: larga ? 30 : 22, fontWeight: "800" }}>
             Qual é a nave de hoje?
           </Text>
           <Text className="text-on-surface-variant" style={{ fontSize: 13.5, lineHeight: 19 }}>
@@ -190,6 +218,11 @@ export default function NaveDoDiaScreen() {
             <TextInput
               value={busca}
               onChangeText={setBusca}
+              // Enter chuta a primeira sugestão: no PC ninguém quer ir no mouse.
+              onSubmitEditing={() => sugestoes[0] && chutar(sugestoes[0])}
+              returnKeyType="go"
+              autoFocus={larga}
+              blurOnSubmit={false}
               placeholder="Digite um carro ou marca: Civic, Opala, Golf…"
               placeholderTextColor={colors.muted}
               autoCorrect={false}
@@ -197,10 +230,15 @@ export default function NaveDoDiaScreen() {
                 backgroundColor: colors.inputSurface,
                 color: colors.onInputSurface,
                 paddingHorizontal: 14,
-                paddingVertical: 14,
-                fontSize: 15,
+                paddingVertical: larga ? 16 : 14,
+                fontSize: larga ? 17 : 15,
               }}
             />
+            {larga && sugestoes.length > 0 && (
+              <Text className="text-muted" style={{ fontSize: 12 }}>
+                Enter escolhe a primeira.
+              </Text>
+            )}
             {sugestoes.map((n) => (
               <Pressable
                 key={n.id}
@@ -222,16 +260,16 @@ export default function NaveDoDiaScreen() {
 
         {palpites.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={{ gap: 4 }}>
-              <View className="flex-row" style={{ gap: 4 }}>
-                <Text className="text-muted" style={{ width: LARGURA_DO_NOME, fontSize: 10.5, fontWeight: "700", letterSpacing: 1 }}>
+            <View style={{ gap: VAO }}>
+              <View className="flex-row" style={{ gap: VAO }}>
+                <Text className="text-muted" style={{ width: m.nome, fontSize: larga ? 11.5 : 10.5, fontWeight: "700", letterSpacing: 1 }}>
                   CARRO
                 </Text>
                 {COLUNAS.map((c) => (
                   <Text
                     key={c}
                     className="text-muted"
-                    style={{ width: LARGURA_DA_PISTA, fontSize: 10, fontWeight: "700", letterSpacing: 0.4, textAlign: "center" }}
+                    style={{ width: m.pista, fontSize: larga ? 11.5 : 10, fontWeight: "700", letterSpacing: 0.4, textAlign: "center" }}
                     numberOfLines={1}
                   >
                     {c.toUpperCase()}
@@ -240,7 +278,7 @@ export default function NaveDoDiaScreen() {
               </View>
               {/* O palpite mais novo em cima: é o que a pessoa quer ver. */}
               {[...palpites].reverse().map((p) => (
-                <Linha key={p.id} chute={p} alvo={alvo} />
+                <Linha key={p.id} chute={p} alvo={alvo} m={m} />
               ))}
             </View>
           </ScrollView>
