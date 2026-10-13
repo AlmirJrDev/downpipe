@@ -41,7 +41,9 @@ export default function WelcomeScreen() {
   const [largura, setLargura] = useState(SCREEN_WIDTH);
   const isLast = index === SLIDES.length - 1;
 
-  const goToProfile = () => router.replace("/edit-profile?onboarding=1");
+  // Depois das boas-vindas vem a pergunta "Como você vive carro?", e ela
+  // leva pro @.
+  const goToProfile = () => router.replace("/como-voce-vive");
 
   const irPara = (i: number) => {
     setIndex(i);

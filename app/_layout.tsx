@@ -104,10 +104,11 @@ function AuthRedirect() {
     if (mePending) return;
 
     const needsOnboarding = !!me && isPlaceholderUsername(me.username);
-    // "welcome" (carrossel de recursos) e "edit-profile" (configurar o @)
-    // são os dois passos do onboarding — não empurra pra fora de nenhum dos
-    // dois enquanto o usuário ainda não terminou.
-    const inOnboardingFlow = segments[0] === "welcome" || segments[0] === "edit-profile";
+    // "welcome" (carrossel de recursos), "como-voce-vive" (a pergunta) e
+    // "edit-profile" (configurar o @) são os passos do onboarding — não
+    // empurra pra fora de nenhum deles enquanto o usuário não terminou.
+    const inOnboardingFlow =
+      segments[0] === "welcome" || segments[0] === "como-voce-vive" || segments[0] === "edit-profile";
 
     if (needsOnboarding && !inOnboardingFlow) {
       // Conta criada no meio da publicação de um rolê: as boas-vindas
@@ -198,6 +199,8 @@ export default function RootLayout() {
                   />
                   <Stack.Screen name="nova-senha" options={{ animation: "fade" }} />
                   <Stack.Screen name="welcome" options={{ animation: "fade" }} />
+                  <Stack.Screen name="como-voce-vive" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="seguir-garagens" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="edit-profile" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="saved" options={{ animation: "slide_from_right" }} />

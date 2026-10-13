@@ -79,6 +79,7 @@ interface RawProfile {
   isFollowing?: boolean | null;
   isOrganizer?: boolean;
   eventsAttendedCount?: number;
+  viveCarro?: string[];
 }
 
 function toUser(raw: RawProfile): User {
@@ -98,6 +99,7 @@ function toUser(raw: RawProfile): User {
     isFollowing: raw.isFollowing,
     isOrganizer: raw.isOrganizer ?? false,
     eventsAttendedCount: raw.eventsAttendedCount ?? 0,
+    viveCarro: raw.viveCarro ?? [],
   };
 }
 
@@ -119,6 +121,7 @@ async function updateMyProfile(patch: {
   gearheadSince?: number | null;
   instagram?: string | null;
   isOrganizer?: boolean;
+  viveCarro?: string[];
 }): Promise<User> {
   const raw = await api.patch<RawProfile>("/profile/me", patch);
   return toUser(raw);

@@ -42,6 +42,11 @@ export interface User {
   isAdmin?: boolean;
   /** Rolês em que a pessoa já esteve — só os que já aconteceram. */
   eventsAttendedCount?: number;
+  /**
+   * "Como você vive carro?" do onboarding (só no próprio perfil). Vazio em
+   * conta de antes da pergunta. Ver utils/viveCarro.
+   */
+  viveCarro?: string[];
 }
 
 // Catálogo próprio de veículos (GET /vehicles/*), alimentado pela FIPE.

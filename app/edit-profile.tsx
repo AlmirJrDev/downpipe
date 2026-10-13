@@ -23,6 +23,7 @@ import { voltarOuIrPara } from "@/utils/navigation";
 import { apiService } from "@/services/apiService";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isPlaceholderUsername } from "@/utils/profile";
+import { exemploDeBio, telaDepoisDoArroba } from "@/utils/viveCarro";
 import { ApiError } from "@/services/api";
 
 
@@ -89,9 +90,10 @@ export default function EditProfileScreen() {
       // volta pra cá antes do refetch terminar. Setando direto o resultado
       // da própria mutation, o cache já está correto no mesmo tick do navigate.
       queryClient.setQueryData(["me"], freshUser);
-      // No onboarding, emenda direto na primeira ação de verdade (adicionar
-      // carro) em vez de largar o usuário num feed vazio.
-      if (isOnboarding) router.replace("/add-car?onboarding=1");
+      // No onboarding, emenda direto na primeira ação de verdade, que depende
+      // de como a pessoa vive carro (carro, encontro, foto ou seguir gente),
+      // em vez de largar o usuário num feed vazio.
+      if (isOnboarding) router.replace(telaDepoisDoArroba(me?.viveCarro) as never);
       else voltarOuIrPara("/(tabs)/profile");
     },
     onError: (err) => {
@@ -167,7 +169,7 @@ export default function EditProfileScreen() {
         />
         <FormField
           label="Bio"
-          placeholder="Fale sobre você e seus carros..."
+          placeholder={exemploDeBio(me.viveCarro)}
           value={bio}
           onChangeText={setBio}
           multiline

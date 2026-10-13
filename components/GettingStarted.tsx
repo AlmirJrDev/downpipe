@@ -8,6 +8,8 @@ import { useMyGarage } from "@/stores/garageStore";
 import { apiService } from "@/services/apiService";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isPlaceholderUsername } from "@/utils/profile";
+import { useEvents, useEventsByOrganizer } from "@/stores/eventsStore";
+import { perfilPrincipal } from "@/utils/viveCarro";
 
 interface Step {
   label: string;
@@ -64,27 +66,73 @@ export function GettingStarted() {
     enabled: !!me?.username,
   });
 
+  // Quem marcou "organizo" ou "sem carro" tem passos que dependem dos
+  // encontros: os que organiza, e se já confirmou presença em algum.
+  const perfis = me?.viveCarro?.length ? me.viveCarro : ["carro"];
+  const organiza = perfis.includes("organizador");
+  const semCarro = perfis.includes("sem_carro");
+  const { data: meusEncontros } = useEventsByOrganizer(organiza ? me?.username : undefined);
+  const { data: proximos } = useEvents({});
+
   // Espera os dados chegarem pra não piscar um checklist errado.
   if (!me || cars === undefined || postsPage === undefined) return null;
+  if (organiza && meusEncontros === undefined) return null;
 
   const firstCar = cars[0];
+  const temCarro = perfis.includes("carro");
+  const fotografa = perfis.includes("fotografo");
+  const vaiEmAlgum =
+    (me.eventsAttendedCount ?? 0) > 0 ||
+    (proximos?.pages.some((p) => p.data.some((e) => e.attendingByMe)) ?? false);
 
+  /**
+   * Os passos de cada perfil marcado em "Como você vive carro?", juntos.
+   * Conta de antes da pergunta (lista vazia) fica com os de quem tem carro,
+   * que eram os de sempre.
+   */
   const steps: Step[] = [
     { label: "Personalizar seu perfil", done: !isPlaceholderUsername(me.username), route: "/edit-profile" },
-    { label: "Adicionar seu primeiro carro", done: cars.length > 0, route: "/add-car" },
-    {
-      label: "Criar o projeto do seu carro",
-      // projectsCount vem de /profile/me. Sem carro não dá pra criar projeto,
-      // então o passo aponta pra adicionar carro antes.
-      done: me.projectsCount > 0,
-      route: firstCar ? `/edit-project/${firstCar.id}` : "/add-car",
-    },
-    { label: "Fazer sua primeira publicação", done: postsPage.data.length > 0, route: "/add-post" },
+    ...(temCarro
+      ? [
+          { label: "Adicionar seu primeiro carro", done: cars.length > 0, route: "/add-car" },
+          {
+            label: "Criar o projeto do seu carro",
+            // projectsCount vem de /profile/me. Sem carro não dá pra criar
+            // projeto, então o passo aponta pra adicionar carro antes.
+            done: me.projectsCount > 0,
+            route: firstCar ? `/edit-project/${firstCar.id}` : "/add-car",
+          },
+        ]
+      : []),
+    ...(organiza
+      ? [{ label: "Publicar seu primeiro encontro", done: (meusEncontros?.data.length ?? 0) > 0, route: "/add-event" }]
+      : []),
+    ...(temCarro || fotografa
+      ? [
+          {
+            label: fotografa ? "Postar uma foto e marcar o carro" : "Fazer sua primeira publicação",
+            done: postsPage.data.length > 0,
+            route: "/add-post",
+          },
+        ]
+      : []),
+    ...(semCarro
+      ? [
+          { label: "Seguir 3 garagens", done: me.followingCount >= 3, route: "/seguir-garagens" },
+          { label: "Confirmar presença num encontro", done: vaiEmAlgum, route: "/(tabs)/explore?aba=roles" },
+        ]
+      : []),
   ];
 
   if (steps.every((s) => s.done)) return null;
 
   const doneCount = steps.filter((s) => s.done).length;
+  const subtitulo = {
+    carro: "Monte sua garagem e mostre seu projeto pra galera.",
+    organizador: "Coloque seu encontro no mapa e veja quem vai.",
+    fotografo: "Mostre seu trabalho e leve o crédito em cada foto.",
+    sem_carro: "Siga a galera e escolha seu próximo encontro.",
+  }[perfilPrincipal(perfis) ?? "carro"];
 
   return (
     <View className="border border-border bg-card px-4 pt-4 pb-2 mb-6">
@@ -97,7 +145,7 @@ export function GettingStarted() {
         </Text>
       </View>
       <Text className="text-on-surface-variant mb-2" style={{ fontSize: 13 }}>
-        Monte sua garagem e mostre seu projeto pra galera.
+        {subtitulo}
       </Text>
       {steps.map((step, i) => (
         <StepRow key={step.label} step={step} isLast={i === steps.length - 1} />

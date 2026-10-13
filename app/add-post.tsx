@@ -8,7 +8,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { PularOnboarding } from "@/components/PularOnboarding";
 import { ArrowLeft, Camera, Eye, Plus, Send, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ImageCropper } from "@/components/ImageCropper";
@@ -35,6 +36,8 @@ const POST_ASPECT = 4 / 5;
 const MAXIMO_DE_FOTOS = 6;
 
 export default function AddPostScreen() {
+  // Fotógrafo cai aqui direto do onboarding (ver utils/viveCarro).
+  const isOnboarding = useLocalSearchParams<{ onboarding?: string }>().onboarding === "1";
   const { data: myCars } = useMyGarage();
   const createPost = useCreatePost();
   // No computador, as fotos à esquerda e os campos à direita — o "Criar
@@ -115,12 +118,15 @@ export default function AddPostScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.surface }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <AppHeader
-        title="Nova publicação"
+        title={isOnboarding ? "Sua primeira foto" : "Nova publicação"}
         left={
-          <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)")}>
-            <ArrowLeft size={22} color={colors.onSurface} />
-          </Pressable>
+          isOnboarding ? undefined : (
+            <Pressable hitSlop={8} onPress={() => voltarOuIrPara("/(tabs)")}>
+              <ArrowLeft size={22} color={colors.onSurface} />
+            </Pressable>
+          )
         }
+        right={isOnboarding ? <PularOnboarding /> : undefined}
       />
 
       <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingTop: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">

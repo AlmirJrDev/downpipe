@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { ArrowLeft, CalendarPlus, Camera, Check, Globe, Link2, MapPin } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
+import { PularOnboarding } from "@/components/PularOnboarding";
 import { PrimaryButton } from "@/components/ui/Button";
 import { ImageCropper } from "@/components/ImageCropper";
 import { DateTimeFields } from "@/components/ui/DateTimeFields";
@@ -89,8 +90,10 @@ function ChipDoRole({
 }
 export default function AddEventScreen() {
   // eventId presente = edição do evento existente.
-  const { eventId } = useLocalSearchParams<{ eventId?: string }>();
+  const { eventId, onboarding } = useLocalSearchParams<{ eventId?: string; onboarding?: string }>();
   const isEditing = !!eventId;
+  // Quem organiza cai aqui direto do onboarding (ver utils/viveCarro).
+  const isOnboarding = onboarding === "1";
   // No computador, o flyer à esquerda e os campos à direita.
   const larga = useLarguraAmpla();
 
@@ -378,15 +381,26 @@ export default function AddEventScreen() {
 
   const header = (
     <AppHeader
-      title={isEditing ? "Editar evento" : entrouComoVisitante ? "Publicar meu encontro" : "Novo evento"}
-      left={
-        <Pressable
-          hitSlop={8}
-          onPress={voltar}
-        >
-          <ArrowLeft size={22} color={colors.onSurface} />
-        </Pressable>
+      title={
+        isEditing
+          ? "Editar evento"
+          : isOnboarding
+            ? "Seu primeiro encontro"
+            : entrouComoVisitante
+              ? "Publicar meu encontro"
+              : "Novo evento"
       }
+      left={
+        isOnboarding ? undefined : (
+          <Pressable
+            hitSlop={8}
+            onPress={voltar}
+          >
+            <ArrowLeft size={22} color={colors.onSurface} />
+          </Pressable>
+        )
+      }
+      right={isOnboarding ? <PularOnboarding /> : undefined}
     />
   );
 

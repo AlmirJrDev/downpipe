@@ -22,7 +22,7 @@ import type { Sugestao } from "@/types";
 /** A partir daqui a pessoa já tem feed próprio e a fileira sai de cena. */
 const JA_SEGUE_GENTE = 5;
 
-function Cartao({ sugestao }: { sugestao: Sugestao }) {
+export function Cartao({ sugestao }: { sugestao: Sugestao }) {
   const seguir = useToggleFollow(sugestao.username);
   // Seguido some da lista no próximo carregamento; até lá, o botão responde
   // na hora pra não parecer que o toque não pegou.
