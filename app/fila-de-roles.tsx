@@ -39,6 +39,7 @@ import { ImageCropper } from "@/components/ImageCropper";
 import { useUploadEventPhoto } from "@/stores/eventsStore";
 import { Alert } from "@/utils/alert";
 import { AppHeader } from "@/components/AppHeader";
+import { CaixaDeLinks } from "@/components/CaixaDeLinks";
 import { EmptyState } from "@/components/ui/States";
 import { DateTimeFields } from "@/components/ui/DateTimeFields";
 import { apiService } from "@/services/apiService";
@@ -73,6 +74,8 @@ const ABAS = [
   { chave: "pending", rotulo: "NA FILA" },
   { chave: "approved", rotulo: "PUBLICADOS" },
   { chave: "rejected", rotulo: "DESCARTADOS" },
+  // A caixa de links: posts guardados pra virar sugestão (ver CaixaDeLinks).
+  { chave: "links", rotulo: "LINKS" },
 ] as const;
 
 type Aba = (typeof ABAS)[number]["chave"];
@@ -759,8 +762,8 @@ export default function FilaDeRolesScreen() {
 
   const fila = useQuery({
     queryKey: ["fila-de-roles", aba],
-    queryFn: () => apiService.getFilaDeRoles(aba),
-    enabled: !!me?.isAdmin,
+    queryFn: () => apiService.getFilaDeRoles(aba === "links" ? "pending" : aba),
+    enabled: !!me?.isAdmin && aba !== "links",
   });
 
   const cabecalho = (
@@ -843,7 +846,9 @@ export default function FilaDeRolesScreen() {
           />
         }
       >
-        {fila.isPending ? (
+        {aba === "links" ? (
+          <CaixaDeLinks />
+        ) : fila.isPending ? (
           <View className="py-16 items-center">
             <ActivityIndicator color={colors.primary} />
           </View>

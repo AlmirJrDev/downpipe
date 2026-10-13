@@ -1048,6 +1048,28 @@ async function sugerirRole(input: SugestaoDeRole): Promise<{ message: string }> 
 /**
  * A fila de rolês — mesma regra da moderação: 404 pra quem não publica.
  */
+export interface LinkDeEncontro {
+  id: string;
+  url: string;
+  note: string | null;
+  status: "novo" | "lancado" | "descartado";
+  suggestionId: string | null;
+  createdAt: string;
+  handledAt: string | null;
+}
+
+/** A caixa de links: posts de encontro guardados pra lançar depois na fila. */
+async function getLinksDeEncontro(): Promise<LinkDeEncontro[]> {
+  return api.get<LinkDeEncontro[]>("/admin/suggestions/links");
+}
+
+async function guardarLinkDeEncontro(input: {
+  url: string;
+  note?: string;
+}): Promise<{ link: LinkDeEncontro; repetido: boolean }> {
+  return api.post<{ link: LinkDeEncontro; repetido: boolean }>("/admin/suggestions/links", input);
+}
+
 async function getFilaDeRoles(
   status: "pending" | "approved" | "rejected" = "pending"
 ): Promise<RoleNaFila[]> {
@@ -1176,6 +1198,8 @@ const apiDeVerdade = {
   marcarRelatoLido,
   getTrafego,
   getFilaDeRoles,
+  getLinksDeEncontro,
+  guardarLinkDeEncontro,
   contarRolesNaFila,
   aprovarRole,
   descartarRole,
