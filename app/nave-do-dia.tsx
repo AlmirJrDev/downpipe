@@ -231,7 +231,8 @@ export default function NaveDoDiaScreen() {
                   <Text
                     key={c}
                     className="text-muted"
-                    style={{ width: LARGURA_DA_PISTA, fontSize: 10.5, fontWeight: "700", letterSpacing: 1, textAlign: "center" }}
+                    style={{ width: LARGURA_DA_PISTA, fontSize: 10, fontWeight: "700", letterSpacing: 0.4, textAlign: "center" }}
+                    numberOfLines={1}
                   >
                     {c.toUpperCase()}
                   </Text>
