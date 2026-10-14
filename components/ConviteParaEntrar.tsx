@@ -12,6 +12,7 @@ import { router, useSegments } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
 import { caminhoAberto, ehTelaDeConteudo, guardarDestino, useEhVisitante } from "@/utils/visitante";
+import { useModoDesktop } from "@/hooks/useDesktop";
 
 export function ConviteParaEntrar() {
   const ehVisitante = useEhVisitante();
@@ -21,7 +22,10 @@ export function ConviteParaEntrar() {
   // Mesmo corte da moldura do app no computador (ver +html.tsx).
   const largo = Platform.OS === "web" && width >= 860;
 
-  if (!ehVisitante || !ehTelaDeConteudo(segments[0])) return null;
+  const desktop = useModoDesktop();
+
+  // No computador o convite mora no menu lateral (ver MenuDeVisitante).
+  if (!ehVisitante || desktop || !ehTelaDeConteudo(segments[0])) return null;
 
   const entrar = (para: "/login" | "/register") => {
     // Guarda de onde ela saiu: depois de entrar, volta pra este mesmo

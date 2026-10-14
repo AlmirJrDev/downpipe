@@ -5,6 +5,9 @@
  * celular no meio da tela — o mesmo papel do menu da esquerda do Instagram
  * web. Vale em toda tela de quem está logado, não só nas abas: abrir um
  * perfil ou um rolê não pode fazer o menu sumir.
+ *
+ * Quem está de visita tem o seu: os jogos (que é o que mais traz gente de
+ * fora) e o convite pra entrar, no lugar da barra do rodapé do celular.
  */
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -18,6 +21,8 @@ import {
   Compass,
   Flag,
   Home,
+  TrendingUp,
+  Wrench,
   MessageSquareText,
   SquarePlus,
   User,
@@ -26,6 +31,8 @@ import {
 } from "lucide-react-native";
 import { Logo } from "@/components/Logo";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAuthStore } from "@/stores/authStore";
+import { caminhoAberto, guardarDestino } from "@/utils/visitante";
 import { useUnreadCount } from "@/stores/notificationsStore";
 import { apiService } from "@/services/apiService";
 import { LARGURA_DO_MENU, useLayoutStore } from "@/hooks/useDesktop";
@@ -107,6 +114,91 @@ function Linha({ item, ativo }: { item: Item; ativo: boolean }) {
 }
 
 export function MenuLateral() {
+  const logado = useAuthStore((s) => s.status === "signedIn");
+  return logado ? <MenuDeQuemEntrou /> : <MenuDeVisitante />;
+}
+
+const JOGOS_DO_MENU: Item[] = [
+  { rotulo: "Nave do Dia", Icone: Gamepad2, destino: "/nave-do-dia", ativoEm: (c) => c === "/nave-do-dia" },
+  { rotulo: "Nave do Dia Brasil", Icone: Flag, destino: "/nave-do-dia-brasil", ativoEm: (c) => c.startsWith("/nave-do-dia-brasil") },
+  { rotulo: "Frankenstein", Icone: Wrench, destino: "/frankenstein", ativoEm: (c) => c.startsWith("/frankenstein") },
+  { rotulo: "Mais Caro ou Mais Barato?", Icone: TrendingUp, destino: "/mais-caro", ativoEm: (c) => c.startsWith("/mais-caro") },
+];
+
+function MenuDeVisitante() {
+  const caminho = usePathname();
+  const entrar = (para: "/login" | "/register") => {
+    // Depois de entrar, volta pro que estava vendo.
+    guardarDestino(caminhoAberto());
+    router.push(para);
+  };
+
+  return (
+    <View
+      style={{
+        width: LARGURA_DO_MENU,
+        height: "100%",
+        paddingTop: 28,
+        paddingHorizontal: 12,
+        borderRightWidth: 1,
+        borderRightColor: colors.border,
+        backgroundColor: colors.surfaceLowest,
+      }}
+    >
+      {/* Sem conta não há feed: o logo leva pra página de apresentação. */}
+      <Pressable
+        onPress={() => {
+          if (typeof window !== "undefined") window.location.href = "/";
+        }}
+        style={{ paddingHorizontal: 12, marginBottom: 30 }}
+        accessibilityRole="link"
+        accessibilityLabel="Downpipe, página inicial"
+      >
+        <Logo height={20} />
+      </Pressable>
+
+      <Text
+        style={{ color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.4, paddingHorizontal: 12, marginBottom: 6 }}
+      >
+        JOGOS
+      </Text>
+      <View style={{ gap: 2 }}>
+        {JOGOS_DO_MENU.map((item) => (
+          <Linha key={item.rotulo} item={item} ativo={item.ativoEm(caminho)} />
+        ))}
+        <Linha
+          item={{ rotulo: "Todos os jogos", Icone: Compass, destino: "/jogos", ativoEm: (c) => c.startsWith("/jogos") }}
+          ativo={caminho.startsWith("/jogos")}
+        />
+      </View>
+
+      <View style={{ marginTop: "auto", marginBottom: 20, gap: 10, padding: 14, borderWidth: 1, borderColor: colors.border }}>
+        <Text style={{ color: colors.onSurface, fontSize: 15, fontWeight: "800" }}>Entre no Downpipe</Text>
+        <Text style={{ color: colors.onSurfaceVariant, fontSize: 12.5, lineHeight: 18 }}>
+          Monte a sua garagem, confirme presença nos encontros e siga a galera.
+        </Text>
+        <Pressable
+          onPress={() => entrar("/register")}
+          className="items-center active:opacity-80"
+          style={{ paddingVertical: 11, backgroundColor: colors.primaryContainer }}
+          accessibilityRole="button"
+        >
+          <Text style={{ color: colors.onPrimaryContainer, fontSize: 12.5, fontWeight: "800", letterSpacing: 1.2 }}>CRIAR CONTA</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => entrar("/login")}
+          className="items-center border border-outline active:bg-white/5"
+          style={{ paddingVertical: 10 }}
+          accessibilityRole="button"
+        >
+          <Text style={{ color: colors.onSurface, fontSize: 12.5, fontWeight: "700", letterSpacing: 1.2 }}>JÁ TENHO CONTA</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function MenuDeQuemEntrou() {
   const caminho = usePathname();
   const { data: me } = useCurrentUser();
   const { data: naoLidas } = useUnreadCount();

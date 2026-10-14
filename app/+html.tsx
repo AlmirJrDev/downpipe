@@ -185,6 +185,11 @@ const larguraDoRole = `
   if (window.innerWidth >= 1024 && /^\\/app\\/(event\\/|login|register|forgot-password|nova-senha)/.test(window.location.pathname)) {
     document.documentElement.dataset.largura = 'ampla';
   }
+  // As telas que um link abre têm menu lateral também pra quem está de
+  // visita (ver hooks/useDesktop): já nascem no layout de computador.
+  if (window.innerWidth >= 1024 && /^\\/app\\/(post|car|event|user|user-posts|event-posts|nave-do-dia|nave-do-dia-brasil|mais-caro|frankenstein|jogos)(\\/|$)/.test(window.location.pathname)) {
+    document.documentElement.dataset.app = 'desktop';
+  }
   // Quem tem sessão guardada vai cair no modo desktop assim que o app
   // montar; abrir a moldura já aqui evita a página nascer com 460 px e
   // pular. Se a sessão estiver vencida, o app desfaz ao descobrir.
