@@ -214,6 +214,7 @@ export default function RootLayout() {
                   <Stack.Screen name="nave-do-dia" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="nave-do-dia-brasil" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="mais-caro" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen name="frankenstein" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="jogos" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="excluir-minha-conta" options={{ animation: "slide_from_right" }} />
                   <Stack.Screen name="event-posts/[id]" options={{ animation: "slide_from_right" }} />

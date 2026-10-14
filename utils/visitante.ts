@@ -21,7 +21,7 @@ import { useAuthStore } from "@/stores/authStore";
  */
 // "nave-do-dia" (o jogo) também: é o que se manda no grupo, e quem chega
 // pelo link joga antes de ter conta.
-const TELAS_DE_CONTEUDO = ["post", "car", "event", "user", "user-posts", "event-posts", "nave-do-dia", "nave-do-dia-brasil", "mais-caro", "jogos"];
+const TELAS_DE_CONTEUDO = ["post", "car", "event", "user", "user-posts", "event-posts", "nave-do-dia", "nave-do-dia-brasil", "mais-caro", "frankenstein", "jogos"];
 
 /**
  * Formulário que abre sem conta: a conta é pedida só no fim, na hora de

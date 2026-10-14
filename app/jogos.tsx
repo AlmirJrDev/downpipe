@@ -5,7 +5,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { ArrowLeft, ChevronRight, Flag, Gamepad2, TrendingUp } from "lucide-react-native";
+import { ArrowLeft, ChevronRight, Flag, Gamepad2, TrendingUp, Wrench } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { numeroDoDia } from "@/utils/naveDoDia";
@@ -26,6 +26,13 @@ const JOGOS = [
     selo: () => `DIÁRIO · #${numeroDoDia()}`,
     nome: "Nave do Dia Brasil",
     texto: "Só carro que rodou muito por aqui: Gol, Opala, Uno, Corolla, Hilux. Outro carro por dia.",
+  },
+  {
+    rota: "/frankenstein",
+    Icone: Wrench,
+    selo: () => `NOVO · DESAFIO #${numeroDoDia()}`,
+    nome: "Frankenstein",
+    texto: "Monte uma nave com peça de tudo que é carro e suba a escada de rachas no 402, do Fusca ao McLaren.",
   },
   {
     rota: "/mais-caro",
@@ -52,13 +59,13 @@ export default function JogosScreen() {
         <Text className="text-on-surface-variant" style={{ fontSize: 14, lineHeight: 20, marginBottom: 6 }}>
           Jogos rápidos pra quem vive carro. Grátis, e dá pra mandar o resultado pra galera.
         </Text>
-        <View style={{ flexDirection: largo ? "row" : "column", gap: 12 }}>
+        <View style={{ flexDirection: largo ? "row" : "column", flexWrap: largo ? "wrap" : "nowrap", gap: 12 }}>
           {JOGOS.map(({ rota, Icone, selo, nome, texto }) => (
             <Pressable
               key={rota}
               onPress={() => router.push(rota as never)}
               className="border border-border p-5 active:bg-white/5"
-              style={{ flex: 1, gap: 8, backgroundColor: colors.surfaceHigh }}
+              style={{ flex: 1, flexBasis: largo ? "45%" : undefined, gap: 8, backgroundColor: colors.surfaceHigh }}
               accessibilityRole="link"
             >
               <View className="flex-row items-center justify-between">

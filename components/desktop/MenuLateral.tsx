@@ -154,7 +154,7 @@ export function MenuLateral() {
       rotulo: "Jogos",
       Icone: Gamepad2,
       destino: "/jogos",
-      ativoEm: (c) => c.startsWith("/jogos") || c.startsWith("/nave-do-dia") || c.startsWith("/mais-caro"),
+      ativoEm: (c) => c.startsWith("/jogos") || c.startsWith("/nave-do-dia") || c.startsWith("/mais-caro") || c.startsWith("/frankenstein"),
       empilhar: true,
     },
   ];
