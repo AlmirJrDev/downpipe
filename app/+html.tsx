@@ -171,6 +171,18 @@ const estilos = `
       background-color: #121212;
     }
   }
+
+  /* Login, cadastro e senha: a tela de entrada ocupa a janela inteira,
+     vitrine à esquerda e formulário à direita (components/desktop/
+     TelaDeEntrada). Na moldura de 1180 px sobravam faixas pretas dos lados. */
+  @media (min-width: 1024px) {
+    html[data-tela="entrada"] #root {
+      max-width: none;
+      border-left: 0;
+      border-right: 0;
+      background-color: #0a0a0a;
+    }
+  }
 `;
 
 /**
@@ -184,6 +196,10 @@ const estilos = `
 const larguraDoRole = `
   if (window.innerWidth >= 1024 && /^\\/app\\/(event\\/|login|register|forgot-password|nova-senha)/.test(window.location.pathname)) {
     document.documentElement.dataset.largura = 'ampla';
+  }
+  // Login, cadastro e senha ocupam a janela inteira (ver TelaDeEntrada).
+  if (window.innerWidth >= 1024 && /^\\/app\\/(login|register|forgot-password|nova-senha)/.test(window.location.pathname)) {
+    document.documentElement.dataset.tela = 'entrada';
   }
   // As telas que um link abre têm menu lateral também pra quem está de
   // visita (ver hooks/useDesktop): já nascem no layout de computador.
