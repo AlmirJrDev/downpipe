@@ -105,7 +105,7 @@ function Vitrine({ colunas }: { colunas: number }) {
 
       <View style={{ gap: 10 }}>
         <Text style={{ color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.6 }}>
-          JOGUE SEM CONTA
+          JOGUE
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {JOGOS.map(({ nome, destino, Icone }) => (
