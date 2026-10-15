@@ -251,10 +251,98 @@ export function textoDeCompartilhar(opcoes: {
   return [
     `${cabeca} · ${placar}`,
     linha,
-    `Motor do ${curto(montagem.motor)} no chassi do ${curto(montagem.chassi)}`,
+    `${nomeDaNave(montagem)}: motor do ${curto(montagem.motor)} no chassi do ${curto(montagem.chassi)}`,
     melhorTempo ? `402 m em ${formatarTempo(melhorTempo)} s` : "",
     "downpipe.com.br/app/frankenstein",
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+// ------------------------------------------------------------- a criatura
+
+/** O modelo sem a marca e sem a geração: "VW Golf GTI (MK7)" → "Golf". */
+function modeloCurto(n: Nave): string {
+  const sem = n.nome
+    .replace(/\s*\(.*?\)\s*/g, " ")
+    .replace(new RegExp(`^(VW|${n.marca.replace(/-/g, "\\-")})\\s+`, "i"), "")
+    .trim();
+  return sem.split(/\s+/)[0] || n.marca;
+}
+
+/**
+ * O nome da criatura: chassi + motor, com o sobrenome da tração e da
+ * aspiração. "Uno-Opala Turbo 4x4" diz o que é melhor que a ficha.
+ */
+export function nomeDaNave(m: Required<Montagem>): string {
+  const corpo = modeloCurto(m.chassi);
+  const motor = modeloCurto(m.motor);
+  const base = m.chassi.id === m.motor.id || corpo === motor ? corpo : `${corpo}-${motor}`;
+  const asp = m.motor.aspiracao === "Aspirado" ? "" : m.motor.aspiracao === "Compressor" ? " Supercharger" : ` ${m.motor.aspiracao}`;
+  const tracao = m.tracao.tracao === "Integral" ? " 4x4" : "";
+  return `${base}${asp}${tracao}`;
+}
+
+// --------------------------------------------------------- treino: palpite
+
+/**
+ * Peças de referência pra estimar uma nave ainda incompleta: um carro de
+ * rua comum. No treino, cada peça oferecida mostra o tempo da nave com ela
+ * e as vagas abertas preenchidas com estas.
+ */
+const REFERENCIA = "voyage-16";
+
+export function tempoComPeca(montagem: Montagem, parte: Parte, doador: Nave): number {
+  const base = DOADORES.find((n) => n.id === REFERENCIA) ?? DOADORES[0];
+  const m = { motor: base, cambio: base, tracao: base, chassi: base, pneus: base, ...montagem, [parte]: doador };
+  return tempoNo402(fichaDa(m as Required<Montagem>));
+}
+
+// ------------------------------------------------------- por que perdeu
+
+/**
+ * O que faltou, em até três frases: a diferença, a largada (se foi ela) e
+ * a peça que mais pesou. Perder sem saber por quê é o que faz desistir.
+ */
+export function porQuePerdeu(
+  m: Required<Montagem>,
+  racha: { reacao: number; tempo: number; rivalReacao: number; rivalTempo: number },
+  rivalNome: string
+): string[] {
+  const f = fichaDa(m);
+  const seu = racha.reacao + racha.tempo;
+  const dele = racha.rivalReacao + racha.rivalTempo;
+  const alvo = dele - racha.reacao; // o 402 que você precisava
+  const frases = [`Faltaram ${formatarTempo(seu - dele)} s pro ${rivalNome}.`];
+
+  if (racha.reacao > racha.rivalReacao + 0.05) {
+    frases.push(
+      `Na largada você reagiu em ${formatarTempo(racha.reacao)} s e ele em ${formatarTempo(racha.rivalReacao)} s: ${formatarTempo(
+        racha.reacao - racha.rivalReacao
+      )} s perdidos antes de andar.`
+    );
+  }
+
+  const opcoes: { frase: string; tempo: number }[] = [];
+  const cvPorTon = f.cv / (f.peso / 1000);
+  if (cvPorTon > CAPACIDADE[f.tracao] * f.aderencia) {
+    if (f.tracao !== "Integral") {
+      const t = tempoNo402({ ...f, tracao: "Integral", peso: f.peso + 60 });
+      opcoes.push({ frase: `A tração ${f.tracao.toLowerCase()} patinou com tanta potência: com tração integral a nave faria ${formatarTempo(t)} s.`, tempo: t });
+    }
+    const t = tempoNo402({ ...f, aderencia: 1.13 });
+    if (f.aderencia < 1.1) opcoes.push({ frase: `Os pneus não seguraram: com pneu de esportivo moderno ela faria ${formatarTempo(t)} s.`, tempo: t });
+  }
+  const leve = tempoNo402({ ...f, peso: Math.max(500, f.peso - 250) });
+  opcoes.push({ frase: `Com um chassi 250 kg mais leve ela faria ${formatarTempo(leve)} s.`, tempo: leve });
+
+  // Quanto de motor precisava, com o resto igual.
+  let cv = f.cv;
+  while (cv < 2000 && tempoNo402({ ...f, cv }) > alvo) cv += 10;
+  if (cv < 2000 && cv > f.cv) opcoes.push({ frase: `Com esse peso, precisava de uns ${cv} cv (tem ${f.cv}).`, tempo: alvo });
+
+  // A sugestão que mais aproxima da vitória.
+  const melhor = opcoes.sort((a, b) => a.tempo - b.tempo)[0];
+  if (melhor) frases.push(melhor.frase);
+  return frases;
 }

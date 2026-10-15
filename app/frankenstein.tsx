@@ -9,8 +9,9 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
-import { ArrowLeft, Flag, RefreshCw, Share2, Trophy, Wrench, Zap } from "lucide-react-native";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
+import { bip, ligarSom, ronco, somLigado } from "@/components/jogos/Som";
+import { ArrowLeft, Flag, RefreshCw, Share2, Trophy, Volume2, VolumeX, Wrench, Zap } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { Confete, Surgir, vibrar } from "@/components/jogos/Animacoes";
@@ -28,7 +29,10 @@ import {
   fichaDa,
   filaDeDoadores,
   formatarTempo,
+  nomeDaNave,
+  porQuePerdeu,
   sementeDoDia,
+  tempoComPeca,
   tempoNo402,
   textoDeCompartilhar,
   type Ficha,
@@ -191,30 +195,95 @@ function Garagem({ montagem, destaque }: { montagem: Partida["montagem"]; destaq
   );
 }
 
+/**
+ * A criatura montada, como um carro só: o nome dela e de onde veio cada
+ * pedaço, desenhados no lugar da peça (motor na frente, chassi no meio,
+ * pneus nas rodas). É o que dá vontade de mostrar pros outros.
+ */
+function CartaoDaCriatura({ montagem, larga, tempo }: { montagem: Required<Montagem>; larga: boolean; tempo?: number | null }) {
+  const curto = (n: Nave) => n.nome.replace(/^(VW|Chevrolet|Ford|Fiat|Toyota|Honda|Nissan|Mitsubishi|Volkswagen|BMW|Porsche|Audi) /, "");
+  const etiqueta = (parte: Parte, n: Nave, estilo: object) => (
+    <View style={[{ position: "absolute", paddingHorizontal: 6, paddingVertical: 3, backgroundColor: "rgba(10,10,10,0.85)" }, estilo]}>
+      <Text style={{ color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 0.8 }}>{NOME_DA_PARTE[parte].toUpperCase()}</Text>
+      <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }} numberOfLines={1}>
+        {curto(n)}
+      </Text>
+    </View>
+  );
+  const w = larga ? 420 : 300;
+  return (
+    <View className="border border-border" style={{ padding: larga ? 18 : 14, gap: 12, backgroundColor: colors.surfaceHigh }}>
+      <View style={{ gap: 2 }}>
+        <Text className="text-muted" style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.2 }}>
+          SUA CRIATURA
+        </Text>
+        <Text className="text-on-surface" style={{ fontSize: larga ? 28 : 22, fontWeight: "900" }}>
+          {nomeDaNave(montagem)}
+        </Text>
+        {tempo != null && (
+          <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
+            402 m em {formatarTempo(tempo)} s
+          </Text>
+        )}
+      </View>
+      <View style={{ width: w, maxWidth: "100%", height: larga ? 170 : 130, alignSelf: "center" }}>
+        {/* Carroceria, cabine e rodas: o desenho é só o esqueleto pras etiquetas. */}
+        <View style={{ position: "absolute", left: "8%", right: "8%", top: "38%", height: "28%", backgroundColor: colors.primaryContainer }} />
+        <View style={{ position: "absolute", left: "30%", right: "30%", top: "18%", height: "24%", backgroundColor: "#991b1b" }} />
+        <View style={{ position: "absolute", left: "34%", right: "52%", top: "22%", height: "16%", backgroundColor: "#9ec5ff", opacity: 0.5 }} />
+        <View style={{ position: "absolute", left: "52%", right: "34%", top: "22%", height: "16%", backgroundColor: "#9ec5ff", opacity: 0.5 }} />
+        <View style={{ position: "absolute", left: "15%", top: "56%", width: "17%", aspectRatio: 1, borderRadius: 999, backgroundColor: "#111", borderWidth: 4, borderColor: "#777" }} />
+        <View style={{ position: "absolute", right: "15%", top: "56%", width: "17%", aspectRatio: 1, borderRadius: 999, backgroundColor: "#111", borderWidth: 4, borderColor: "#777" }} />
+        {etiqueta("motor", montagem.motor, { right: 0, top: "8%" })}
+        {etiqueta("chassi", montagem.chassi, { left: "34%", top: "44%" })}
+        {etiqueta("cambio", montagem.cambio, { left: 0, top: "6%" })}
+        {etiqueta("pneus", montagem.pneus, { left: 0, bottom: 0 })}
+        {etiqueta("tracao", montagem.tracao, { right: 0, bottom: 0 })}
+      </View>
+    </View>
+  );
+}
+
 // ---------------------------------------------------------------- largada
 
-/** A árvore de largada: três âmbar, depois verde num tempo que ninguém adivinha. */
+/**
+ * A árvore de largada: três âmbar, depois verde num tempo que ninguém
+ * adivinha. O botão é o maior da tela: é o momento de tensão do jogo, e no
+ * celular o dedo tem que achar ele sem olhar.
+ */
 function Largada({ onLargar }: { onLargar: (reacao: number | null) => void }) {
   const [acesas, setAcesas] = useState(0);
   const [verde, setVerde] = useState(false);
   const verdeEm = useRef<number | null>(null);
   const feito = useRef(false);
+  const aperto = useSharedValue(1);
+  const estiloDoBotao = useAnimatedStyle(() => ({ transform: [{ scale: aperto.value }] }));
 
   const apertar = () => {
     if (feito.current) return;
     feito.current = true;
+    aperto.value = withSequence(withTiming(0.94, { duration: 70 }), withTiming(1, { duration: 160 }));
+    vibrar(verdeEm.current == null ? "erro" : "leve");
     if (verdeEm.current == null) return onLargar(null); // queimou
     onLargar(Math.max(0.1, (Date.now() - verdeEm.current) / 1000));
   };
 
   useEffect(() => {
     const t: ReturnType<typeof setTimeout>[] = [];
-    [400, 900, 1400].forEach((ms, i) => t.push(setTimeout(() => setAcesas(i + 1), ms)));
+    [400, 900, 1400].forEach((ms, i) =>
+      t.push(
+        setTimeout(() => {
+          setAcesas(i + 1);
+          bip();
+        }, ms)
+      )
+    );
     const espera = 1400 + 600 + Math.random() * 1400;
     t.push(
       setTimeout(() => {
         verdeEm.current = Date.now();
         setVerde(true);
+        bip(true);
         vibrar();
       }, espera)
     );
@@ -241,35 +310,44 @@ function Largada({ onLargar }: { onLargar: (reacao: number | null) => void }) {
   const luz = (acesa: boolean, cor: string) => (
     <View
       style={{
-        width: 46,
-        height: 46,
-        borderRadius: 23,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         borderWidth: 2,
         borderColor: acesa ? cor : colors.border,
         backgroundColor: acesa ? cor : "#111",
+        shadowColor: cor,
+        shadowOpacity: acesa ? 0.9 : 0,
+        shadowRadius: acesa ? 14 : 0,
       }}
     />
   );
 
   return (
-    <View className="items-center" style={{ gap: 18, paddingVertical: 10 }}>
-      <View style={{ gap: 10, padding: 14, backgroundColor: "#0b0b0b", borderWidth: 1, borderColor: colors.border }}>
+    <View className="items-center" style={{ gap: 16, paddingVertical: 6 }}>
+      <View className="flex-row" style={{ gap: 12, padding: 12, backgroundColor: "#0b0b0b", borderWidth: 1, borderColor: colors.border }}>
         {luz(acesas >= 1 && !verde, AMBAR)}
         {luz(acesas >= 2 && !verde, AMBAR)}
         {luz(acesas >= 3 && !verde, AMBAR)}
         {luz(verde, "#22c55e")}
       </View>
-      <Pressable
-        onPressIn={apertar}
-        className="items-center justify-center flex-row active:opacity-80"
-        style={{ gap: 10, width: "100%", maxWidth: 420, paddingVertical: 22, backgroundColor: verde ? VERDE : colors.primary }}
-        accessibilityRole="button"
-      >
-        <Zap size={22} color="#fff" />
-        <Text style={{ color: "#fff", fontWeight: "900", fontSize: 20, letterSpacing: 2 }}>ACELERAR</Text>
-      </Pressable>
+      <Animated.View style={[{ width: "100%" }, estiloDoBotao]}>
+        <Pressable
+          onPressIn={apertar}
+          className="items-center justify-center"
+          style={{ gap: 6, width: "100%", minHeight: 150, backgroundColor: verde ? VERDE : "#7f1d1d", borderWidth: 2, borderColor: verde ? "#4ade80" : colors.primary }}
+          accessibilityRole="button"
+          accessibilityLabel="Acelerar"
+        >
+          <Zap size={34} color="#fff" />
+          <Text style={{ color: "#fff", fontWeight: "900", fontSize: 32, letterSpacing: 3 }}>{verde ? "ACELERA!" : "ACELERAR"}</Text>
+          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12.5, fontWeight: "700", letterSpacing: 1 }}>
+            {verde ? "AGORA!" : "ESPERE O VERDE"}
+          </Text>
+        </Pressable>
+      </Animated.View>
       <Text className="text-muted" style={{ fontSize: 12.5, textAlign: "center" }}>
-        Espere o verde. Antes dele é largada queimada.{Platform.OS === "web" ? " No PC, espaço também acelera." : ""}
+        Antes do verde é largada queimada.{Platform.OS === "web" ? " No PC, espaço também acelera." : ""}
       </Text>
     </View>
   );
@@ -279,14 +357,36 @@ function Largada({ onLargar }: { onLargar: (reacao: number | null) => void }) {
 
 /** Quanto do tempo real a animação usa: 12 s de racha viram uns 4 s de tela. */
 const COMPRESSAO = 0.33;
+/** Diferença em que o racha vira foto finish. */
+const FOTO_FINISH = 0.05;
+const ALTURA_DA_RAIA = 54;
+const LARGURA_DO_CARRO = 52;
 
 function Carrinho({ cor }: { cor: string }) {
   return (
-    <View style={{ width: 44, height: 20 }}>
-      <View style={{ position: "absolute", left: 8, top: 0, width: 22, height: 8, backgroundColor: cor, opacity: 0.85 }} />
-      <View style={{ position: "absolute", left: 0, top: 6, width: 44, height: 9, backgroundColor: cor }} />
-      <View style={{ position: "absolute", left: 6, top: 12, width: 9, height: 9, borderRadius: 5, backgroundColor: "#111", borderWidth: 2, borderColor: "#666" }} />
-      <View style={{ position: "absolute", left: 29, top: 12, width: 9, height: 9, borderRadius: 5, backgroundColor: "#111", borderWidth: 2, borderColor: "#666" }} />
+    <View style={{ width: LARGURA_DO_CARRO, height: 24 }}>
+      <View style={{ position: "absolute", left: 12, top: 0, width: 24, height: 10, backgroundColor: cor, opacity: 0.8 }} />
+      <View style={{ position: "absolute", left: 14, top: 2, width: 9, height: 6, backgroundColor: "#9ec5ff", opacity: 0.6 }} />
+      <View style={{ position: "absolute", left: 0, top: 8, width: LARGURA_DO_CARRO, height: 10, backgroundColor: cor }} />
+      <View style={{ position: "absolute", left: LARGURA_DO_CARRO - 4, top: 10, width: 4, height: 4, backgroundColor: "#fde68a" }} />
+      <View style={{ position: "absolute", left: 7, top: 14, width: 11, height: 11, borderRadius: 6, backgroundColor: "#111", borderWidth: 2, borderColor: "#777" }} />
+      <View style={{ position: "absolute", left: 34, top: 14, width: 11, height: 11, borderRadius: 6, backgroundColor: "#111", borderWidth: 2, borderColor: "#777" }} />
+    </View>
+  );
+}
+
+/** Bandeira quadriculada da chegada, em duas colunas. */
+function LinhaDeChegada({ altura }: { altura: number }) {
+  const lado = 6;
+  const linhas = Math.ceil(altura / lado);
+  return (
+    <View style={{ position: "absolute", right: 0, top: 0, width: lado * 2, height: altura, overflow: "hidden" }}>
+      {Array.from({ length: linhas }, (_, i) => (
+        <View key={i} className="flex-row">
+          <View style={{ width: lado, height: lado, backgroundColor: i % 2 ? "#fff" : "#111" }} />
+          <View style={{ width: lado, height: lado, backgroundColor: i % 2 ? "#111" : "#fff" }} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -297,31 +397,36 @@ function Raia({
   reacao,
   tempo,
   relogio,
-  largura,
+  pista,
+  cronometro,
+  chegou,
 }: {
   rotulo: string;
   cor: string;
   reacao: number;
   tempo: number;
   relogio: SharedValue<number>;
-  largura: number;
+  pista: number;
+  cronometro: string;
+  chegou: boolean;
 }) {
   const estilo = useAnimatedStyle(() => {
     const t = relogio.value / COMPRESSAO - reacao;
     const p = Math.max(0, Math.min(1, t / tempo));
     // Arrancada acelera o tempo todo: começa devagar e termina voando.
-    return { transform: [{ translateX: Math.pow(p, 1.6) * Math.max(0, largura - 44) }] };
+    return { transform: [{ translateX: Math.pow(p, 1.6) * Math.max(0, pista - LARGURA_DO_CARRO) }] };
   });
   return (
-    <View style={{ gap: 4 }}>
-      <Text className="text-on-surface-variant" style={{ fontSize: 11.5, fontWeight: "700", letterSpacing: 0.8 }} numberOfLines={1}>
-        {rotulo}
-      </Text>
-      <View style={{ height: 34, justifyContent: "center", borderBottomWidth: 1, borderColor: colors.border, backgroundColor: "#0d0d0d" }}>
-        <Animated.View style={estilo}>
-          <Carrinho cor={cor} />
-        </Animated.View>
+    <View style={{ height: ALTURA_DA_RAIA, justifyContent: "center" }}>
+      <View className="flex-row items-center justify-between" style={{ position: "absolute", top: 4, left: 18, right: 18 }}>
+        <Text style={{ color: colors.onSurfaceVariant, fontSize: 10.5, fontWeight: "800", letterSpacing: 0.8 }} numberOfLines={1}>
+          {rotulo}
+        </Text>
+        <Text style={{ color: chegou ? "#fff" : colors.muted, fontSize: 12, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{cronometro}</Text>
       </View>
+      <Animated.View style={[{ marginTop: 14 }, estilo]}>
+        <Carrinho cor={cor} />
+      </Animated.View>
     </View>
   );
 }
@@ -329,32 +434,85 @@ function Raia({
 function Corrida({ racha, rival, onFim }: { racha: Racha; rival: Nave; onFim: () => void }) {
   const relogio = useSharedValue(0);
   const [largura, setLargura] = useState(0);
-  const fim = Math.max(racha.reacao + racha.tempo, racha.rivalReacao + racha.rivalTempo) * COMPRESSAO;
+  const [decorrido, setDecorrido] = useState(0);
+  const seu = racha.reacao + racha.tempo;
+  const dele = racha.rivalReacao + racha.rivalTempo;
+  const fim = Math.max(seu, dele) * COMPRESSAO;
+  const fotoFinish = Math.abs(seu - dele) < FOTO_FINISH;
 
   useEffect(() => {
     if (!largura) return;
     relogio.value = withTiming(fim, { duration: fim * 1000, easing: Easing.linear });
-    const t = setTimeout(onFim, fim * 1000 + 350);
-    return () => clearTimeout(t);
+    ronco(Math.min(seu, dele) * COMPRESSAO);
+    const inicio = Date.now();
+    // O cronômetro na tela, em tempo de racha (não de animação).
+    const relogioDaTela = setInterval(() => setDecorrido((Date.now() - inicio) / 1000 / COMPRESSAO), 40);
+    const t = setTimeout(onFim, fim * 1000 + (fotoFinish ? 1600 : 500));
+    return () => {
+      clearInterval(relogioDaTela);
+      clearTimeout(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [largura]);
 
+  const pista = Math.max(0, largura - 28);
+  const crono = (total: number) => formatarTempo(Math.min(decorrido, total));
+  const acabou = decorrido >= Math.max(seu, dele);
+
   return (
-    <View style={{ gap: 14 }} onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
-      {largura > 0 && (
-        <>
-          <Raia rotulo="SUA NAVE" cor={colors.primary} reacao={racha.reacao} tempo={racha.tempo} relogio={relogio} largura={largura} />
-          <Raia rotulo={rival.nome.toUpperCase()} cor="#d4d4d4" reacao={racha.rivalReacao} tempo={racha.rivalTempo} relogio={relogio} largura={largura} />
-        </>
-      )}
-      <View className="flex-row justify-between">
-        <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700" }}>
-          LARGADA
-        </Text>
-        <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700" }}>
-          402 M
-        </Text>
+    <View style={{ gap: 10 }}>
+      <View
+        onLayout={(e) => setLargura(e.nativeEvent.layout.width)}
+        style={{ backgroundColor: "#141414", borderWidth: 1, borderColor: colors.border, paddingVertical: 6, overflow: "hidden" }}
+      >
+        {largura > 0 && (
+          <View style={{ paddingLeft: 8, paddingRight: 20 }}>
+            {/* A faixa tracejada entre as raias. */}
+            <View className="flex-row" style={{ position: "absolute", left: 8, right: 20, top: ALTURA_DA_RAIA + 1, gap: 14 }}>
+              {Array.from({ length: Math.ceil(pista / 30) }, (_, i) => (
+                <View key={i} style={{ width: 16, height: 2, backgroundColor: "#d4d4d4", opacity: 0.35 }} />
+              ))}
+            </View>
+            <Raia
+              rotulo="SUA NAVE"
+              cor={colors.primary}
+              reacao={racha.reacao}
+              tempo={racha.tempo}
+              relogio={relogio}
+              pista={pista}
+              cronometro={crono(seu)}
+              chegou={decorrido >= seu}
+            />
+            <Raia
+              rotulo={rival.nome.toUpperCase()}
+              cor="#d4d4d4"
+              reacao={racha.rivalReacao}
+              tempo={racha.rivalTempo}
+              relogio={relogio}
+              pista={pista}
+              cronometro={crono(dele)}
+              chegou={decorrido >= dele}
+            />
+          </View>
+        )}
+        <LinhaDeChegada altura={ALTURA_DA_RAIA * 2 + 12} />
       </View>
+      {acabou && fotoFinish ? (
+        <Surgir>
+          <Text style={{ color: "#facc15", fontSize: 22, fontWeight: "900", letterSpacing: 2, textAlign: "center" }}>
+            FOTO FINISH! {formatarTempo(Math.abs(seu - dele))} s
+          </Text>
+        </Surgir>
+      ) : (
+        <View className="flex-row justify-between">
+          <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700" }}>
+            LARGADA
+          </Text>
+          <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700" }}>
+            402 M
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -371,6 +529,8 @@ export default function FrankensteinScreen() {
   const [recorde, setRecorde] = useState(0);
   const [confete, setConfete] = useState(0);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [som, setSom] = useState(true);
+  useEffect(() => setSom(somLigado()), []);
   const rolagem = useRef<ScrollView>(null);
   const fila = useMemo(() => filaDeDoadores(partida.semente), [partida.semente]);
 
@@ -561,11 +721,25 @@ export default function FrankensteinScreen() {
               style={{ borderColor: ativo ? colors.primary : colors.border, backgroundColor: ativo ? colors.surfaceHigh : "transparent" }}
             >
               <Text style={{ color: ativo ? colors.onSurface : colors.muted, fontSize: 12.5, fontWeight: "700", letterSpacing: 0.6 }}>
-                {m === "dia" ? `DESAFIO DO DIA #${numero}` : "MODO LIVRE"}
+                {m === "dia" ? `DESAFIO DO DIA #${numero}` : "TREINO"}
               </Text>
             </Pressable>
           );
         })}
+        {Platform.OS === "web" && (
+          <Pressable
+            onPress={() => {
+              ligarSom(!som);
+              setSom(!som);
+            }}
+            className="items-center justify-center border border-border"
+            style={{ marginLeft: "auto", width: 40 }}
+            accessibilityRole="button"
+            accessibilityLabel={som ? "Desligar o som" : "Ligar o som"}
+          >
+            {som ? <Volume2 size={17} color={colors.onSurface} /> : <VolumeX size={17} color={colors.muted} />}
+          </Pressable>
+        )}
       </View>
       <View className="flex-row items-end justify-between" style={{ gap: 10 }}>
         <View style={{ flex: 1, gap: 4 }}>
@@ -604,7 +778,22 @@ export default function FrankensteinScreen() {
           </Text>
         </View>
         <View style={{ gap: 6 }}>
-          {PARTES.map((p) => {
+          {(() => {
+            // No treino, cada peça livre mostra o 402 da nave com ela (as
+            // vagas ainda abertas entram com peças de carro de rua comum).
+            // No desafio do dia não: lá a graça é decidir no olho.
+            const treino = !oficina && partida.modo === "livre";
+            const estimativas = new Map<Parte, number>();
+            if (treino) {
+              const montagem: Montagem = {};
+              for (const x of PARTES) {
+                const n = nave(partida.montagem[x]);
+                if (n) montagem[x] = n;
+              }
+              for (const x of PARTES) if (!partida.montagem[x]) estimativas.set(x, tempoComPeca(montagem, x, doador));
+            }
+            const melhor = Math.min(...estimativas.values());
+            return PARTES.map((p) => {
             const ocupada = !oficina && !!partida.montagem[p];
             // Na oficina, mostra quanto o 402 muda com a troca.
             let efeito: string | null = null;
@@ -614,6 +803,8 @@ export default function FrankensteinScreen() {
               efeito =
                 Math.abs(d) < 0.0005 ? "não muda" : `${formatarTempo(t)} s (${d < 0 ? "−" : "+"}${formatarTempo(Math.abs(d))})`;
             }
+            const estimativa = estimativas.get(p);
+            if (estimativa != null) efeito = `≈ ${formatarTempo(estimativa)} s${estimativa === melhor ? " ★" : ""}`;
             return (
               <Pressable
                 key={p}
@@ -643,12 +834,18 @@ export default function FrankensteinScreen() {
                     já tem
                   </Text>
                 ) : efeito ? (
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: efeito.includes("−") ? "#4ade80" : efeito.includes("+") ? "#f87171" : colors.muted }}>{efeito}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: efeito.includes("−") || efeito.includes("★") ? "#4ade80" : efeito.includes("+") ? "#f87171" : colors.muted }}>{efeito}</Text>
                 ) : null}
               </Pressable>
             );
-          })}
+            });
+          })()}
         </View>
+        {partida.modo === "livre" && !oficina && (
+          <Text className="text-muted" style={{ fontSize: 11.5 }}>
+            Treino: o tempo ao lado é a nave com aquela peça e as vagas abertas com peças de um carro de rua. ★ é a melhor escolha agora.
+          </Text>
+        )}
       </Surgir>
     );
 
@@ -689,6 +886,7 @@ export default function FrankensteinScreen() {
   } else if (partida.etapa === "pronta" && ficha) {
     miolo = (
       <Surgir style={{ gap: 12 }}>
+        {completa && <CartaoDaCriatura montagem={completa} larga={larga} />}
         <View style={{ gap: 2 }}>
           <Text className="text-muted" style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.2 }}>
             SUA NAVE NO 402
@@ -731,11 +929,24 @@ export default function FrankensteinScreen() {
           <Text style={{ color: r.venceu ? "#4ade80" : "#f87171", fontSize: larga ? 30 : 24, fontWeight: "900", letterSpacing: 1 }}>
             {r.queimou ? "QUEIMOU A LARGADA" : r.venceu ? (ultimaFase ? "ZEROU O FRANKENSTEIN!" : "GANHOU!") : "PERDEU"}
           </Text>
-          {!r.queimou && (
+          {!r.queimou && r.venceu && (
             <Text className="text-on-surface-variant" style={{ fontSize: 14 }}>
-              {r.venceu ? "Na frente por " : "Atrás por "}
-              {formatarTempo(Math.abs(dele - seu))} s
+              Na frente por {formatarTempo(Math.abs(dele - seu))} s{Math.abs(dele - seu) < 0.05 ? ", no foto finish!" : ""}
             </Text>
+          )}
+          {r.queimou && (
+            <Text className="text-on-surface-variant" style={{ fontSize: 14, lineHeight: 20 }}>
+              Você acelerou antes do verde. Espere a última luz verde acender: a reação boa fica entre 0,2 e 0,4 s.
+            </Text>
+          )}
+          {!r.queimou && !r.venceu && completa && (
+            <View style={{ gap: 6 }}>
+              {porQuePerdeu(completa, r, rival.nave.nome).map((frase, i) => (
+                <Text key={i} className={i === 0 ? "text-on-surface" : "text-on-surface-variant"} style={{ fontSize: i === 0 ? 15 : 13.5, fontWeight: i === 0 ? "800" : "400", lineHeight: 20 }}>
+                  {frase}
+                </Text>
+              ))}
+            </View>
           )}
           {!r.queimou && (
             <View className="flex-row" style={{ gap: 8 }}>
@@ -805,6 +1016,7 @@ export default function FrankensteinScreen() {
               </Text>
             </View>
           </View>
+          {completa && <CartaoDaCriatura montagem={completa} larga={larga} tempo={partida.melhorTempo} />}
           {completa && <PrimaryButton label="Compartilhar resultado" onPress={compartilhar} icon={<Share2 size={15} color={colors.onPrimaryContainer} />} />}
           <Pressable
             onPress={jogarLivre}
@@ -813,7 +1025,7 @@ export default function FrankensteinScreen() {
           >
             <RefreshCw size={15} color={colors.onSurface} />
             <Text className="text-on-surface" style={{ fontWeight: "700", letterSpacing: 1 }}>
-              {partida.modo === "dia" ? "JOGAR NO MODO LIVRE" : "JOGAR DE NOVO"}
+              {partida.modo === "dia" ? "TREINAR" : "JOGAR DE NOVO"}
             </Text>
           </Pressable>
           {partida.modo === "dia" && (

@@ -11,10 +11,12 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Flame, Share2, Trophy } from "lucide-react-native";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CircleHelp, Flame, Lightbulb, Share2, Trophy, X } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { Confete, Surgir, Virar, vibrar } from "@/components/jogos/Animacoes";
+import { FotoDoCarro } from "@/components/jogos/FotoDoCarro";
+import { buscarNaves, dicas, oQueSeSabe, DICAS_EM } from "@/utils/naveDoDiaAjuda";
 import { Share } from "@/utils/share";
 import { router } from "expo-router";
 import { voltarOuIrPara } from "@/utils/navigation";
@@ -40,13 +42,13 @@ interface Medidas {
   altura: number;
   fonte: number;
 }
-const CELULAR: Medidas = { pista: 78, nome: 132, altura: 58, fonte: 12 };
+const CELULAR: Medidas = { pista: 78, nome: 108, altura: 58, fonte: 12 };
 const VAO = 4;
 
 function medidasPara(larga: boolean, espaco: number): Medidas {
   if (!larga || espaco <= 0) return CELULAR;
   const nome = 190;
-  const pista = Math.max(CELULAR.pista, Math.min(132, Math.floor((espaco - nome - VAO * 8) / 8)));
+  const pista = Math.max(CELULAR.pista, Math.min(132, Math.floor((espaco - nome - VAO * 9) / 8)));
   return { pista, nome, altura: 76, fonte: 14 };
 }
 const COLUNAS = ["Marca", "País", "Carroceria", "Motor", "Tração", "Cilindros", "Ano", "Potência"];
@@ -126,44 +128,57 @@ function useContagem() {
   return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
 }
 
-/** Um palpite. O recém-chutado vira peça por peça; os de antes já aparecem prontos. */
-function Linha({ chute, alvo, m, animar }: { chute: Nave; alvo: Nave; m: Medidas; animar: boolean }) {
+/**
+ * Um palpite, em duas metades: o nome fica numa coluna parada e as pistas
+ * rolam de lado. No celular a linha não cabe, e antes o nome sumia junto
+ * na rolagem: dava pra ver as cores sem saber de qual carro eram.
+ *
+ * O recém-chutado vira peça por peça; os de antes já aparecem prontos. Na
+ * linha da vitória, depois de virar tudo, as peças pulam em onda.
+ */
+const pulo = (acertou: boolean, animar: boolean, i: number) => (acertou && animar ? REVELACAO + i * 70 : undefined);
+
+function NomeDoPalpite({ chute, alvo, m, animar }: { chute: Nave; alvo: Nave; m: Medidas; animar: boolean }) {
+  const acertou = chute.id === alvo.id;
+  return (
+    <Virar
+      animar={animar}
+      atraso={0}
+      pulo={pulo(acertou, animar, 0)}
+      style={{
+        width: m.nome,
+        height: m.altura,
+        justifyContent: "center",
+        paddingHorizontal: 8,
+        borderWidth: 1,
+        borderColor: acertou ? FUNDO.verde : colors.border,
+        backgroundColor: acertou ? FUNDO.verde : colors.surfaceHigh,
+      }}
+    >
+      <Text style={{ color: acertou ? "#fff" : colors.onSurface, fontSize: m.fonte, fontWeight: "700" }} numberOfLines={3}>
+        {chute.nome}
+      </Text>
+    </Virar>
+  );
+}
+
+function PistasDoPalpite({ chute, alvo, m, animar }: { chute: Nave; alvo: Nave; m: Medidas; animar: boolean }) {
   const pistas = comparar(chute, alvo);
   const acertou = chute.id === alvo.id;
-  // Na linha da vitória, depois de virar tudo, as peças pulam em onda.
-  const pulo = (i: number) => (acertou && animar ? REVELACAO + i * 70 : undefined);
   return (
     <View className="flex-row" style={{ gap: VAO }}>
-      <Virar
-        animar={animar}
-        atraso={0}
-        pulo={pulo(0)}
-        style={{
-          width: m.nome,
-          height: m.altura,
-          justifyContent: "center",
-          paddingHorizontal: 8,
-          borderWidth: 1,
-          borderColor: acertou ? FUNDO.verde : colors.border,
-          backgroundColor: acertou ? FUNDO.verde : colors.surfaceHigh,
-        }}
-      >
-        <Text style={{ color: acertou ? "#fff" : colors.onSurface, fontSize: m.fonte, fontWeight: "700" }} numberOfLines={3}>
-          {chute.nome}
-        </Text>
-      </Virar>
       {pistas.map((p, i) => (
         // O fundo neutro marca o lugar da peça enquanto ela ainda não virou.
         <View key={p.chave} style={{ width: m.pista, height: m.altura, backgroundColor: animar ? colors.surfaceHigh : undefined }}>
           <Virar
             animar={animar}
             atraso={(i + 1) * PASSO}
-            pulo={pulo(i + 1)}
+            pulo={pulo(acertou, animar, i + 1)}
             style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 4, backgroundColor: FUNDO[p.cor] }}
           >
             <View
               accessible
-              accessibilityLabel={`${p.rotulo}: ${p.valor}, ${p.cor}${p.seta ? `, o carro do dia é ${p.seta === "cima" ? "maior" : "menor"}` : ""}`}
+              accessibilityLabel={`${chute.nome}, ${p.rotulo}: ${p.valor}, ${p.cor}${p.seta ? `, o carro do dia é ${p.seta === "cima" ? "maior" : "menor"}` : ""}`}
               style={{ alignItems: "center" }}
             >
               <Text style={{ color: "#fff", fontSize: m.fonte, fontWeight: "700", textAlign: "center" }} numberOfLines={2}>
@@ -205,6 +220,104 @@ function TrocaDeModo({ modo }: { modo: Modo }) {
           </Pressable>
         );
       })}
+    </View>
+  );
+}
+
+/**
+ * Como jogar, com um palpite de exemplo: abre sozinho na primeira visita
+ * (antes, quem chegava só entendia as cores depois de errar umas vezes) e
+ * depois pelo botão de ajuda.
+ */
+function ComoJogar({ onFechar, larga }: { onFechar: () => void; larga: boolean }) {
+  const exemplo: { valor: string; cor: Cor; seta?: "cima" | "baixo"; nota: string }[] = [
+    { valor: "Honda", cor: "vermelho", nota: "marca diferente" },
+    { valor: "Japão", cor: "amarelo", nota: "mesmo continente" },
+    { valor: "Cupê", cor: "verde", nota: "igual" },
+    { valor: "1999", cor: "amarelo", seta: "cima", nota: "perto; a nave é mais nova" },
+  ];
+  return (
+    <Surgir>
+      <View className="border border-border" style={{ padding: larga ? 20 : 16, gap: 12, backgroundColor: colors.surfaceHigh }}>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-on-surface" style={{ fontSize: 16, fontWeight: "800" }}>
+            Como jogar
+          </Text>
+          <Pressable onPress={onFechar} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fechar como jogar">
+            <X size={18} color={colors.onSurfaceVariant} />
+          </Pressable>
+        </View>
+        <Text className="text-on-surface-variant" style={{ fontSize: 13.5, lineHeight: 19 }}>
+          Digite um carro e escolha na lista. Cada palpite vira uma linha de pistas comparando com a nave do dia:
+        </Text>
+        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+          {exemplo.map((e) => (
+            <View key={e.valor} style={{ gap: 4, width: larga ? 150 : "47%" }}>
+              <View style={{ height: 46, alignItems: "center", justifyContent: "center", backgroundColor: FUNDO[e.cor] }}>
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>{e.valor}</Text>
+                {e.seta === "cima" && <ArrowUp size={14} color="#fff" />}
+              </View>
+              <Text className="text-muted" style={{ fontSize: 11.5 }}>
+                {e.cor === "verde" ? "Verde" : e.cor === "amarelo" ? "Amarelo" : "Vermelho"}: {e.nota}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <Text className="text-on-surface-variant" style={{ fontSize: 13, lineHeight: 18 }}>
+          Amarelo é perto: mesmo continente, turbo e biturbo, ano a até 5 anos, potência a até 15%. A seta diz pra que lado
+          ir. Empacou? A partir do {DICAS_EM[0]}º palpite aparecem dicas.
+        </Text>
+        <PrimaryButton label="Bora jogar" onPress={onFechar} />
+      </View>
+    </Surgir>
+  );
+}
+
+/** O que os palpites já contaram, num quadro só, e as dicas de quem empacou. */
+function OQueJaSabe({ palpites, alvo, larga }: { palpites: Nave[]; alvo: Nave; larga: boolean }) {
+  const pistas = oQueSeSabe(palpites, alvo);
+  const ajuda = dicas(alvo, palpites.length);
+  const proxima = DICAS_EM.find((n) => n > palpites.length);
+  if (pistas.length === 0) return null;
+  return (
+    <View className="border border-border" style={{ padding: 14, gap: 10, backgroundColor: colors.surfaceContainer }}>
+      <Text className="text-muted" style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.2 }}>
+        O QUE VOCÊ JÁ SABE
+      </Text>
+      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+        {pistas.map((p) => (
+          <View
+            key={p.rotulo}
+            style={{
+              flexGrow: 1,
+              flexBasis: larga ? 180 : 140,
+              paddingVertical: 7,
+              paddingHorizontal: 10,
+              borderWidth: 1,
+              borderColor: p.certo ? FUNDO.verde : colors.border,
+              backgroundColor: p.certo ? "rgba(21,128,61,0.15)" : "transparent",
+            }}
+          >
+            <Text className="text-muted" style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 0.8 }}>
+              {p.rotulo.toUpperCase()}
+            </Text>
+            <Text className="text-on-surface" style={{ fontSize: 13.5, fontWeight: p.certo ? "800" : "600" }}>
+              {p.valor}
+            </Text>
+          </View>
+        ))}
+      </View>
+      {ajuda.map((d) => (
+        <View key={d} className="flex-row items-center" style={{ gap: 8 }}>
+          <Lightbulb size={15} color="#facc15" />
+          <Text style={{ color: "#fde68a", fontSize: 13.5, flex: 1 }}>{d}</Text>
+        </View>
+      ))}
+      {proxima && (
+        <Text className="text-muted" style={{ fontSize: 11.5 }}>
+          {ajuda.length === 0 ? "Primeira dica" : "Próxima dica"} no {proxima}º palpite.
+        </Text>
+      )}
     </View>
   );
 }
@@ -251,7 +364,12 @@ function CartaoDaVitoria({
           <Text className="text-on-surface" style={{ fontSize: larga ? 26 : 21, fontWeight: "800" }}>
             {alvo.nome}
           </Text>
+          <Text className="text-on-surface-variant" style={{ fontSize: 13 }}>
+            {alvo.ano} · {alvo.cv} cv · {alvo.cilindros} cilindros {alvo.aspiracao === "Aspirado" ? "aspirado" : alvo.aspiracao.toLowerCase()} · tração {alvo.tracao.toLowerCase()}
+          </Text>
         </View>
+
+        <FotoDoCarro id={alvo.id} comResumo altura={larga ? 300 : 210} />
 
         <View className="flex-row" style={{ gap: 10 }}>
           <View className="border border-border" style={{ flex: 1, padding: 12, gap: 2 }}>
@@ -328,19 +446,27 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venceu]);
 
-  const sugestoes = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    if (!q) return [];
-    // Palavra inteira primeiro: "gol" mostra o Gol antes do Golf.
-    const peso = (n: Nave) => {
-      const palavras = `${n.nome} ${n.marca}`.toLowerCase().split(/[\s()/-]+/);
-      return palavras.includes(q) ? 0 : palavras.some((p) => p.startsWith(q)) ? 1 : 2;
-    };
-    return lista
-      .filter((n) => !ids.includes(n.id) && `${n.nome} ${n.marca}`.toLowerCase().includes(q))
-      .sort((a, b) => peso(a) - peso(b))
-      .slice(0, 6);
-  }, [busca, ids, lista]);
+  // Sem acento, sem hífen, em qualquer ordem e com um erro de digitação:
+  // "gtr", "corola", "civic si" (ver utils/naveDoDiaAjuda).
+  const sugestoes = useMemo(() => buscarNaves(lista, busca, ids), [busca, ids, lista]);
+
+  // Como jogar abre sozinho na primeira visita.
+  const [ajuda, setAjuda] = useState(false);
+  useEffect(() => {
+    try {
+      if (Platform.OS === "web" && !localStorage.getItem("nave-do-dia:viu-como-jogar")) setAjuda(true);
+    } catch {
+      // sem storage: não insiste
+    }
+  }, []);
+  const fecharAjuda = () => {
+    setAjuda(false);
+    try {
+      if (Platform.OS === "web") localStorage.setItem("nave-do-dia:viu-como-jogar", "1");
+    } catch {
+      // idem
+    }
+  };
 
   const chutar = (n: Nave) => {
     adicionar(n.id);
@@ -410,6 +536,18 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
                 </Text>
               </View>
             )}
+            <Pressable
+              onPress={() => setAjuda((v) => !v)}
+              className="flex-row items-center"
+              style={{ gap: 4, marginLeft: "auto" }}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <CircleHelp size={15} color={colors.onSurfaceVariant} />
+              <Text className="text-on-surface-variant" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 0.6 }}>
+                COMO JOGAR
+              </Text>
+            </Pressable>
           </View>
           <Text className="text-on-surface" style={{ fontSize: larga ? 30 : 22, fontWeight: "800" }}>
             {modo === "brasil" ? "Qual é a nave brasileira de hoje?" : "Qual é a nave de hoje?"}
@@ -419,6 +557,8 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
             vermelho nada a ver. Nos números, a seta diz pra que lado ir.
           </Text>
         </View>
+
+        {ajuda && !venceu && <ComoJogar onFechar={fecharAjuda} larga={larga} />}
 
         {venceu ? (
           !revelando && (
@@ -467,6 +607,10 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
               >
                 <Text className="text-on-surface" style={{ fontSize: 14, fontWeight: "600" }}>
                   {n.nome}
+                  <Text className="text-muted" style={{ fontWeight: "400" }}>
+                    {"  "}
+                    {n.ano}
+                  </Text>
                 </Text>
               </Pressable>
             ))}
@@ -478,13 +622,22 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
           </View>
         )}
 
+        {!venceu && <OQueJaSabe palpites={palpites} alvo={alvo} larga={larga} />}
+
         {palpites.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View className="flex-row" style={{ gap: VAO }}>
+            {/* Os nomes ficam parados; só as pistas rolam de lado. */}
             <View style={{ gap: VAO }}>
-              <View className="flex-row" style={{ gap: VAO }}>
-                <Text className="text-muted" style={{ width: m.nome, fontSize: larga ? 11.5 : 10.5, fontWeight: "700", letterSpacing: 1 }}>
-                  CARRO
-                </Text>
+              <Text className="text-muted" style={{ width: m.nome, height: 16, fontSize: larga ? 11.5 : 10.5, fontWeight: "700", letterSpacing: 1 }}>
+                CARRO
+              </Text>
+              {[...palpites].reverse().map((p) => (
+                <NomeDoPalpite key={p.id} chute={p} alvo={alvo} m={m} animar={p.id === novo} />
+              ))}
+            </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+            <View style={{ gap: VAO }}>
+              <View className="flex-row" style={{ gap: VAO, height: 16 }}>
                 {COLUNAS.map((c) => (
                   <Text
                     key={c}
@@ -498,10 +651,11 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
               </View>
               {/* O palpite mais novo em cima: é o que a pessoa quer ver. */}
               {[...palpites].reverse().map((p) => (
-                <Linha key={p.id} chute={p} alvo={alvo} m={m} animar={p.id === novo} />
+                <PistasDoPalpite key={p.id} chute={p} alvo={alvo} m={m} animar={p.id === novo} />
               ))}
             </View>
           </ScrollView>
+          </View>
         )}
 
         <Text className="text-muted" style={{ fontSize: 11.5, lineHeight: 16 }}>

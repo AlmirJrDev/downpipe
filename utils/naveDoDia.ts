@@ -31,7 +31,7 @@ export interface Nave {
   cv: number;
 }
 
-const CONTINENTE: Record<string, string> = {
+export const CONTINENTE: Record<string, string> = {
   Japão: "Ásia",
   Alemanha: "Europa",
   Itália: "Europa",

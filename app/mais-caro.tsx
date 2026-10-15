@@ -7,11 +7,12 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { ArrowDown, ArrowLeft, ArrowUp, RotateCcw, Share2 } from "lucide-react-native";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, RotateCcw, Share2 } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import Animated from "react-native-reanimated";
 import { Confete, MaisUm, Surgir, usePulo, useTremor, vibrar } from "@/components/jogos/Animacoes";
+import { FotoDoCarro, temFoto } from "@/components/jogos/FotoDoCarro";
 import { Share } from "@/utils/share";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
@@ -77,6 +78,8 @@ function Cartao({
   largo: boolean;
 }) {
   const borda = resultado === "certo" ? VERDE : resultado === "errado" ? VERMELHO : colors.border;
+  const idDaFoto = `fipe:${carro.id}`;
+  const comFoto = temFoto(idDaFoto);
   return (
     <View
       style={{
@@ -86,10 +89,18 @@ function Cartao({
         borderColor: borda,
         backgroundColor: colors.surfaceHigh,
         padding: largo ? 28 : 18,
+        paddingTop: comFoto ? 0 : largo ? 28 : 18,
         justifyContent: "space-between",
         overflow: "hidden",
+        gap: 10,
       }}
     >
+      {/* A foto, quando há uma conferida (ver utils/fotosDosCarros.json). */}
+      {comFoto && (
+        <View style={{ marginHorizontal: largo ? -28 : -18 }}>
+          <FotoDoCarro id={idDaFoto} altura={largo ? 190 : 120} credito={false} />
+        </View>
+      )}
       {/* O ano gigante e apagado ao fundo: é o que dá cara ao cartão sem foto. */}
       <Text
         aria-hidden
@@ -170,30 +181,47 @@ export default function MaisCaroScreen() {
       // Espera o preço aparecer pra tremer: é aí que a ficha cai.
       setTimeout(tremor.tremer, 450);
     }
-    setTimeout(() => {
-      if (ok) {
-        const nova = sequencia + 1;
-        setSequencia(nova);
-        placar.pular();
-        setMaisUm(Date.now());
-        // Confete ao passar o recorde (uma vez por partida) e a cada 10.
-        const primeiroRecorde = !bateuRecorde && recordeDaPartida.current > 0 && nova > recordeDaPartida.current;
-        if (primeiroRecorde) setBateuRecorde(true);
-        if (primeiroRecorde || nova % 10 === 0) setConfete(Date.now());
-        if (nova > recorde) {
-          setRecorde(nova);
-          salvarRecorde(nova);
-        }
-        recentes.current = [...recentes.current, mostrado.id].slice(-12);
-        setMostrado(escondido);
-        setEscondido(proximoCarro(escondido, recentes.current, nova));
-        setCerto(null);
-        setFase("jogando");
-      } else {
-        setFase("fim");
-      }
-    }, 1300);
+    // Errou: o fim de jogo vem sozinho. Acertou: a pessoa lê o preço e a
+    // diferença e segue quando quiser (ver continuar).
+    if (!ok) setTimeout(() => setFase("fim"), 1300);
   };
+
+  /** Depois do acerto: soma o ponto e traz o próximo carro. */
+  const continuar = () => {
+    if (fase !== "revelando" || !certo) return;
+    const nova = sequencia + 1;
+    setSequencia(nova);
+    placar.pular();
+    setMaisUm(Date.now());
+    // Confete ao passar o recorde (uma vez por partida) e a cada 10.
+    const primeiroRecorde = !bateuRecorde && recordeDaPartida.current > 0 && nova > recordeDaPartida.current;
+    if (primeiroRecorde) setBateuRecorde(true);
+    if (primeiroRecorde || nova % 10 === 0) setConfete(Date.now());
+    if (nova > recorde) {
+      setRecorde(nova);
+      salvarRecorde(nova);
+    }
+    recentes.current = [...recentes.current, mostrado.id].slice(-12);
+    setMostrado(escondido);
+    setEscondido(proximoCarro(escondido, recentes.current, nova));
+    setCerto(null);
+    setFase("jogando");
+  };
+
+  // No PC: setas chutam e Enter continua.
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const tecla = (e: KeyboardEvent) => {
+      if (fase === "jogando" && e.key === "ArrowUp") chutar("mais");
+      else if (fase === "jogando" && e.key === "ArrowDown") chutar("menos");
+      else if (fase === "revelando" && (e.key === "Enter" || e.key === "ArrowRight" || e.code === "Space")) {
+        e.preventDefault();
+        continuar();
+      }
+    };
+    window.addEventListener("keydown", tecla);
+    return () => window.removeEventListener("keydown", tecla);
+  });
 
   const recomecar = () => {
     const primeiro = primeiroCarro();
@@ -305,10 +333,27 @@ export default function MaisCaroScreen() {
         {!largo && fase === "jogando" && botoes}
 
         {fase === "revelando" && (
-          <Surgir>
+          <Surgir style={{ gap: 10, alignItems: "center" }}>
             <Text style={{ textAlign: "center", fontWeight: "900", fontSize: 22, letterSpacing: 1, color: certo ? "#4ade80" : "#f87171" }}>
               {certo ? "ACERTOU!" : "ERROU…"}
             </Text>
+            <Text className="text-on-surface-variant" style={{ textAlign: "center", fontSize: 14.5 }}>
+              {escondido.nome} {escondido.ano} é{" "}
+              <Text className="text-on-surface" style={{ fontWeight: "800" }}>
+                {reais(Math.abs(escondido.preco - mostrado.preco))} {escondido.preco >= mostrado.preco ? "mais caro" : "mais barato"}
+              </Text>{" "}
+              que o {mostrado.nome}.
+            </Text>
+            {certo && (
+              <View style={{ width: "100%", maxWidth: 420 }}>
+                <PrimaryButton label="Continuar" onPress={continuar} icon={<ArrowRight size={16} color={colors.onPrimaryContainer} />} />
+                {largo && (
+                  <Text className="text-muted" style={{ fontSize: 11.5, textAlign: "center", marginTop: 6 }}>
+                    Enter continua · ↑ mais caro · ↓ mais barato
+                  </Text>
+                )}
+              </View>
+            )}
           </Surgir>
         )}
 
