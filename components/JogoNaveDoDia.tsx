@@ -16,7 +16,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { Confete, Surgir, Virar, vibrar } from "@/components/jogos/Animacoes";
 import { FotoDoCarro } from "@/components/jogos/FotoDoCarro";
-import { buscarNaves, dicas, oQueSeSabe, DICAS_EM } from "@/utils/naveDoDiaAjuda";
+import { buscarNaves, dicas, DICAS_EM } from "@/utils/naveDoDiaAjuda";
 import { Share } from "@/utils/share";
 import { router } from "expo-router";
 import { voltarOuIrPara } from "@/utils/navigation";
@@ -273,40 +273,17 @@ function ComoJogar({ onFechar, larga }: { onFechar: () => void; larga: boolean }
   );
 }
 
-/** O que os palpites já contaram, num quadro só, e as dicas de quem empacou. */
-function OQueJaSabe({ palpites, alvo, larga }: { palpites: Nave[]; alvo: Nave; larga: boolean }) {
-  const pistas = oQueSeSabe(palpites, alvo);
+/**
+ * As dicas de quem empacou: a década, depois a primeira letra, depois o
+ * tamanho do nome. Nada de resumo das pistas: juntar as pistas de cabeça é
+ * o jogo.
+ */
+function Dicas({ palpites, alvo }: { palpites: Nave[]; alvo: Nave }) {
   const ajuda = dicas(alvo, palpites.length);
   const proxima = DICAS_EM.find((n) => n > palpites.length);
-  if (pistas.length === 0) return null;
+  if (palpites.length === 0) return null;
   return (
-    <View className="border border-border" style={{ padding: 14, gap: 10, backgroundColor: colors.surfaceContainer }}>
-      <Text className="text-muted" style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.2 }}>
-        O QUE VOCÊ JÁ SABE
-      </Text>
-      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-        {pistas.map((p) => (
-          <View
-            key={p.rotulo}
-            style={{
-              flexGrow: 1,
-              flexBasis: larga ? 180 : 140,
-              paddingVertical: 7,
-              paddingHorizontal: 10,
-              borderWidth: 1,
-              borderColor: p.certo ? FUNDO.verde : colors.border,
-              backgroundColor: p.certo ? "rgba(21,128,61,0.15)" : "transparent",
-            }}
-          >
-            <Text className="text-muted" style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 0.8 }}>
-              {p.rotulo.toUpperCase()}
-            </Text>
-            <Text className="text-on-surface" style={{ fontSize: 13.5, fontWeight: p.certo ? "800" : "600" }}>
-              {p.valor}
-            </Text>
-          </View>
-        ))}
-      </View>
+    <View className="border border-border" style={{ padding: 12, gap: 8, backgroundColor: colors.surfaceContainer }}>
       {ajuda.map((d) => (
         <View key={d} className="flex-row items-center" style={{ gap: 8 }}>
           <Lightbulb size={15} color="#facc15" />
@@ -622,7 +599,7 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
           </View>
         )}
 
-        {!venceu && <OQueJaSabe palpites={palpites} alvo={alvo} larga={larga} />}
+        {!venceu && <Dicas palpites={palpites} alvo={alvo} />}
 
         {palpites.length > 0 && (
           <View className="flex-row" style={{ gap: VAO }}>

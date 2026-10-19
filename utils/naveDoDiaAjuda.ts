@@ -1,9 +1,8 @@
 /**
  * O que ajuda a jogar a Nave do Dia sem mexer na regra: achar o carro
- * digitando de qualquer jeito, juntar as pistas num resumo e dar uma dica
- * pra quem empacou.
+ * digitando de qualquer jeito e dar uma dica pra quem empacou.
  */
-import { CONTINENTE, comparar, type Nave } from "./naveDoDia";
+import type { Nave } from "./naveDoDia";
 
 // ------------------------------------------------------------------ busca
 
@@ -78,67 +77,6 @@ export function buscarNaves(lista: Nave[], texto: string, jaChutados: string[], 
     )
     .slice(0, limite)
     .map((c) => c.n);
-}
-
-// --------------------------------------------------------- o que se sabe
-
-export interface Pista {
-  rotulo: string;
-  valor: string;
-  /** Já se sabe o valor exato. */
-  certo: boolean;
-}
-
-function faixa(chutes: Nave[], alvo: Nave, campo: "ano" | "cv" | "cilindros", sufixo = ""): Pista | null {
-  const rotulo = campo === "ano" ? "Ano" : campo === "cv" ? "Potência" : "Cilindros";
-  if (chutes.some((c) => c[campo] === alvo[campo])) return { rotulo, valor: `${alvo[campo]}${sufixo}`, certo: true };
-  // A seta diz pra que lado está: acima do maior chute que pediu "mais" e
-  // abaixo do menor que pediu "menos".
-  const acima = chutes.filter((c) => alvo[campo] > c[campo]).map((c) => c[campo]);
-  const abaixo = chutes.filter((c) => alvo[campo] < c[campo]).map((c) => c[campo]);
-  if (!acima.length && !abaixo.length) return null;
-  const min = acima.length ? Math.max(...acima) + 1 : null;
-  const max = abaixo.length ? Math.min(...abaixo) - 1 : null;
-  if (min != null && max != null) return { rotulo, valor: min === max ? `${min}${sufixo}` : `${min} a ${max}${sufixo}`, certo: min === max };
-  return { rotulo, valor: min != null ? `${min}${sufixo} ou mais` : `até ${max}${sufixo}`, certo: false };
-}
-
-function categoria(chutes: Nave[], alvo: Nave, campo: "marca" | "carroceria" | "tracao", rotulo: string): Pista | null {
-  if (chutes.some((c) => c[campo] === alvo[campo])) return { rotulo, valor: alvo[campo], certo: true };
-  const nao = [...new Set(chutes.map((c) => c[campo]))];
-  if (!nao.length) return null;
-  return { rotulo, valor: `não é ${nao.slice(0, 3).join(", ")}${nao.length > 3 ? ` +${nao.length - 3}` : ""}`, certo: false };
-}
-
-/**
- * Junta as pistas de todos os palpites num resumo só: é o que a pessoa
- * faria de cabeça olhando a tabela, e o que mais trava quem está jogando.
- */
-export function oQueSeSabe(chutes: Nave[], alvo: Nave): Pista[] {
-  if (chutes.length === 0) return [];
-  const pistas: (Pista | null)[] = [];
-
-  pistas.push(categoria(chutes, alvo, "marca", "Marca"));
-
-  if (chutes.some((c) => c.pais === alvo.pais)) pistas.push({ rotulo: "País", valor: alvo.pais, certo: true });
-  else if (chutes.some((c) => CONTINENTE[c.pais] === CONTINENTE[alvo.pais]))
-    pistas.push({ rotulo: "País", valor: `${CONTINENTE[alvo.pais]}, mas não ${[...new Set(chutes.filter((c) => CONTINENTE[c.pais] === CONTINENTE[alvo.pais]).map((c) => c.pais))].join(" nem ")}`, certo: false });
-  else pistas.push({ rotulo: "País", valor: `fora de ${[...new Set(chutes.map((c) => CONTINENTE[c.pais]))].join(" e ")}`, certo: false });
-
-  pistas.push(categoria(chutes, alvo, "carroceria", "Carroceria"));
-
-  const motor = comparar(chutes[0], alvo).find((p) => p.chave === "aspiracao");
-  if (chutes.some((c) => c.aspiracao === alvo.aspiracao)) pistas.push({ rotulo: "Motor", valor: alvo.aspiracao, certo: true });
-  else if (motor && chutes.some((c) => comparar(c, alvo).find((p) => p.chave === "aspiracao")?.cor === "amarelo"))
-    pistas.push({ rotulo: "Motor", valor: "turbo ou biturbo", certo: false });
-  else pistas.push({ rotulo: "Motor", valor: `não é ${[...new Set(chutes.map((c) => c.aspiracao.toLowerCase()))].join(", ")}`, certo: false });
-
-  pistas.push(categoria(chutes, alvo, "tracao", "Tração"));
-  pistas.push(faixa(chutes, alvo, "cilindros"));
-  pistas.push(faixa(chutes, alvo, "ano"));
-  pistas.push(faixa(chutes, alvo, "cv", " cv"));
-
-  return pistas.filter((p): p is Pista => !!p);
 }
 
 // ------------------------------------------------------------------ dicas
