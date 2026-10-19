@@ -13,6 +13,7 @@
  * perto do tempo real; o resto é a graça de pôr V12 em Uno.
  */
 import { NAVES, hojeEmBrasilia, numeroDoDia, type Aspiracao, type Nave, type Tracao } from "./naveDoDia";
+import { PESOS_EXTRAS_2 } from "./navesExtras2";
 
 // ------------------------------------------------------------------ pesos
 
@@ -62,7 +63,17 @@ const PESOS: Record<string, number> = {
 };
 
 /** Os carros que entram no jogo: os da Nave do Dia que têm peso conhecido. */
+Object.assign(PESOS, PESOS_EXTRAS_2);
+
 export const DOADORES: Nave[] = NAVES.filter((n) => PESOS[n.id] != null);
+
+/**
+ * Os desafios até o #7 saíram com os 205 carros da época. A fila desses
+ * dias continua sorteada só deles: a leva nova (sempre no fim da lista)
+ * não muda um desafio que já existiu.
+ */
+const DOADORES_DA_ESTREIA = 205;
+const ULTIMO_DIA_DA_ESTREIA = 7;
 
 // ------------------------------------------------------------------ peças
 
@@ -217,7 +228,9 @@ function gerador(semente: number) {
  */
 export function filaDeDoadores(semente: number): Nave[] {
   const aleatorio = gerador(semente);
-  const lista = [...DOADORES];
+  const dia = semente - 7_000_000;
+  const daEstreia = dia >= 1 && dia <= ULTIMO_DIA_DA_ESTREIA;
+  const lista = daEstreia ? DOADORES.slice(0, DOADORES_DA_ESTREIA) : [...DOADORES];
   for (let i = lista.length - 1; i > 0; i--) {
     const j = Math.floor(aleatorio() * (i + 1));
     [lista[i], lista[j]] = [lista[j], lista[i]];

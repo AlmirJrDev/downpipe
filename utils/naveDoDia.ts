@@ -13,6 +13,7 @@
  */
 
 import { BRASILEIROS, NAVES_EXTRAS } from "./navesExtras";
+import { BRASILEIROS_2, NAVES_EXTRAS_2 } from "./navesExtras2";
 
 export type Carroceria = "Hatch" | "Sedã" | "Cupê" | "Perua" | "Conversível" | "SUV" | "Picape" | "Van";
 export type Aspiracao = "Aspirado" | "Turbo" | "Biturbo" | "Compressor";
@@ -41,6 +42,7 @@ const CONTINENTE: Record<string, string> = {
   Suécia: "Europa",
   EUA: "América",
   Brasil: "América",
+  China: "Ásia",
 };
 
 // prettier-ignore
@@ -99,7 +101,9 @@ const NAVES_BASE: Nave[] = [
   { id: "challenger-hellcat", nome: "Dodge Challenger SRT Hellcat", marca: "Dodge", pais: "EUA", carroceria: "Cupê", aspiracao: "Compressor", tracao: "Traseira", cilindros: 8, ano: 2015, cv: 717 },
 ];
 
-export const NAVES: Nave[] = [...NAVES_BASE, ...NAVES_EXTRAS];
+// Leva nova sempre no fim: o Frankenstein dos dias antigos sorteia só dos primeiros (ver utils/frankenstein).
+export const NAVES: Nave[] = [...NAVES_BASE, ...NAVES_EXTRAS, ...NAVES_EXTRAS_2];
+const BRASIL = new Set([...BRASILEIROS, ...BRASILEIROS_2]);
 
 // ---------------------------------------------------------------- os modos
 
@@ -120,13 +124,15 @@ interface ConfigDoModo {
 }
 
 export const MODOS: Record<Modo, ConfigDoModo> = {
-  geral: { titulo: "Nave do Dia", caminho: "/nave-do-dia", semente: 20261013, jaJogados: ["m3-e30"], lista: NAVES },
+  geral: { titulo: "Nave do Dia", caminho: "/nave-do-dia", semente: 20261013, jaJogados: ["m3-e30", "300sl", "corolla-18-2003", "jetta-gli-mk7", "corvette-c8", "l200-triton", "mx5-nd"],
+    lista: NAVES,
+  },
   brasil: {
     titulo: "Nave do Dia Brasil",
     caminho: "/nave-do-dia-brasil",
     semente: 55011500,
-    jaJogados: ["opala-ss-250s"],
-    lista: NAVES.filter((n) => BRASILEIROS.has(n.id)),
+    jaJogados: ["opala-ss-250s", "sw4-28", "pulse-abarth", "sandero-16", "vectra-gsi", "ecosport-16", "camaro-ss-2010"],
+    lista: NAVES.filter((n) => BRASIL.has(n.id)),
   },
 };
 
