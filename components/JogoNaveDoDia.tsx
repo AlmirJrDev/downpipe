@@ -11,14 +11,15 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CircleHelp, Flame, Lightbulb, Share2, Trophy, X } from "lucide-react-native";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarDays, CircleHelp, Flame, Lightbulb, Share2, Trophy, X } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { Confete, Surgir, Virar, vibrar } from "@/components/jogos/Animacoes";
 import { FotoDoCarro } from "@/components/jogos/FotoDoCarro";
 import { buscarNaves, dicas, DICAS_EM } from "@/utils/naveDoDiaAjuda";
 import { Share } from "@/utils/share";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { dataCurta, diaPedido, diasAnteriores } from "@/utils/diasAnteriores";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import {
@@ -80,8 +81,7 @@ function useProgresso(prefixo: string, dia: string) {
   const chave = `${prefixo}:${dia}`;
   const [ids, setIds] = useState<string[]>([]);
   useEffect(() => {
-    const salvo = lerJson<string[]>(chave);
-    if (salvo) setIds(salvo);
+    setIds(lerJson<string[]>(chave) ?? []);
   }, [chave]);
   const adicionar = (id: string) =>
     setIds((atual) => {
@@ -299,6 +299,67 @@ function Dicas({ palpites, alvo }: { palpites: Nave[]; alvo: Nave }) {
   );
 }
 
+/** Desistiu de um dia passado: mostra a resposta. */
+const chaveDeDesistencia = (prefixo: string, dia: string) => `${prefixo}:${dia}:desistiu`;
+
+function estadoDoDia(prefixo: string, dia: string, modo: Modo): string {
+  const ids = lerJson<string[]>(`${prefixo}:${dia}`) ?? [];
+  if (ids.includes(naveDoDia(dia, modo).id)) return ids.length === 1 ? "acertou de primeira" : `acertou em ${ids.length}`;
+  if (lerJson<boolean>(chaveDeDesistencia(prefixo, dia))) return "desistiu";
+  if (ids.length) return `${ids.length} ${ids.length === 1 ? "palpite" : "palpites"}, em aberto`;
+  return "não jogou";
+}
+
+/**
+ * Os dias que passaram, pra quem chegou agora ou perdeu algum. A lista
+ * mostra só número, data e como a pessoa foi: a resposta continua
+ * escondida até ela jogar ou desistir.
+ */
+function ListaDeDias({ modo, prefixo, dia, hoje }: { modo: Modo; prefixo: string; dia: string; hoje: string }) {
+  const dias = [hoje, ...diasAnteriores(hoje)];
+  const abrir = (d: string) => router.replace((d === hoje ? MODOS[modo].caminho : `${MODOS[modo].caminho}?dia=${d}`) as never);
+  return (
+    <View className="border border-border" style={{ backgroundColor: colors.surfaceContainer }}>
+      {dias.map((d, i) => {
+        const estado = estadoDoDia(prefixo, d, modo);
+        const atual = d === dia;
+        return (
+          <Pressable
+            key={d}
+            onPress={() => abrir(d)}
+            className="flex-row items-center active:bg-white/5"
+            style={{
+              gap: 12,
+              paddingVertical: 11,
+              paddingHorizontal: 14,
+              borderTopWidth: i ? 1 : 0,
+              borderColor: colors.border,
+              backgroundColor: atual ? colors.surfaceHigh : "transparent",
+            }}
+            accessibilityRole="link"
+          >
+            <Text className="text-primary" style={{ width: 34, fontSize: 13, fontWeight: "800" }}>
+              #{numeroDoDia(d)}
+            </Text>
+            <Text className="text-on-surface" style={{ flex: 1, fontSize: 14, fontWeight: atual ? "800" : "600" }}>
+              {d === hoje ? "Hoje" : dataCurta(d)}
+            </Text>
+            <Text
+              style={{
+                fontSize: 12.5,
+                fontWeight: "700",
+                color: estado.startsWith("acertou") ? "#4ade80" : estado === "desistiu" ? "#f87171" : colors.muted,
+              }}
+            >
+              {estado}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 /** O cartão de quando acerta: grande, verde, impossível de não ver. */
 function CartaoDaVitoria({
   alvo,
@@ -309,7 +370,11 @@ function CartaoDaVitoria({
   aoCompartilhar,
   aviso,
   larga,
+  passado,
+  aoVoltarProDeHoje,
 }: {
+  passado: boolean;
+  aoVoltarProDeHoje: () => void;
   alvo: Nave;
   palpites: number;
   dias: number;
@@ -348,6 +413,11 @@ function CartaoDaVitoria({
 
         <FotoDoCarro id={alvo.id} comResumo altura={larga ? 300 : 210} />
 
+        {passado ? (
+          <Text className="text-muted" style={{ fontSize: 12.5 }}>
+            Dia passado não conta pros dias seguidos.
+          </Text>
+        ) : (
         <View className="flex-row" style={{ gap: 10 }}>
           <View className="border border-border" style={{ flex: 1, padding: 12, gap: 2 }}>
             <View className="flex-row items-center" style={{ gap: 6 }}>
@@ -369,8 +439,22 @@ function CartaoDaVitoria({
             </Text>
           </View>
         </View>
+        )}
 
         <PrimaryButton label="Compartilhar resultado" onPress={aoCompartilhar} icon={<Share2 size={15} color={colors.onPrimaryContainer} />} />
+        {passado && (
+          <Pressable
+            onPress={aoVoltarProDeHoje}
+            className="flex-row items-center justify-center border border-outline active:bg-white/5"
+            style={{ gap: 8, paddingVertical: 13 }}
+            accessibilityRole="link"
+          >
+            <Text className="text-on-surface" style={{ fontWeight: "700", letterSpacing: 1 }}>
+              JOGAR A NAVE DE HOJE
+            </Text>
+            <ArrowRight size={16} color={colors.onSurface} />
+          </Pressable>
+        )}
         <Pressable
           onPress={() => router.replace(MODOS[outroModo].caminho as never)}
           className="flex-row items-center justify-center border border-outline active:bg-white/5"
@@ -393,7 +477,13 @@ function CartaoDaVitoria({
 }
 
 export function JogoNaveDoDia({ modo }: { modo: Modo }) {
-  const dia = hojeEmBrasilia();
+  const hoje = hojeEmBrasilia();
+  // ?dia=2026-10-14 abre um dia passado; sem ele (ou com data inválida) é hoje.
+  const { dia: param } = useLocalSearchParams<{ dia?: string }>();
+  const dia = diaPedido(param, hoje);
+  const passado = dia !== hoje;
+  const [verDias, setVerDias] = useState(false);
+  const voltarProDeHoje = () => router.replace(MODOS[modo].caminho as never);
   const { lista, titulo } = MODOS[modo];
   const prefixo = modo === "geral" ? "nave-do-dia" : `nave-do-dia-${modo}`;
   const alvo = useMemo(() => naveDoDia(dia, modo), [dia, modo]);
@@ -417,9 +507,22 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
   const palpites = ids.map((id) => lista.find((n) => n.id === id)).filter((n): n is Nave => !!n);
   const venceu = palpites.some((p) => p.id === alvo.id);
 
+  // Desistir só existe em dia passado: é o jeito de ver a resposta sem jogar.
+  const [desistiu, setDesistiu] = useState(false);
+  useEffect(() => {
+    setDesistiu(!!lerJson<boolean>(chaveDeDesistencia(prefixo, dia)));
+    setVerDias(false);
+    setNovo(null);
+    setBusca("");
+  }, [prefixo, dia]);
+  const desistir = () => {
+    gravarJson(chaveDeDesistencia(prefixo, dia), true);
+    setDesistiu(true);
+  };
+
   // Inclui quem já tinha ganhado hoje antes da sequência existir.
   useEffect(() => {
-    if (venceu) registrar();
+    if (venceu && !passado) registrar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venceu]);
 
@@ -462,7 +565,7 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
   };
 
   const compartilhar = async () => {
-    const texto = textoDeCompartilhar(palpites, alvo, dia, modo);
+    const texto = textoDeCompartilhar(palpites, alvo, dia, modo, passado);
     try {
       await Share.share({ message: texto });
     } catch {
@@ -499,13 +602,14 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <Text className="text-primary" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.4 }}>
               #{numeroDoDia(dia)}
+              {passado ? ` · ${dataCurta(dia).toUpperCase()}` : ""}
             </Text>
             {palpites.length > 0 && !venceu && (
               <Text className="text-muted" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1 }}>
                 {palpites.length} {palpites.length === 1 ? "PALPITE" : "PALPITES"}
               </Text>
             )}
-            {dias > 0 && !venceu && (
+            {dias > 0 && !venceu && !passado && (
               <View className="flex-row items-center" style={{ gap: 3 }}>
                 <Flame size={13} color={colors.primary} />
                 <Text className="text-muted" style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1 }}>
@@ -514,9 +618,21 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
               </View>
             )}
             <Pressable
-              onPress={() => setAjuda((v) => !v)}
+              onPress={() => setVerDias((v) => !v)}
               className="flex-row items-center"
               style={{ gap: 4, marginLeft: "auto" }}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <CalendarDays size={15} color={verDias ? colors.primary : colors.onSurfaceVariant} />
+              <Text style={{ color: verDias ? colors.primary : colors.onSurfaceVariant, fontSize: 12, fontWeight: "700", letterSpacing: 0.6 }}>
+                DIAS
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setAjuda((v) => !v)}
+              className="flex-row items-center"
+              style={{ gap: 4 }}
               hitSlop={8}
               accessibilityRole="button"
             >
@@ -527,7 +643,11 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
             </Pressable>
           </View>
           <Text className="text-on-surface" style={{ fontSize: larga ? 30 : 22, fontWeight: "800" }}>
-            {modo === "brasil" ? "Qual é a nave brasileira de hoje?" : "Qual é a nave de hoje?"}
+            {passado
+              ? `Qual era a nave ${modo === "brasil" ? "brasileira " : ""}de ${dataCurta(dia).slice(5)}?`
+              : modo === "brasil"
+                ? "Qual é a nave brasileira de hoje?"
+                : "Qual é a nave de hoje?"}
           </Text>
           <Text className="text-on-surface-variant" style={{ fontSize: 13.5, lineHeight: 19 }}>
             Chuta um carro. Cada palpite mostra o que bate com a nave do dia: verde acertou, amarelo chegou perto,
@@ -535,11 +655,26 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
           </Text>
         </View>
 
+        {verDias && <ListaDeDias modo={modo} prefixo={prefixo} dia={dia} hoje={hoje} />}
+
         {ajuda && !venceu && <ComoJogar onFechar={fecharAjuda} larga={larga} />}
 
-        {venceu ? (
+        {desistiu && !venceu ? (
+          <View className="border border-border" style={{ padding: larga ? 22 : 16, gap: 12, backgroundColor: colors.surfaceHigh }}>
+            <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 1.4 }}>
+              A NAVE DESSE DIA ERA
+            </Text>
+            <Text className="text-on-surface" style={{ fontSize: larga ? 26 : 21, fontWeight: "800" }}>
+              {alvo.nome}
+            </Text>
+            <FotoDoCarro id={alvo.id} comResumo altura={larga ? 280 : 200} />
+            <PrimaryButton label="Jogar a nave de hoje" onPress={voltarProDeHoje} icon={<ArrowRight size={16} color={colors.onPrimaryContainer} />} />
+          </View>
+        ) : venceu ? (
           !revelando && (
             <CartaoDaVitoria
+              passado={passado}
+              aoVoltarProDeHoje={voltarProDeHoje}
               alvo={alvo}
               palpites={palpites.length}
               dias={dias}
@@ -599,7 +734,15 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
           </View>
         )}
 
-        {!venceu && <Dicas palpites={palpites} alvo={alvo} />}
+        {!venceu && !desistiu && <Dicas palpites={palpites} alvo={alvo} />}
+
+        {passado && !venceu && !desistiu && (
+          <Pressable onPress={desistir} hitSlop={6} accessibilityRole="button" style={{ alignSelf: "flex-start" }}>
+            <Text className="text-muted" style={{ fontSize: 12.5, textDecorationLine: "underline" }}>
+              Desistir e ver a resposta desse dia
+            </Text>
+          </Pressable>
+        )}
 
         {palpites.length > 0 && (
           <View className="flex-row" style={{ gap: VAO }}>

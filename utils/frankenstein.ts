@@ -240,12 +240,14 @@ export function textoDeCompartilhar(opcoes: {
   derrotaFinal: boolean;
   melhorTempo: number | null;
   montagem: Required<Montagem>;
+  /** Desafio de um dia passado: sai marcado, pra não parecer o de hoje. */
+  depois?: boolean;
 }): string {
-  const { numero, vitorias, derrotaFinal, melhorTempo, montagem } = opcoes;
+  const { numero, vitorias, derrotaFinal, melhorTempo, montagem, depois } = opcoes;
   const total = RIVAIS.length;
   const campeao = vitorias >= total;
   const linha = "🟩".repeat(vitorias) + (derrotaFinal && !campeao ? "🟥" : "");
-  const cabeca = numero ? `Frankenstein #${numero}` : "Frankenstein";
+  const cabeca = numero ? `Frankenstein #${numero}${depois ? " (jogado depois)" : ""}` : "Frankenstein";
   const placar = campeao ? `zerei as ${total} fases!` : `passei ${vitorias} de ${total} fases`;
   const curto = (n: Nave) => n.nome.replace(/^(VW|Chevrolet|Ford|Fiat|Toyota|Honda|Nissan) /, "");
   return [

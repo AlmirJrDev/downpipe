@@ -235,12 +235,12 @@ export function comparar(chute: Nave, alvo: Nave): Pista[] {
 }
 
 /** Quadradinhos pra compartilhar: 🟩🟨🟥 por palpite, como os "dle" fazem. */
-export function textoDeCompartilhar(palpites: Nave[], alvo: Nave, dia = hojeEmBrasilia(), modo: Modo = "geral"): string {
+export function textoDeCompartilhar(palpites: Nave[], alvo: Nave, dia = hojeEmBrasilia(), modo: Modo = "geral", depois = false): string {
   const emoji: Record<Cor, string> = { verde: "🟩", amarelo: "🟨", vermelho: "🟥" };
   const linhas = palpites.map((p) => comparar(p, alvo).map((x) => emoji[x.cor]).join(""));
   const resumo = palpites.length === 1 ? "de primeira" : `em ${palpites.length} palpites`;
   return [
-    `${MODOS[modo].titulo} #${numeroDoDia(dia)} · acertei ${resumo}`,
+    `${MODOS[modo].titulo} #${numeroDoDia(dia)}${depois ? " (jogado depois)" : ""} · acertei ${resumo}`,
     ...linhas.slice(-6),
     `downpipe.com.br/app${MODOS[modo].caminho}`,
   ].join("\n");

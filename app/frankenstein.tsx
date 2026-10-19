@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
 import { bip, ligarSom, ronco, somLigado } from "@/components/jogos/Som";
-import { ArrowLeft, Flag, RefreshCw, Share2, Trophy, Volume2, VolumeX, Wrench, Zap } from "lucide-react-native";
+import { ArrowLeft, CalendarDays, Flag, RefreshCw, Share2, Trophy, Volume2, VolumeX, Wrench, Zap } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
 import { Confete, Surgir, vibrar } from "@/components/jogos/Animacoes";
@@ -19,6 +19,8 @@ import { Share } from "@/utils/share";
 import { voltarOuIrPara } from "@/utils/navigation";
 import { useLarguraAmpla } from "@/hooks/useLarguraAmpla";
 import { hojeEmBrasilia, numeroDoDia, type Nave } from "@/utils/naveDoDia";
+import { dataCurta, diaPedido, diasAnteriores } from "@/utils/diasAnteriores";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   DOADORES,
   NOME_DA_PARTE,
@@ -517,11 +519,64 @@ function Corrida({ racha, rival, onFim }: { racha: Racha; rival: Nave; onFim: ()
   );
 }
 
+// ------------------------------------------------------------ dias passados
+
+function estadoDoDia(dia: string): string {
+  const p = lerJson<Partida>(`frankenstein:dia:${dia}`);
+  if (!p) return "não jogou";
+  if (p.etapa === "fim") return p.vitorias >= RIVAIS.length ? "zerou!" : `${p.vitorias}/${RIVAIS.length} fases`;
+  return "em andamento";
+}
+
+/** Os desafios que passaram: quem chegou agora joga os que perdeu. */
+function ListaDeDias({ dia, hoje }: { dia: string; hoje: string }) {
+  const dias = [hoje, ...diasAnteriores(hoje)];
+  return (
+    <View className="border border-border" style={{ backgroundColor: colors.surfaceContainer }}>
+      {dias.map((d, i) => {
+        const estado = estadoDoDia(d);
+        const atual = d === dia;
+        return (
+          <Pressable
+            key={d}
+            onPress={() => router.replace((d === hoje ? "/frankenstein" : `/frankenstein?dia=${d}`) as never)}
+            className="flex-row items-center active:bg-white/5"
+            style={{
+              gap: 12,
+              paddingVertical: 11,
+              paddingHorizontal: 14,
+              borderTopWidth: i ? 1 : 0,
+              borderColor: colors.border,
+              backgroundColor: atual ? colors.surfaceHigh : "transparent",
+            }}
+            accessibilityRole="link"
+          >
+            <Text className="text-primary" style={{ width: 34, fontSize: 13, fontWeight: "800" }}>
+              #{numeroDoDia(d)}
+            </Text>
+            <Text className="text-on-surface" style={{ flex: 1, fontSize: 14, fontWeight: atual ? "800" : "600" }}>
+              {d === hoje ? "Hoje" : dataCurta(d)}
+            </Text>
+            <Text style={{ fontSize: 12.5, fontWeight: "700", color: estado === "não jogou" ? colors.muted : estado === "em andamento" ? "#facc15" : "#4ade80" }}>
+              {estado}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 // ------------------------------------------------------------------ a tela
 
 export default function FrankensteinScreen() {
   const larga = useLarguraAmpla();
-  const dia = hojeEmBrasilia();
+  const hoje = hojeEmBrasilia();
+  // ?dia=2026-10-14 abre o desafio de um dia passado; sem ele, o de hoje.
+  const { dia: param } = useLocalSearchParams<{ dia?: string }>();
+  const dia = diaPedido(param, hoje);
+  const passado = dia !== hoje;
+  const [verDias, setVerDias] = useState(false);
   const numero = numeroDoDia(dia);
   const chaveDoDia = `frankenstein:dia:${dia}`;
 
@@ -537,8 +592,12 @@ export default function FrankensteinScreen() {
   // Volta o desafio do dia de onde parou.
   useEffect(() => {
     setRecorde(lerJson<number>(CHAVE_DO_RECORDE) ?? 0);
+    setVerDias(false);
     const salva = lerJson<Partida>(chaveDoDia);
-    if (!salva) return;
+    if (!salva) {
+      setPartida(novaPartida("dia", sementeDoDia(dia)));
+      return;
+    }
     if (salva.etapa === "corrida" && salva.racha) {
       // Saiu durante a animação: o racha já estava decidido, vale o resultado.
       const total = salva.racha.reacao + salva.racha.tempo;
@@ -692,6 +751,7 @@ export default function FrankensteinScreen() {
     if (!completa) return;
     const texto = textoDeCompartilhar({
       numero: partida.modo === "dia" ? numero : null,
+      depois: partida.modo === "dia" && passado,
       vitorias: partida.vitorias,
       derrotaFinal: partida.vitorias < RIVAIS.length,
       melhorTempo: partida.melhorTempo,
@@ -721,11 +781,21 @@ export default function FrankensteinScreen() {
               style={{ borderColor: ativo ? colors.primary : colors.border, backgroundColor: ativo ? colors.surfaceHigh : "transparent" }}
             >
               <Text style={{ color: ativo ? colors.onSurface : colors.muted, fontSize: 12.5, fontWeight: "700", letterSpacing: 0.6 }}>
-                {m === "dia" ? `DESAFIO DO DIA #${numero}` : "TREINO"}
+                {m === "dia" ? `DESAFIO #${numero}${passado ? ` · ${dataCurta(dia).slice(5)}` : ""}` : "TREINO"}
               </Text>
             </Pressable>
           );
         })}
+        <Pressable
+          onPress={() => setVerDias((v) => !v)}
+          className="flex-row items-center justify-center border border-border"
+          style={{ marginLeft: "auto", gap: 6, paddingHorizontal: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Dias anteriores"
+        >
+          <CalendarDays size={16} color={verDias ? colors.primary : colors.onSurface} />
+          <Text style={{ color: verDias ? colors.primary : colors.onSurface, fontSize: 12, fontWeight: "700", letterSpacing: 0.6 }}>DIAS</Text>
+        </Pressable>
         {Platform.OS === "web" && (
           <Pressable
             onPress={() => {
@@ -733,7 +803,7 @@ export default function FrankensteinScreen() {
               setSom(!som);
             }}
             className="items-center justify-center border border-border"
-            style={{ marginLeft: "auto", width: 40 }}
+            style={{ width: 40 }}
             accessibilityRole="button"
             accessibilityLabel={som ? "Desligar o som" : "Ligar o som"}
           >
@@ -1030,7 +1100,7 @@ export default function FrankensteinScreen() {
           </Pressable>
           {partida.modo === "dia" && (
             <Text className="text-muted" style={{ fontSize: 12 }}>
-              Amanhã tem outro desafio, com outros carros na rolada.
+              {passado ? "Desafio de dia passado: o de hoje tem outros carros na rolada." : "Amanhã tem outro desafio, com outros carros na rolada."}
             </Text>
           )}
           {aviso && (
@@ -1069,6 +1139,7 @@ export default function FrankensteinScreen() {
         contentContainerStyle={{ padding: larga ? 32 : 16, paddingBottom: 48, maxWidth: 1120, width: "100%", alignSelf: "center", gap: 18 }}
       >
         {cabecalho}
+        {verDias && <ListaDeDias dia={dia} hoje={hoje} />}
         <View style={{ flexDirection: larga ? "row" : "column", gap: larga ? 28 : 18, alignItems: "flex-start" }}>
           <View style={{ flex: larga ? 1.2 : undefined, width: larga ? undefined : "100%", gap: 12 }}>{miolo}</View>
           <View style={{ flex: larga ? 1 : undefined, width: larga ? undefined : "100%" }}>{nave_}</View>
