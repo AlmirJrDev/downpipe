@@ -1,12 +1,7 @@
-import React, { useEffect } from "react";
-import { Text, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
+import React from "react";
+import { Text, View, type ViewStyle } from "react-native";
 import { TriangleAlert } from "lucide-react-native";
+import { ShimmerEffect } from "./molecules/Shimmer/Shimmer";
 import { colors } from "@/constants/theme";
 import { PrimaryButton } from "./Button";
 
@@ -70,15 +65,20 @@ export function ErrorState({
   );
 }
 
-function SkeletonBlock({ style }: { style?: object }) {
-  const opacity = useSharedValue(0.4);
-  useEffect(() => {
-    opacity.value = withRepeat(withTiming(0.9, { duration: 800 }), -1, true);
-  }, []);
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+/**
+ * Bloco de carregamento: um brilho atravessa da esquerda pra direita
+ * (Shimmer, do Reacticx). Lê como "está vindo", onde o pisca-pisca de antes
+ * parecia travado.
+ */
+const BRILHO = [colors.surfaceHigh, "#2c2c2c", "#3a3a3a", "#2c2c2c", colors.surfaceHigh];
+
+function SkeletonBlock({ style }: { style?: ViewStyle }) {
   return (
-    <Animated.View
-      style={[{ backgroundColor: colors.surfaceHigh }, style, animatedStyle]}
+    <ShimmerEffect
+      preset="custom"
+      shimmerColors={BRILHO}
+      duration={1400}
+      style={{ backgroundColor: colors.surfaceHigh, ...style }}
     />
   );
 }

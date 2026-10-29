@@ -38,6 +38,8 @@ import {
 } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { NumberFlow } from "@/components/ui/molecules/number-flow";
+import { BotaoVou } from "@/components/BotaoVou";
 import { InstagramLink } from "@/components/ui/InstagramLink";
 import { ReportSheet } from "@/components/ReportSheet";
 import { EmptyState } from "@/components/ui/States";
@@ -360,12 +362,17 @@ export default function EventDetailsScreen() {
 
             <Pressable
               onPress={() => setAttendeesOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`${event.attendeesCount} ${event.attendeesCount === 1 ? "confirmado" : "confirmados"}${amigos > 0 ? `, ${amigos} ${amigos === 1 ? "amigo seu" : "amigos seus"}` : ""}. Ver a lista`}
               className="flex-row items-center gap-2.5 active:opacity-60"
               hitSlop={6}
             >
               <Users size={15} color={colors.primary} />
+              {/* O número rola quando alguém confirma (inclusive você). */}
+              <View className="flex-row items-center flex-1" style={{ gap: 4 }}>
+              <NumberFlow value={event.attendeesCount} fontSize={14} color={colors.onSurface} fontWeight="400" />
               <Text className="text-on-surface flex-1" style={{ fontSize: 14 }}>
-                {event.attendeesCount} {event.attendeesCount === 1 ? "confirmado" : "confirmados"}
+                {event.attendeesCount === 1 ? "confirmado" : "confirmados"}
                 {/* "12 amigos seus" é o que transforma um número em motivo. */}
                 {amigos > 0 && (
                   <Text className="text-muted">
@@ -374,6 +381,7 @@ export default function EventDetailsScreen() {
                   </Text>
                 )}
               </Text>
+              </View>
             </Pressable>
           </View>
 
@@ -389,34 +397,13 @@ export default function EventDetailsScreen() {
           {/* Ações logo após a informação, não no fim da rolagem: decidir se
               vai é o que a pessoa veio fazer aqui. */}
           <View className="flex-row gap-2.5 mt-5">
-            <Pressable
-              onPress={() => toggleAttendance.mutate({ eventId: event.id, attending })}
-              disabled={toggleAttendance.isPending}
-              className="flex-1 flex-row items-center justify-center gap-2 py-4 active:opacity-80"
-              style={{
-                backgroundColor: attending ? "transparent" : colors.success,
-                borderWidth: attending ? 1 : 0,
-                borderColor: colors.success,
+            <BotaoVou
+              attending={attending}
+              onPress={() => {
+                // Toque duplo rápido mandaria "vou" e "não vou" juntos.
+                if (!toggleAttendance.isPending) toggleAttendance.mutate({ eventId: event.id, attending });
               }}
-            >
-              {toggleAttendance.isPending ? (
-                <ActivityIndicator size="small" color={attending ? colors.success : "#0a0a0a"} />
-              ) : (
-                <>
-                  <Check size={16} color={attending ? colors.success : "#0a0a0a"} />
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      fontWeight: "700",
-                      letterSpacing: 1.2,
-                      color: attending ? colors.success : "#0a0a0a",
-                    }}
-                  >
-                    {attending ? "VOCÊ VAI" : "EU VOU"}
-                  </Text>
-                </>
-              )}
-            </Pressable>
+            />
 
             <Pressable
               onPress={comoChegar}
