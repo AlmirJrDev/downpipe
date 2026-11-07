@@ -6,7 +6,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "backgroundColor": "#131313",
     "splash": {
       "image": "./assets/splash-1284.png",
@@ -28,7 +27,10 @@
         {
           "locationWhenInUsePermission": "O Downpipe usa sua localizacao para marcar o ponto exato do encontro no mapa."
         }
-      ]
+      ],
+      "expo-image",
+      "expo-secure-store",
+      "expo-font"
     ],
     "ios": {
       "supportsTablet": false,
