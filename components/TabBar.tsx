@@ -41,7 +41,7 @@ function espacoDeBaixo(inset: number): number {
   return Math.min(Math.max(inset, spacing.sm), 34);
 }
 
-export function TabBar({ state, navigation }: BottomTabBarProps) {
+export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   // No computador quem navega é o menu lateral (ver components/desktop).
   const desktop = useModoDesktop();
@@ -56,7 +56,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         key={route.key}
         onPress={() => {
           Haptics.selectionAsync();
-          navigation.navigate(route.name);
+          navigateToTab(route.key);
         }}
         className="flex-1 items-center"
         style={{ paddingTop: SLOT_PADDING_TOP, paddingBottom: spacing.xs }}

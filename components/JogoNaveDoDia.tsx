@@ -10,7 +10,7 @@
  * da vitória (ver components/jogos/Animacoes).
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, TextInput, View, type ScrollViewInstance } from "react-native";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarDays, CircleHelp, Flame, Lightbulb, Share2, Trophy, X } from "lucide-react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { PrimaryButton } from "@/components/ui/Button";
@@ -496,7 +496,7 @@ export function JogoNaveDoDia({ modo }: { modo: Modo }) {
   /** Acertou agora e a linha ainda está virando: o cartão espera. */
   const [revelando, setRevelando] = useState(false);
   const [confete, setConfete] = useState(0);
-  const rolagem = useRef<ScrollView>(null);
+  const rolagem = useRef<ScrollViewInstance>(null);
   const contagem = useContagem();
   // No computador a tela sai da coluna estreita (ver useLarguraAmpla) e as
   // peças crescem até encher a linha: a galera joga muito pelo PC.

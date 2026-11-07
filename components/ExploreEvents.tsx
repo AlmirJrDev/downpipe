@@ -430,7 +430,7 @@ export function ExploreEvents({
         paddingBottom: spacing.lg,
       }}
       refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
+        <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.primary} />
       }
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) fetchNextPage();
@@ -441,7 +441,7 @@ export function ExploreEvents({
           <View className="py-6">
             <ActivityIndicator color={colors.primary} />
           </View>
-        ) : null
+        ) : undefined
       }
       ListHeaderComponent={header}
       ListEmptyComponent={
@@ -458,7 +458,7 @@ export function ExploreEvents({
                 : "Seja o primeiro a marcar um encontro."
             }
           />
-        ) : null
+        ) : undefined
       }
     />
   );

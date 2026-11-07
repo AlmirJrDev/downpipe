@@ -5,12 +5,16 @@
  * worker. No celular este arquivo nem é lido — não existe HTML lá.
  */
 import React from "react";
-import { ScrollViewStyleReset } from "expo-router/html";
+import { ScrollViewStyleReset, useServerDocumentContext } from "expo-router/html";
 import type { PropsWithChildren } from "react";
 
 export default function Root({ children }: PropsWithChildren) {
+  // SDK 58: os estilos do react-native-web (headNodes) e os bundles de JS
+  // (bodyNodes) só entram no HTML se a casca os puser. Sem bodyNodes o app
+  // não hidrata.
+  const { headNodes, bodyNodes, htmlAttributes, bodyAttributes } = useServerDocumentContext();
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -51,8 +55,12 @@ export default function Root({ children }: PropsWithChildren) {
         <script dangerouslySetInnerHTML={{ __html: larguraDoRole }} />
         <script dangerouslySetInnerHTML={{ __html: capturarInstalacao }} />
         <script dangerouslySetInnerHTML={{ __html: registrarServiceWorker }} />
+        {headNodes}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   );
 }

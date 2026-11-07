@@ -4,7 +4,7 @@
 // duas está rodando.
 import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewProps } from "react-native-webview";
 
 /**
  * O que as telas podem pedir ao mapa.
@@ -18,6 +18,11 @@ import { WebView } from "react-native-webview";
 export type PlatformWebViewRef = {
   chamar: (nome: string, ...args: (number | string | boolean)[]) => void;
 };
+
+// Com os tipos estritos do React Native 0.88, as props do WebView 14 viram
+// "never" (as variantes iOS e Android não se cruzam). O componente funciona;
+// é só o tipo que não fecha, então ele entra aqui com as props declaradas.
+const WebViewTipada = WebView as unknown as React.ComponentType<WebViewProps & { ref?: React.Ref<WebView> }>;
 
 interface Props {
   source: { html: string };
@@ -41,7 +46,7 @@ export const PlatformWebView = forwardRef<PlatformWebViewRef, Props>((props, ref
 
   // O tipo de Props é o recorte que o iframe da web também consegue honrar;
   // prometer goBack/reload aqui seria mentira do outro lado.
-  return <WebView ref={webRef} {...(props as React.ComponentProps<typeof WebView>)} />;
+  return <WebViewTipada ref={webRef} {...(props as WebViewProps)} />;
 });
 
 PlatformWebView.displayName = "PlatformWebView";

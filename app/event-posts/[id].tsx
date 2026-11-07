@@ -82,7 +82,7 @@ export default function EventPostsScreen() {
               <View className="py-6">
                 <ActivityIndicator color={colors.primary} />
               </View>
-            ) : null
+            ) : undefined
           }
         />
       )}

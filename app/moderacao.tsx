@@ -188,7 +188,7 @@ export default function ModeracaoScreen() {
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         refreshControl={
-          <RefreshControl refreshing={fila.isFetching} onRefresh={() => fila.refetch()} tintColor={colors.primary} />
+          <RefreshControl refreshing={fila.isFetching} onRefresh={() => void fila.refetch()} tintColor={colors.primary} />
         }
       >
         {fila.isPending ? (

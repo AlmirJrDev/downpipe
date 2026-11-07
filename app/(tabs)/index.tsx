@@ -6,7 +6,7 @@ import {
   RefreshControl,
   Text,
   View,
-  type ViewToken,
+  type ListViewToken,
 } from "react-native";
 import { Image } from "expo-image";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -232,7 +232,7 @@ export default function HomeScreen() {
   const jaPedidas = useRef(new Set<string>());
 
   const adiantarProximasFotos = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    ({ viewableItems }: { viewableItems: ListViewToken[] }) => {
       const ultimoVisivel = viewableItems[viewableItems.length - 1]?.index;
       if (ultimoVisivel == null) return;
 
@@ -332,7 +332,7 @@ export default function HomeScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={() => void refetch()}
               tintColor={colors.primary}
             />
           }
@@ -364,7 +364,7 @@ export default function HomeScreen() {
               </View>
             ) : !hasNextPage && feed.length > 0 ? (
               <FimDoFeed onTopo={() => listaRef.current?.scrollToOffset({ offset: 0, animated: true })} />
-            ) : null
+            ) : undefined
           }
         />
       )}

@@ -281,7 +281,7 @@ export default function EventChatScreen() {
         ListFooterComponent={
           carregandoAntigas ? (
             <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
-          ) : null
+          ) : undefined
         }
         ListEmptyComponent={
           // A lista é invertida: o vazio aparece de cabeça pra baixo sem isto.

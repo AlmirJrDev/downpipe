@@ -166,7 +166,7 @@ export default function ExploreScreen() {
             <View className="py-6">
               <ActivityIndicator color={colors.primary} />
             </View>
-          ) : null
+          ) : undefined
         }
         ListHeaderComponent={
           <View className="mb-2">
@@ -249,7 +249,7 @@ export default function ExploreScreen() {
                   : "Tente ajustar os filtros selecionados."
               }
             />
-          ) : null
+          ) : undefined
         }
       />
       )}

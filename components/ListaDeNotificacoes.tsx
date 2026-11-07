@@ -200,7 +200,7 @@ export function ListaDeNotificacoes({
           contentContainerStyle={{ paddingBottom: spacing.lg }}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
+            <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.primary} />
           }
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
@@ -211,7 +211,7 @@ export function ListaDeNotificacoes({
               <View className="py-6">
                 <ActivityIndicator color={colors.primary} />
               </View>
-            ) : null
+            ) : undefined
           }
           ListEmptyComponent={
             <EmptyState

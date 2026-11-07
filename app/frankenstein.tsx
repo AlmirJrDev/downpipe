@@ -8,7 +8,7 @@
  * queimada, senão dava pra repetir até ganhar.
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View, type ScrollViewInstance } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
 import { bip, ligarSom, ronco, somLigado } from "@/components/jogos/Som";
 import { ArrowLeft, CalendarDays, Flag, RefreshCw, Share2, Trophy, Volume2, VolumeX, Wrench, Zap } from "lucide-react-native";
@@ -586,7 +586,7 @@ export default function FrankensteinScreen() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [som, setSom] = useState(true);
   useEffect(() => setSom(somLigado()), []);
-  const rolagem = useRef<ScrollView>(null);
+  const rolagem = useRef<ScrollViewInstance>(null);
   const fila = useMemo(() => filaDeDoadores(partida.semente), [partida.semente]);
 
   // Volta o desafio do dia de onde parou.

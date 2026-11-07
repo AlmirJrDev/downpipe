@@ -71,7 +71,7 @@ export function LikersSheet({
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={isFetchingNextPage ? <RowSkeleton /> : null}
+          ListFooterComponent={isFetchingNextPage ? <RowSkeleton /> : undefined}
           ListEmptyComponent={
             isLoading ? (
               <View className="py-8 items-center">

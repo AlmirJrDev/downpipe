@@ -841,7 +841,7 @@ export default function FilaDeRolesScreen() {
         refreshControl={
           <RefreshControl
             refreshing={fila.isFetching}
-            onRefresh={() => fila.refetch()}
+            onRefresh={() => void fila.refetch()}
             tintColor={colors.primary}
           />
         }

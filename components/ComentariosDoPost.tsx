@@ -126,12 +126,12 @@ export function ComentariosDoPost({
           data={comments}
           keyExtractor={(c) => c.id}
           style={painel ? { flex: 1 } : { maxHeight: 300 }}
-          ListHeaderComponent={cabecalho ?? null}
+          ListHeaderComponent={cabecalho ?? undefined}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={isFetchingNextPage ? <RowSkeleton /> : null}
+          ListFooterComponent={isFetchingNextPage ? <RowSkeleton /> : undefined}
           ListEmptyComponent={
             !isLoading ? (
               <Text className="text-on-surface-variant px-5 py-6 text-center">

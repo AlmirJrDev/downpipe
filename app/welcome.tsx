@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Text, View } from "react-native";
+import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Text, View, type ScrollViewInstance } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Car, Wrench, Users, Sparkles } from "lucide-react-native";
@@ -34,7 +34,7 @@ const SLIDES = [
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const [index, setIndex] = useState(0);
   // Largura de verdade do carrossel, medida na tela. A da janela errava no
   // computador, onde o app fica numa coluna mais estreita que a janela.

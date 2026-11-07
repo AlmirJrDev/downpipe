@@ -99,7 +99,7 @@ export function FollowListSheet({
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={query.isFetchingNextPage ? <RowSkeleton /> : null}
+          ListFooterComponent={query.isFetchingNextPage ? <RowSkeleton /> : undefined}
           ListEmptyComponent={
             query.isLoading ? (
               <View className="py-8 items-center">
