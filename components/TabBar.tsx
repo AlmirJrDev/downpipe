@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Home, Compass, Warehouse, User, SquarePlus } from "lucide-react-native";
 import { router } from "expo-router";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { colors, spacing } from "@/constants/theme";
 import { useModoDesktop } from "@/hooks/useDesktop";
 

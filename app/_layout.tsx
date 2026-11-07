@@ -6,7 +6,7 @@ import { registrarVisita } from "@/utils/visitas";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { DarkTheme, ThemeProvider } from "@react-navigation/native";
+import { DarkTheme, ThemeProvider } from "expo-router/react-navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { colors } from "@/constants/theme";
 import { useAuthStore } from "@/stores/authStore";
